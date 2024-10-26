@@ -1,7 +1,8 @@
 name peakCalling:
 channels:
+  - defaults
   - bioconda
   - conda-forge
-denpendencies:
-  - python==3.12.5
+dependencies:
   - macs3==3.0.2
+  - homer==4.11
