@@ -50,10 +50,10 @@ def getAllSampleFilePaths(includeDirectories=True) -> list[str]:
     with open("config/samples.json", "r") as file:
         data: dict[str:dict] = json.load(file)
         for type in data:
-                for fileInfo in data[type].values():
-                    path = f"{directory}{fileInfo["cleanFileName"]}"
-                    filePaths.append(f"{path}_1.fastq")
-                    filePaths.append(f"{path}_2.fastq")
+            for fileInfo in data[type].values():
+                path = f"{directory}{fileInfo["cleanFileName"]}"
+                filePaths.append(f"{path}_1.fastq")
+                filePaths.append(f"{path}_2.fastq")
 
     return filePaths
 
@@ -62,8 +62,7 @@ def getSraAccessions(geoAccessions: list[str]) -> dict[str:str]:
     '''
         Given a list of GEO accessions retrieve their related SRA accessions 
     '''
-    if len(geoAccessions) == 0:
-        return dict() 
+    if len(geoAccessions) == 0: return dict() 
     enterezUrl: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term="
     enterezUrl += "+OR+".join(geoAccessions)
     print(enterezUrl)
