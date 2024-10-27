@@ -58,4 +58,4 @@ rule align:
 
 rule test:
     input:
-        [*map(lambda fileName: f"results/macs3-filterdup/{fileName[:-8]}.sam", getAllSampleFilePaths(includeDirectories=False)[::2])]
+        [*map(lambda fileName: f"results/macs2-filterdup/{fileName[:-8]}.bed", getAllSampleFilePaths(includeDirectories=False)[::2])]
