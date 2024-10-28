@@ -29,7 +29,7 @@ rule cutadapt_pe:
         out1 = f"{OUTPUTDIRS["cutadapt"]}/{{id}}_1.fastq",
         out2 = f"{OUTPUTDIRS["cutadapt"]}/{{id}}_2.fastq"
     conda:
-        "../envs/trim.yml"
+        "../envs/cutadapt.yml"
     params:
         args = config["cutadapt"]["args"]
     shell:
