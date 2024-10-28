@@ -5,7 +5,6 @@ from sampleFileScripts import getAllSampleFilePaths, getFileNames
 from setModuleOptions import setModuleOptions
 
 configfile: "config/config.yml"
-
 setModuleOptions(config)
 
 module utils:
@@ -22,7 +21,7 @@ module downloadWorkflow:
 
 module trimWorkflow:
     snakefile: "rules/trim.smk"
-    config: config["trimmingWorkflow"]
+    config: config
 
 module alignmentWorkflow:
     snakefile: "rules/align.smk"
@@ -54,7 +53,6 @@ aligner = config["aligner"]
 rule align:
     input:
         [*map(lambda fileName: f"results/{aligner}/{fileName[:-8]}.sam", getAllSampleFilePaths(includeDirectories=False)[::2])]
-
 
 rule test:
     input:

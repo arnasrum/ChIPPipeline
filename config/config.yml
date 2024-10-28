@@ -1,31 +1,36 @@
-downloadWorkflow:
-  fasterq-dump:
-    downloadPath: "resources/reads"
-    args: ""
-
-trimmingWorkflow:
-  trimgalore:
-    inputPath: "resources/reads"
-    args: ""
-
-  cutadapt:
-    args: ""
-
-  fastp:
-    args: ""
-
-bowtie2:
+fasterq-dump:
+  downloadPath: "resources/reads"
   args: ""
 
-bwa:
+
+# Trimmer config
+trimgalore:
+  inputPath: "resources/reads"
   args: ""
-bwa-index:
+
+cutadapt:
   args: ""
+
+fastp:
+  args: ""
+
 
 
 trimmer: "trim_galore"
 fastp_options: ""
 trim_galore_options: ""
+
+bowtie2:
+  args: ""
+bowtie2-build:
+  args: ""
+bwa:
+  args: ""
+bwa-index:
+  args: ""
+STAR:
+  threads: 8
+  args: ""
 
 
 aligner: "bowtie2"
