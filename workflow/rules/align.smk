@@ -8,11 +8,12 @@ rule buildBowtie2Index:
     output:
         expand("results/bowtie2-build/{genome}.{extension}", 
             extension=["1.bt2", "2.bt2", "3.bt2", "4.bt2"], 
-            genome=[config["genome"]]
-        )
+            genome=[config["genome"]])
+    conda:
+        "../envs/align.yml"
     params:
         genome = config["genome"],
-        args = config["bowtie2"]["args"]
+        args = config["bowtie2-build"]["args"]
     shell:
         '''
         bowtie2-build {params.args} {input} results/bowtie2-build/{params.genome}
@@ -28,6 +29,8 @@ rule bowtie2_pe:
         input2 = f"results/{trimmer}/{{id}}_2.fastq"
     output:
         outputFile = f"results/bowtie2/{{id}}.sam"
+    conda:
+        "../envs/align.yml"
     params:
         args = config["bowtie2"]["args"],
         genome = config["genome"],
@@ -39,7 +42,6 @@ rule bowtie2_pe:
         bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.input1} -2 {input.input2} -S {output}
         '''
 
-
 rule buildBWAIndex:
     input:
         f"resources/genomes/{config["genome"]}.fa.gz"
@@ -48,6 +50,8 @@ rule buildBWAIndex:
             genome=config["genome"], 
             ext=["amb", "ann", "pac", "sa", "bwt"]
         ) 
+    conda:
+        "../envs/align.yml"
     params:
         genome = config["genome"],
         args = config["bwa-index"]["args"]
@@ -67,6 +71,8 @@ rule bwa_pe:
         ) 
     output:
         "results/bwa/{id}.sam"
+    conda:
+        "../envs/align.yml"
     params:
         args = config["bwa"]["args"]
     shell:
@@ -82,12 +88,16 @@ rule buildStarIndex:
         expand("results/star-index/SA{index}", index=["", "index"])
     params:
         pathToGenome = f"resources/genomes/{config["genome"]}.fa"
+    conda:
+        "../envs/align.yml"
     threads:
-        8
+        config["STAR"]["threads"]
+    params:
+        args = config["STAR"]["args"]
     shell:
         """
         mkdir -p results/starIndex
-        STAR --runThreadN {threads} --runMode genomeGenerate --genomeDir results/star-index --genomeFastaFiles {params.pathToGenome} 
+        STAR --runThreadN {threads} --runMode genomeGenerate --genomeDir results/star-index --genomeFastaFiles {params.pathToGenome} {params.args}
         """ 
 
 rule STAR_pe:
@@ -97,11 +107,15 @@ rule STAR_pe:
         read2 = f"results/{config["trimmer"]}/{{sample}}_2.fastq"
     output:
         "results/STAR/{sample}.sam"
+    conda:
+        "../envs/align.yml"
     threads:
-        8
+        config["STAR"]["threads"]
+    params:
+        args = config["STAR"]["args"]
     shell:
         """
-        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample} --readFilesIn {input.read1} {input.read2} 
+        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample} --readFilesIn {input.read1} {input.read2} {params.args}
         mv results/STAR/{wildcards.sample}Aligned.out.sam results/STAR/{wildcards.sample}.sam
         """
 
