@@ -3,11 +3,13 @@ from xml.etree import ElementTree
 from typing import Any
 import pandas as pd
 import pathlib
+import time
 import json
 import os
 import re
 
-REQUEST_TIMEOUT = 30
+REQUEST_TIMEOUT: int = 30
+NUM_FAILED_REQUESTS_ALLOWED: int = 5
 
 def makeSampleInfo(sampleSheet:str="config/samples.csv") -> dict[str:dict]:
 
@@ -19,8 +21,8 @@ def makeSampleInfo(sampleSheet:str="config/samples.csv") -> dict[str:dict]:
     inputSamples = set()
     with open(sampleSheet, "r") as file:
         for index, row in pd.read_csv(file).iterrows():
-            for gsm in row.values[2:]:
-                inputSamples.add(gsm)
+            for sample in row.values[2:]:
+                inputSamples.add(sample)
     sampleInfo = {}
     sampleInfo["public"] = {}; sampleInfo["provided"] = {}
     providedInfo: dict[str:Any] = sampleInfo["provided"]
@@ -29,14 +31,14 @@ def makeSampleInfo(sampleSheet:str="config/samples.csv") -> dict[str:dict]:
     gsmAccessions = set(filter(lambda item: pattern.match(item), inputSamples))
     # Handle provided files
     # gsm should be renamed
-    for gsm in filter(lambda item: not pattern.match(item), inputSamples):
-        path = pathlib.Path(gsm)
+    for sample in filter(lambda item: not pattern.match(item), inputSamples):
+        path = pathlib.Path(sample)
         fileExtention = "".join(path.suffixes)
         fileName = path.name.split(fileExtention)[0]
         providedInfo[fileName] = {}
         providedInfo[fileName]["cleanFileName"] = fileName
         providedInfo[fileName]["fileExtension"] = fileExtention 
-        providedInfo[fileName]["path"] = gsm.split(fileName + fileExtention)[0]
+        providedInfo[fileName]["path"] = sample.split(fileName + fileExtention)[0]
     # Handle publicly available files
     sampleInfo["public"] = {key:value for key, value in getMetaData(getSraAccessions(gsmAccessions).values()).items()}
 
@@ -67,13 +69,15 @@ def getSraAccessions(geoAccessions: list[str]) -> dict[str:str]:
     enterezUrl += "+OR+".join(geoAccessions)
     print(enterezUrl)
     ### Handle 5** and 4** status codes
-    response: Response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
+    #response: Response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
+    response: Response = __pollRequest(enterezUrl) 
     xmlResponse: ElementTree.Element = ElementTree.fromstring(response.content)
     idList = list(filter(lambda item: int(item) > 299999999, [id.text for id in xmlResponse[3]]))
     enterezUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gds&id=" + ",".join(idList)
     print(enterezUrl)
     ### Handle 5** and 4** status codes
-    response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
+    #response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
+    response = __pollRequest(enterezUrl) 
     responseText: str = response.content.decode().lstrip("\n").rstrip("\n")
     gsmToSraMap: dict[str:str] = {} 
     responseText = responseText.replace("\n\n", "\t;:.,").replace("\n", "")
@@ -96,7 +100,8 @@ def getMetaData(sraAccessions: list[str]) -> dict[str: dict]:
     enterezUrl: str = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id={",".join(sraAccessions)}"
     print(enterezUrl)
     ### Handle 5** and 4** status codes
-    response: Response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
+    #response: Response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
+    response = __pollRequest(enterezUrl)
     root: ElementTree.Element = ElementTree.fromstring(response.content)
     metaData: dict[str: dict] = {}
     for node in root:
@@ -128,6 +133,26 @@ def getFileNames(includeProvided: bool = True, includePubliclyAvailiable: bool =
         if includeProvided:
             providedFiles = [*map(lambda item: item["cleanFileName"], fileInfo["provided"].values())]
     return publicFiles + providedFiles
+
+
+def __pollRequest(url: str) -> bytes:
+    waitTime: int = 1
+    failedRequestCount: int = 0
+    while True:
+        if failedRequestCount >= NUM_FAILED_REQUESTS_ALLOWED:
+            raise Exception("NCBI seems to be down at this time")
+        response: Response = get(url, timeout=REQUEST_TIMEOUT)
+        if response.status_code == 200:
+            break
+        if response.status_code >= 400 and response.status_code < 500 or response.status_code == 204:
+            raise Exception("Something went wrong while fetching GEO data, please check the accessions")
+        if response.status_code >= 500: 
+            failedRequestCount += 1
+        print("Request failed...")
+        time.sleep(waitTime)
+        print("Retrying")
+    return response
+
 
 
 def __makeCleanFileName(title: str) -> str:
