@@ -1,6 +1,7 @@
 from requests import get, Response
 from xml.etree import ElementTree
 from typing import Any
+from functools import reduce
 import pandas as pd
 import pathlib
 import time
@@ -19,28 +20,33 @@ def makeSampleInfo(sampleSheet:str="config/samples.csv") -> dict[str:dict]:
 
     pattern = re.compile(r"^GSM[0-9]*$")
     inputSamples = set()
+    sampleInfo = {}; sampleInfo["public"] = {}; sampleInfo["provided"] = {}
+    providedInfo: dict[str:Any] = sampleInfo["provided"]
     with open(sampleSheet, "r") as file:
         for index, row in pd.read_csv(file).iterrows():
             for sample in row.values[2:]:
                 inputSamples.add(sample)
-    sampleInfo = {}
-    sampleInfo["public"] = {}; sampleInfo["provided"] = {}
-    providedInfo: dict[str:Any] = sampleInfo["provided"]
-    gsmAccessions = set()
-
-    gsmAccessions = set(filter(lambda item: pattern.match(item), inputSamples))
-    # Handle provided files
-    # gsm should be renamed
-    for sample in filter(lambda item: not pattern.match(item), inputSamples):
-        path = pathlib.Path(sample)
-        fileExtention = "".join(path.suffixes)
-        fileName = path.name.split(fileExtention)[0]
-        providedInfo[fileName] = {}
-        providedInfo[fileName]["cleanFileName"] = fileName
-        providedInfo[fileName]["fileExtension"] = fileExtention 
-        providedInfo[fileName]["path"] = sample.split(fileName + fileExtention)[0]
+                # Handle provided files
+                #for sample in filter(lambda item: not pattern.match(item), inputSamples):
+                if pattern.match(sample): 
+                    sampleInfo["public"][sample] = {}
+                    sampleInfo["public"][sample]["type"] = row["type"]
+                    sampleInfo["public"][sample]["mark"] = row["sample"]
+                    continue
+                path = pathlib.Path(sample)
+                fileExtention = "".join(path.suffixes)
+                fileName = path.name.split(fileExtention)[0]
+                providedInfo[fileName] = {}
+                providedInfo[fileName]["cleanFileName"] = fileName
+                providedInfo[fileName]["fileExtension"] = fileExtention 
+                providedInfo[fileName]["path"] = sample.split(fileName + fileExtention)[0]
+                providedInfo[fileName]["mark"] = row["sample"]
+                providedInfo[fileName]["type"] = row["type"]
     # Handle publicly available files
-    sampleInfo["public"] = {key:value for key, value in getMetaData(getSraAccessions(gsmAccessions).values()).items()}
+    gsmAccessions = set(filter(lambda item: pattern.match(item), inputSamples))
+    fetchedInfo = getMetaData(getSraAccessions(gsmAccessions).values())
+    #sampleInfo["public"][key] = sampleInfo["public"][key] | fetchedInfo[key]
+    sampleInfo["public"] = {key: value for key, value in map(lambda key: (key, sampleInfo["public"][key] | fetchedInfo[key]), sampleInfo["public"].keys())}
 
     with open(f"config/samples.json", "w") as outfile:
         outfile.write(json.dumps(sampleInfo, indent=4))
@@ -68,14 +74,12 @@ def getSraAccessions(geoAccessions: list[str]) -> dict[str:str]:
     enterezUrl: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term="
     enterezUrl += "+OR+".join(geoAccessions)
     print(enterezUrl)
-    ### Handle 5** and 4** status codes
     #response: Response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
     response: Response = __pollRequest(enterezUrl) 
     xmlResponse: ElementTree.Element = ElementTree.fromstring(response.content)
     idList = list(filter(lambda item: int(item) > 299999999, [id.text for id in xmlResponse[3]]))
     enterezUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gds&id=" + ",".join(idList)
     print(enterezUrl)
-    ### Handle 5** and 4** status codes
     #response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
     response = __pollRequest(enterezUrl) 
     responseText: str = response.content.decode().lstrip("\n").rstrip("\n")
@@ -99,7 +103,6 @@ def getMetaData(sraAccessions: list[str]) -> dict[str: dict]:
     runAccessions: list[str] = []
     enterezUrl: str = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id={",".join(sraAccessions)}"
     print(enterezUrl)
-    ### Handle 5** and 4** status codes
     #response: Response = get(enterezUrl, timeout=REQUEST_TIMEOUT)
     response = __pollRequest(enterezUrl)
     root: ElementTree.Element = ElementTree.fromstring(response.content)
