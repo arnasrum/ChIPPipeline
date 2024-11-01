@@ -45,14 +45,13 @@ def makeSampleInfo(sampleSheet:str="config/samples.csv") -> dict[str:dict]:
     # Handle publicly available files
     gsmAccessions = set(filter(lambda item: pattern.match(item), inputSamples))
     fetchedInfo = getMetaData(getSraAccessions(gsmAccessions).values())
-    #sampleInfo["public"][key] = sampleInfo["public"][key] | fetchedInfo[key]
     sampleInfo["public"] = {key: value for key, value in map(lambda key: (key, sampleInfo["public"][key] | fetchedInfo[key]), sampleInfo["public"].keys())}
 
     with open(f"config/samples.json", "w") as outfile:
         outfile.write(json.dumps(sampleInfo, indent=4))
     return sampleInfo
 
-def getAllSampleFilePaths(includeDirectories=True) -> list[str]:
+def getAllSampleFilePaths(config: dict, includeDirectories=True) -> list[str]:
     directory = "resources/reads/" if includeDirectories else ""
     filePaths = []
     with open("config/samples.json", "r") as file:
@@ -61,7 +60,7 @@ def getAllSampleFilePaths(includeDirectories=True) -> list[str]:
             for fileInfo in data[type].values():
                 path = f"{directory}{fileInfo["cleanFileName"]}"
                 filePaths.append(f"{path}_1.fastq")
-                filePaths.append(f"{path}_2.fastq")
+                if config["paired_end"]: filePaths.append(f"{path}_2.fastq")
 
     return filePaths
 

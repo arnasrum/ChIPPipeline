@@ -41,19 +41,19 @@ use rule * from peakCallingWorkflow as peak_calling_*
 
 rule downloadSamples:
     input:
-        *getAllSampleFilePaths()
+        *getAllSampleFilePaths(config)
 
 trimmer = config["trimmer"]
 rule trim:
     input:
-        [*map(lambda fileName: f"results/{trimmer}/{fileName}", getAllSampleFilePaths(includeDirectories=False))],
-        [*map(lambda fileName: f"results/fastqc/{trimmer}/{fileName[:-8]}_1_fastqc.html", getAllSampleFilePaths(includeDirectories=False))]
+        [*map(lambda fileName: f"results/{trimmer}/{fileName}", getAllSampleFilePaths(config, includeDirectories=False))],
+        [*map(lambda fileName: f"results/fastqc/{trimmer}/{fileName[:-8]}_1_fastqc.html", getAllSampleFilePaths(config, includeDirectories=False))]
 
 aligner = config["aligner"]
 rule align:
     input:
-        [*map(lambda fileName: f"results/{aligner}/{fileName[:-8]}.sam", getAllSampleFilePaths(includeDirectories=False)[::2])]
+        [*map(lambda fileName: f"results/{aligner}/{fileName[:-8]}.sam", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
 
 rule test:
     input:
-        [*map(lambda fileName: f"results/macs2-filterdup/{fileName[:-8]}.bed", getAllSampleFilePaths(includeDirectories=False)[::2])]
+        [*map(lambda fileName: f"results/macs2-filterdup/{fileName[:-8]}.bed", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
