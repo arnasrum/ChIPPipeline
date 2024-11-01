@@ -47,8 +47,6 @@ rule bowtie2_pe:
     shell:
         '''
         if [[ params.paired_end ]]; then
-            echo {input.reads}
-            echo 'bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -2 {input.reads} -S {output} {params.args} {params.extra}'
             bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -2 {input.reads} -S {output} {params.args} {params.extra}
         else
             bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -S {output} {params.args} {params.extra}
