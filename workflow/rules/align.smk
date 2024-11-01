@@ -2,6 +2,13 @@ trimmer = config["trimmer"]
 aligner = config["aligner"]
 
 
+def alignmentInput(sample): 
+    reads = [f"results/{trimmer}/{sample}_1.fastq"]
+    if config["paired_end"]:
+        reads.append(f"results/{trimmer}/{sample}_2.fastq") 
+    return reads
+
+
 rule buildBowtie2Index:
     input:
         f"resources/genomes/{config["genome"]}.fa.gz"
@@ -25,21 +32,27 @@ rule bowtie2_pe:
             extension=["1.bt2", "2.bt2", "3.bt2", "4.bt2"], 
             genome=config["genome"]
         ),
-        input1 = f"results/{trimmer}/{{id}}_1.fastq", 
-        input2 = f"results/{trimmer}/{{id}}_2.fastq"
+        reads = lambda wildcards: alignmentInput(wildcards.sample)
     output:
-        outputFile = f"results/bowtie2/{{id}}.sam"
+        outputFile = f"results/bowtie2/{{sample}}.sam"
     conda:
         "../envs/align.yml"
     params:
         args = config["bowtie2"]["args"],
+        extra = config["bowtie2"]["extra"],
         genome = config["genome"],
-        outputArgs = f"-S results/bowtie2/{{id}}.sam"
+        paired_end = config["paired_end"],
     log:
-        "logs/bowtie2/{id}.log"
+        "logs/bowtie2/{sample}.log"
     shell:
         '''
-        bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.input1} -2 {input.input2} -S {output}
+        if [[ params.paired_end ]]; then
+            echo {input.reads}
+            echo 'bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -2 {input.reads} -S {output} {params.args} {params.extra}'
+            bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -2 {input.reads} -S {output} {params.args} {params.extra}
+        else
+            bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -S {output} {params.args} {params.extra}
+        fi
         '''
 
 rule buildBWAIndex:
@@ -61,23 +74,23 @@ rule buildBWAIndex:
         bwa index {params.args} {input} -p results/bwa-index/{params.genome}
         """
 
-rule bwa_pe:
+rule bwa:
     input:
-        read1 = f"results/{config["trimmer"]}/{{id}}_1.fastq",
-        read2 = f"results/{config["trimmer"]}/{{id}}_2.fastq",
-        genomeIndex = expand("results/bwa-index/{genome}.{ext}", 
+        reads = lambda wildcards: alignmentInput(wildcards.sample),
+        genomeIndex = expand("results/bwa-index/{genome}.{ext}",
             genome=config["genome"], 
             ext=["amb", "ann", "pac", "sa", "bwt"]
         ) 
     output:
-        "results/bwa/{id}.sam"
+        "results/bwa/{sample}.sam"
     conda:
         "../envs/align.yml"
     params:
-        args = config["bwa"]["args"]
+        args = config["bwa"]["args"],
+        extra = config["bwa"]["extra"]
     shell:
         """
-        bwa mem {params.args} results/bwa-index/mm39 {input.read1} {input.read2} > {output}
+        bwa mem {params.args} results/bwa-index/mm39 {input.reads} > {output} {params.extra}
         """
 
 
@@ -100,11 +113,10 @@ rule buildStarIndex:
         STAR --runThreadN {threads} --runMode genomeGenerate --genomeDir results/star-index --genomeFastaFiles {params.pathToGenome} {params.args}
         """ 
 
-rule STAR_pe:
+rule STAR:
     input:
         expand("results/star-index/SA{index}", index=["", "index"]),
-        read1 = f"results/{config["trimmer"]}/{{sample}}_1.fastq",
-        read2 = f"results/{config["trimmer"]}/{{sample}}_2.fastq"
+        reads = lambda wildcards: alignmentInput(wildcards.sample)
     output:
         "results/STAR/{sample}.sam"
     conda:
@@ -112,10 +124,11 @@ rule STAR_pe:
     threads:
         config["STAR"]["threads"]
     params:
-        args = config["STAR"]["args"]
+        args = config["STAR"]["args"],
+        extra = config["STAR"]["extra"]
     shell:
         """
-        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample} --readFilesIn {input.read1} {input.read2} {params.args}
+        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample} --readFilesIn {input.reads} {params.args} {params.extra}
         mv results/STAR/{wildcards.sample}Aligned.out.sam results/STAR/{wildcards.sample}.sam
         """
 
