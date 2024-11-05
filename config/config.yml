@@ -5,37 +5,30 @@ fasterq-dump:
 
 # Trimmer config
 trimgalore:
-  inputPath: "resources/reads"
   args: ""
-
 cutadapt:
   args: ""
-
 fastp:
   args: ""
-
-
-
 trimmer: "trim_galore"
-fastp_options: ""
-trim_galore_options: ""
 
 bowtie2:
   args: ""
+  extra: ""
 bowtie2-build:
   args: ""
 bwa:
   args: ""
+  extra: ""
 bwa-index:
   args: ""
 STAR:
+  extra: ""
   threads: 8
   args: ""
-
-
 aligner: "bowtie2"
 bowtie2_options: ""
-libraryStrategy: "paired"
+paired_end: true 
 providedFileExtension: "fastq"
 
 genome: "mm39"

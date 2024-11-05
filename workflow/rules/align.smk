@@ -2,10 +2,10 @@ trimmer = config["trimmer"]
 aligner = config["aligner"]
 
 
-def alignmentInput(sample): 
-    reads = [f"results/{trimmer}/{sample}_1.fastq"]
+def alignmentInput(sample: str) -> list[str]: 
+    reads = [f"results/{config["trimmer"]}/{sample}_1.fastq"]
     if config["paired_end"]:
-        reads.append(f"results/{trimmer}/{sample}_2.fastq") 
+        reads.append(f"results/{config["trimmer"]}/{sample}_2.fastq") 
     return reads
 
 
@@ -26,7 +26,7 @@ rule buildBowtie2Index:
         bowtie2-build {params.args} {input} results/bowtie2-build/{params.genome}
         '''
 
-rule bowtie2_pe:
+rule bowtie2:
     input:
         expand("results/bowtie2-build/{genome}.{extension}", 
             extension=["1.bt2", "2.bt2", "3.bt2", "4.bt2"], 
@@ -47,7 +47,7 @@ rule bowtie2_pe:
     shell:
         '''
         if [[ params.paired_end ]]; then
-            bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -2 {input.reads} -S {output} {params.args} {params.extra}
+            bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads[0]} -2 {input.reads[1]} -S {output} {params.args} {params.extra}
         else
             bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -S {output} {params.args} {params.extra}
         fi

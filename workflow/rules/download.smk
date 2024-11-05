@@ -42,7 +42,7 @@ for gsm, values in fileInfo["public"].items():
             """
 
 
-reads = ["1", "2"] if config["libraryStrategy"] == "paired" else ["1"]
+reads = ["1", "2"] if config["paired_end"] == "paired" else ["1"]
 for key, value in fileInfo["provided"].items():
     rule:
         name: f"link_{value["cleanFileName"]}"
@@ -51,16 +51,16 @@ for key, value in fileInfo["provided"].items():
         output:
             expand("resources/reads/{fileName}_{num}{ext}", fileName=value["cleanFileName"], num=reads, ext=value["fileExtension"]) 
         params:
-            libraryStrategy = config["libraryStrategy"],
+            paired_end = config["paired_end"],
             pathToOriginal = f"{value['path']}{value['cleanFileName']}",
             fileExt = value["fileExtension"],
             cleanFileName = value["cleanFileName"]
         shell:
             '''
-                if [[ {params.libraryStrategy} == "paired" ]]; then
+                if [[ {params.paired_end} ]]; then
                     ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
                     ln {params.pathToOriginal}_2{params.fileExt} resources/reads/{params.cleanFileName}_2{params.fileExt}
-                elif [[ {params.libraryStrategy} == "single" ]]; then
+                elif [[ {params.paired_end} ]]; then
                     ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
                 fi
             '''
