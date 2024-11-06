@@ -2,15 +2,39 @@ fasterq-dump:
   downloadPath: "resources/reads"
   args: ""
 
-trimgalore:
-  inputPath: "resources/reads"
-  args: ""
 
+# Trimmer config
+trimgalore:
+  args: ""
 cutadapt:
   args: ""
-
 fastp:
   args: ""
+trimmer: "trim_galore"
 
-alignment:
-  trimmer: "fastp"
+bowtie2:
+  args: ""
+  extra: ""
+bowtie2-build:
+  args: ""
+bwa:
+  args: ""
+  extra: ""
+bwa-index:
+  args: ""
+STAR:
+  extra: ""
+  threads: 8
+  args: ""
+aligner: "bowtie2"
+bowtie2_options: ""
+paired_end: true 
+providedFileExtension: "fastq"
+
+genome: "mm39"
+
+path_to_reads: ""
+
+samtools: "-f 4"
+
+modules: ""

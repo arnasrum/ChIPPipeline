@@ -1,5 +1,3 @@
-experiment,srx,run,species
-GSM1871976,SRX1204300,SRR2297347,Mus musculus
-GSM2108958,SRX1681433,SRR3337253,Mus musculus
-GSM2108958,SRX1681433,SRR3337254,Mus musculus
-GSM2108958,SRX1681433,SRR3337255,Mus musculus
+sample,type,replicate1,replicate2
+8cell,chip,GSM1871972,GSM1871973
+8cell,chip,privateData/test1,privateData/test2

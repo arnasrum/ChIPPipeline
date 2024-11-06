@@ -1,11 +1,12 @@
-rule fastqc:
+
+
+rule fastqc_after_trim:
 	input:
-		"reads/{id}.fastq",
+		f"results/{config["trimmer"]}/{{id}}.fastq",
 	output:
-		"output/fastqc/{id}_fastqc.html",
-		"output/fastqc/{id}_fastqc.zip",
+		expand("results/fastqc/{trimmer}/{id}_fastqc.{ext}", trimmer=config["trimmer"], ext=["zip", "html"], allow_missing=True)
 	params:
-		outputPath = "output/fastqc"
+		outputPath = "results/fastqc/" + config["trimmer"]
 	shell:
 		"""
 		fastqc -o {params.outputPath} {input} 

@@ -1,4 +1,4 @@
-name: trimmomatic
+name trimmomatic:
 channels:
   - bioconda
   - conda-forge
