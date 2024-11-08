@@ -19,32 +19,43 @@ def makeSampleInfo(sampleSheet:str="config/samples.csv") -> dict[str:dict]:
             #return json.load(file)
 
     pattern = re.compile(r"^GSM[0-9]*$")
-    inputSamples = set()
+    geoAccessions = set()
     sampleInfo = {}; sampleInfo["public"] = {}; sampleInfo["provided"] = {}
-    providedInfo: dict[str:Any] = sampleInfo["provided"]
+    availabiltyType: str = "provided"
     with open(sampleSheet, "r") as file:
         for index, row in pd.read_csv(file).iterrows():
-            for sample in row.values[2:]:
-                inputSamples.add(sample)
+            for sample in row.values[3:]:
                 # Handle provided files
                 #for sample in filter(lambda item: not pattern.match(item), inputSamples):
                 if pattern.match(sample): 
-                    sampleInfo["public"][sample] = {}
-                    sampleInfo["public"][sample]["type"] = row["type"]
-                    sampleInfo["public"][sample]["mark"] = row["sample"]
-                    continue
-                path = pathlib.Path(sample)
-                fileExtention = "".join(path.suffixes)
-                fileName = path.name.split(fileExtention)[0]
-                providedInfo[fileName] = {}
-                providedInfo[fileName]["cleanFileName"] = fileName
-                providedInfo[fileName]["fileExtension"] = fileExtention 
-                providedInfo[fileName]["path"] = sample.split(fileName + fileExtention)[0]
-                providedInfo[fileName]["mark"] = row["sample"]
-                providedInfo[fileName]["type"] = row["type"]
+                    availabiltyType = "public"
+                    geoAccessions.add(sample)
+                    sampleInfo[availabiltyType][sample] = {}
+                    #sampleInfo["public"][sample]["type"] = row["type"]
+                    #sampleInfo["public"][sample]["mark"] = row["sample"]
+                else:
+                    availabiltyType = "provided"
+                    path = pathlib.Path(sample)
+                    fileExtention = "".join(path.suffixes)
+                    fileName = path.name.split(fileExtention)[0]
+                    #providedInfo[fileName] = {}
+                    sampleInfo[availabiltyType][fileName] = {}
+                    #providedInfo[fileName]["cleanFileName"] = fileName
+                    sampleInfo[availabiltyType][fileName]["cleanFileName"] = fileName
+                    #providedInfo[fileName]["fileExtension"] = fileExtention 
+                    sampleInfo[availabiltyType][fileName]["fileExtension"] = fileExtention 
+                    #providedInfo[fileName]["path"] = sample.split(fileName + fileExtention)[0]
+                    sampleInfo[availabiltyType][fileName]["path"] = sample.split(fileName + fileExtention)[0]
+                    #providedInfo[fileName]["mark"] = row["sample"]
+                    #providedInfo[fileName]["type"] = row["type"]
+                    sample = fileName
+                sampleInfo[availabiltyType][sample]["type"] = row["type"]
+                sampleInfo[availabiltyType][sample]["mark"] = row["sample"]
+                sampleInfo[availabiltyType][sample]["replicate"] = row["replicate"]
+
+
     # Handle publicly available files
-    gsmAccessions = set(filter(lambda item: pattern.match(item), inputSamples))
-    fetchedInfo = getMetaData(getSraAccessions(gsmAccessions).values())
+    fetchedInfo = getMetaData(getSraAccessions(geoAccessions).values())
     sampleInfo["public"] = {key: value for key, value in map(lambda key: (key, sampleInfo["public"][key] | fetchedInfo[key]), sampleInfo["public"].keys())}
 
     with open(f"config/samples.json", "w") as outfile:
