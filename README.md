@@ -1,26 +1,39 @@
 # About
 
-Snakemake chromatin immunoprecipitation sequencing data analysis pipeline. 
+Snakemake chromatin immunoprecipitation sequencing data analysis pipeline.
 
-The pipeline contains several steps like; downloading samples, quality control, trimming, aligning, etc. 
+# Requirements
 
-For each step a rule can be run to execute it. Prerequisite rules are ran if the called rule is missing input files. For example running the alignment rule trigger downloading and trimming rules. 
-
-Each data analysis step can have multiple interchangable tools. Tools are chosen in the configuration file. More conviently the configuration file arguments can be overriden with the "--config" flag when running snakemake. This allows the user to choose tools from the CLI without changing the default configuration of the pipeline. 
-
-`snakemake --config trimmer=cutadapt -np align`
+The pipeline works best with a distrubution of conda environment. 
 
 # Usage
 
-Use 
+Install a snakemake environment with a conda distrubution, and activate the environment with the following command:
 
-`snakemake --list`
+`conda activate snakemake`
 
-to get at list of all available rules. 
+## Specify samples 
 
-The main rules do not have any prefixes, like **align** and **trim**, these can be ran by calling 
+Define expirement samples by editing the [config/samples.csv](./config/samples.csv). 
 
-`snakemake -np RULENAME `
+[config/samples.csv](./config/samples.csv) support both publicly available samples and local samples on the machine.
+
+For publicly available samples please provide their GEO accession in the [config/samples.csv](./config/samples.csv).
+
+For local samples please provide a path to the sample. 
+
+
+## Running the pipeline
+
+To run the pipeline on the provided samples is done by running the following command:
+
+`snakemake -c all`
+
+## Changing the configuration
+
+It is possible to change the configuration by either editing the [config/config.yml](config/config.yml) or doing in the command line by specifying options together with the run command:
+
+`snakemake -c all --config modules='--trim fastp --align STAR --genome h19'`
 
 # Supported Tools
 
@@ -40,6 +53,24 @@ The main rules do not have any prefixes, like **align** and **trim**, these can 
 
 ## Alignment/Mapping
 
-- Bowtie2
+- bowtie2
+- bwa
+- STAR
 
 ## Peak Calling
+
+- macs2
+
+# Module Options
+
+Overwrite the default configuration by running:
+
+    `snakemake -c <num> <rule> --config modules="--flag1 <value1> --flag2 <value2>"`
+
+## Flags
+
+**-t** or **--trim** overwrites the trimmer
+
+**-a** or **--align** overwrites the aligner
+
+**-g** or **--genome** sets the reference genome to be aligned to
