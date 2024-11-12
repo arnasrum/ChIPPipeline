@@ -1,7 +1,0 @@
-name macs2:
-channels:
-  - bioconda
-  - conda-forge
-denpendencies:
-  - python==3.12.5
-  - macs3==3.0.2

@@ -52,7 +52,7 @@ rule trim:
 aligner = config["aligner"]
 rule align:
     input:
-        [*map(lambda fileName: f"results/{aligner}/{fileName[:-8]}.sam", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
+        [*map(lambda fileName: f"results/{aligner}/{fileName[:-8]}.bam", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
 
 rule test:
     input:

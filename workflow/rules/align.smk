@@ -2,7 +2,7 @@ trimmer = config["trimmer"]
 aligner = config["aligner"]
 
 
-def alignmentInput(sample: str) -> list[str]: 
+def alignment_input(sample: str) -> list[str]:
     reads = [f"results/{config["trimmer"]}/{sample}_1.fastq"]
     if config["paired_end"]:
         reads.append(f"results/{config["trimmer"]}/{sample}_2.fastq") 
@@ -23,7 +23,7 @@ rule buildBowtie2Index:
         args = config["bowtie2-build"]["args"]
     shell:
         '''
-        bowtie2-build {params.args} {input} results/bowtie2-build/{params.genome}
+        bowtie2-build {params.args} {input} results/bowtie2-build/{params.genome} 
         '''
 
 rule bowtie2:
@@ -32,27 +32,28 @@ rule bowtie2:
             extension=["1.bt2", "2.bt2", "3.bt2", "4.bt2"], 
             genome=config["genome"]
         ),
-        reads = lambda wildcards: alignmentInput(wildcards.sample)
+        reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
-        outputFile = f"results/bowtie2/{{sample}}.sam"
+        f"results/bowtie2/{{sample}}.bam"
     conda:
         "../envs/align.yml"
     params:
         args = config["bowtie2"]["args"],
         extra = config["bowtie2"]["extra"],
         genome = config["genome"],
-        paired_end = config["paired_end"],
+        paired_end = config["paired_end"]
     shell:
         '''
         pairedEnd="{params.paired_end}"
-        if [[ "$pairedEnd" == 'true' ]]; then
+        #if [[ "$pairedEnd" == 'true' ]]; then
+        if [[ {params.paired_end} ]]; then
             inputOptions=''; i=1
             for file in {input.reads}; do inputOptions+="-$i $file "; i=$((i+1)); done
         else
             echo 'single_end'
             inputOptions='-1 {input.reads[0]}'
         fi
-        bowtie2 -x results/bowtie2-build/{params.genome} ${{inputOptions}} -S {output} {params.args} {params.extra}
+        bowtie2 -x results/bowtie2-build/{params.genome} ${{inputOptions}} -S {wildcards.sample}.sam {params.args} {params.extra} | samtools sort -o {output}
         '''
 
 rule buildBWAIndex:
@@ -76,13 +77,13 @@ rule buildBWAIndex:
 
 rule bwa:
     input:
-        reads = lambda wildcards: alignmentInput(wildcards.sample),
+        reads = lambda wildcards: alignment_input(wildcards.sample),
         genomeIndex = expand("results/bwa-index/{genome}.{ext}",
             genome=config["genome"], 
             ext=["amb", "ann", "pac", "sa", "bwt"]
         ) 
     output:
-        "results/bwa/{sample}.sam"
+        "results/bwa/{sample}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -90,7 +91,7 @@ rule bwa:
         extra = config["bwa"]["extra"]
     shell:
         """
-        bwa mem {params.args} results/bwa-index/mm39 {input.reads} > {output} {params.extra}
+        bwa mem {params.args} {params.extra} results/bwa-index/mm40 {input.reads} | samtools sort -o {output}
         """
 
 
@@ -115,9 +116,9 @@ rule buildStarIndex:
 rule STAR:
     input:
         expand("results/star-index/SA{index}", index=["", "index"]),
-        reads = lambda wildcards: alignmentInput(wildcards.sample)
+        reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
-        "results/STAR/{sample}.sam"
+        "results/STAR/{sample}.bam"
     conda:
         "../envs/align.yml"
     threads:
@@ -127,8 +128,8 @@ rule STAR:
         extra = config["STAR"]["extra"]
     shell:
         """
-        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample} --readFilesIn {input.reads} {params.args} {params.extra}
-        mv results/STAR/{wildcards.sample}Aligned.out.sam results/STAR/{wildcards.sample}.sam
+        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample} --readFilesIn {input.reads} {params.args} {params.extra} | samtools -o {output}
+        #mv results/STAR/{wildcards.sample}Aligned.out.sam results/STAR/{wildcards.sample}.sam
         """
 
 rule filterReads:

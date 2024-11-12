@@ -6,6 +6,9 @@ sys.path.append("workflow/scripts")
 
 fileInfo = makeSampleInfo()
 
+
+
+
 for srr in [run for value in fileInfo["public"].values() for run in value["runs"]]:
     rule:
         name:
@@ -42,19 +45,19 @@ for gsm, values in fileInfo["public"].items():
             """
 
 
-reads = ["1", "2"] if config["paired_end"] == "paired" else ["1"]
+reads = ["1", "2"] if config["paired_end"] else ["1"]
 for key, value in fileInfo["provided"].items():
     rule:
         name: f"link_{value["cleanFileName"]}"
         input:
-            expand("{path}{fileName}_{num}{ext}", fileName=value["cleanFileName"], path=value["path"], num=reads, ext=value["fileExtension"]) 
+            expand("{path}{fileName}_{num}{ext}", fileName=value["cleanFileName"], path=value["path"], num=reads, ext=value["fileExtension"])
         output:
-            expand("resources/reads/{fileName}_{num}{ext}", fileName=value["cleanFileName"], num=reads, ext=value["fileExtension"]) 
+            expand("resources/reads/{fileName}_{num}{ext}", fileName=value["cleanFileName"], num=reads, ext=value["fileExtension"])
         params:
             paired_end = config["paired_end"],
             pathToOriginal = f"{value['path']}{value['cleanFileName']}",
             fileExt = value["fileExtension"],
-            cleanFileName = value["cleanFileName"]
+            cleanFileName = value["cleanFileName"],
         shell:
             '''
                 if [[ {params.paired_end} ]]; then
