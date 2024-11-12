@@ -42,15 +42,17 @@ rule bowtie2:
         extra = config["bowtie2"]["extra"],
         genome = config["genome"],
         paired_end = config["paired_end"],
-    log:
-        "logs/bowtie2/{sample}.log"
     shell:
         '''
-        if [[ params.paired_end ]]; then
-            bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads[0]} -2 {input.reads[1]} -S {output} {params.args} {params.extra}
+        pairedEnd="{params.paired_end}"
+        if [[ "$pairedEnd" == 'true' ]]; then
+            inputOptions=''; i=1
+            for file in {input.reads}; do inputOptions+="-$i $file "; i=$((i+1)); done
         else
-            bowtie2 -x results/bowtie2-build/{params.genome} -1 {input.reads} -S {output} {params.args} {params.extra}
+            echo 'single_end'
+            inputOptions='-1 {input.reads[0]}'
         fi
+        bowtie2 -x results/bowtie2-build/{params.genome} ${{inputOptions}} -S {output} {params.args} {params.extra}
         '''
 
 rule buildBWAIndex:
@@ -98,13 +100,12 @@ rule buildStarIndex:
     output:
         expand("results/star-index/SA{index}", index=["", "index"])
     params:
-        pathToGenome = f"resources/genomes/{config["genome"]}.fa"
+        pathToGenome = f"resources/genomes/{config["genome"]}.fa",
+        args = config["STAR"]["args"]
     conda:
         "../envs/align.yml"
     threads:
         config["STAR"]["threads"]
-    params:
-        args = config["STAR"]["args"]
     shell:
         """
         mkdir -p results/starIndex
@@ -138,8 +139,6 @@ rule filterReads:
     params:
         args = config["samtools"],
         aligner = config["aligner"]
-    log:
-        "logs/samtools/{id}.log"
     shell:
         '''
         if [ ! -d "results/samtools" ]
