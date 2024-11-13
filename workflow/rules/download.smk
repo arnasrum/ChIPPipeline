@@ -1,13 +1,13 @@
 import sys
-from sampleFileScripts import makeSampleInfo
+from sample_file_scripts import make_sample_info
 sys.path.append("workflow/scripts")
 
-fileInfo = makeSampleInfo()
+file_info = make_sample_info()
 
 
 
 
-for srr in [run for value in fileInfo["public"].values() for run in value["runs"]]:
+for srr in [run for value in file_info["public"].values() for run in value["runs"]]:
     rule:
         name:
             f"download_{srr}"
@@ -24,15 +24,15 @@ for srr in [run for value in fileInfo["public"].values() for run in value["runs"
             '''
 
 
-for gsm, values in fileInfo["public"].items():
+for gsm, values in file_info["public"].items():
     rule:
         name:
             f"download_{gsm}"
         input:
             expand("resources/reads/{run}_{readNum}.fastq", run=values["runs"], readNum=[1, 2])
         output:
-            f"resources/reads/{values["cleanFileName"]}_1.fastq",
-            f"resources/reads/{values["cleanFileName"]}_2.fastq"
+            f"resources/reads/{values['cleanFileName']}_1.fastq",
+            f"resources/reads/{values['cleanFileName']}_2.fastq"
         params:
             outdir = "resources/reads",
             read1Files = " ".join(list(map(lambda run: f"resources/reads/{run}_1.fastq", values["runs"]))),
@@ -46,9 +46,9 @@ for gsm, values in fileInfo["public"].items():
 
 
 reads = ["1", "2"] if config["paired_end"] else ["1"]
-for key, value in fileInfo["provided"].items():
+for key, value in file_info["provided"].items():
     rule:
-        name: f"link_{value["cleanFileName"]}"
+        name: f"link_{value['cleanFileName']}"
         input:
             expand("{path}{fileName}_{num}{ext}", fileName=value["cleanFileName"], path=value["path"], num=reads, ext=value["fileExtension"])
         output:
@@ -57,7 +57,7 @@ for key, value in fileInfo["provided"].items():
             paired_end = config["paired_end"],
             pathToOriginal = f"{value['path']}{value['cleanFileName']}",
             fileExt = value["fileExtension"],
-            cleanFileName = value["cleanFileName"],
+            cleanFileName = value["cleanFileName"]
         shell:
             '''
                 if [[ {params.paired_end} ]]; then

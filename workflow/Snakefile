@@ -1,11 +1,11 @@
 import sys
+
 sys.path.append("workflow/scripts")
-import os
-from sampleFileScripts import getAllSampleFilePaths, getFileNames
-from setModuleOptions import setModuleOptions
+from sample_file_scripts import get_all_sample_file_paths, get_file_names
+from set_module_options import set_module_options
 
 configfile: "config/config.yml"
-setModuleOptions(config)
+set_module_options(config)
 
 module utils:
     snakefile: "rules/utils.smk"
@@ -41,19 +41,20 @@ use rule * from peakCallingWorkflow as peak_calling_*
 
 rule downloadSamples:
     input:
-        *getAllSampleFilePaths(config)
+        *get_all_sample_file_paths(config)
 
 trimmer = config["trimmer"]
 rule trim:
     input:
-        [*map(lambda fileName: f"results/{trimmer}/{fileName}", getAllSampleFilePaths(config, includeDirectories=False))],
-        [*map(lambda fileName: f"results/fastqc/{trimmer}/{fileName[:-8]}_1_fastqc.html", getAllSampleFilePaths(config, includeDirectories=False))]
+        [*map(lambda file_name: f"results/{trimmer}/{file_name}", get_all_sample_file_paths(config, include_directories=False))],
+        [*map(lambda file_name: f"results/fastqc/{trimmer}/{file_name[:-8]}_1_fastqc.html", get_all_sample_file_paths(config, include_directories=False))]
 
 aligner = config["aligner"]
 rule align:
     input:
-        [*map(lambda fileName: f"results/{aligner}/{fileName[:-8]}.bam", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
+        [*map(lambda file_name: f"results/{aligner}/{file_name[:-8]}.bam", get_all_sample_file_paths(config, include_directories=False)[::2])]
 
 rule test:
     input:
-        [*map(lambda fileName: f"results/macs2-filterdup/{fileName[:-8]}.bed", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
+        [*map(lambda file_name: f"results/picard-MarkDuplicates/{file_name[:-8]}.bam",get_all_sample_file_paths(config, include_directories=False)[::2])],
+        [*map(lambda file_name: f"results/samtools-index/{file_name[:-8]}.bam.bai",get_all_sample_file_paths(config,include_directories=False)[::2])]

@@ -1,6 +1,6 @@
 import re
 
-def setModuleOptions(config: dict) -> None:
+def set_module_options(config: dict) -> None:
     '''
         Reads config["modules"] and overwrites the default values.
         Optimally specified when running snakemake through CLI 
@@ -11,24 +11,24 @@ def setModuleOptions(config: dict) -> None:
     pattern = re.compile(r"(?i)\B--[a-z]*\s|\B-[a-z]\s")
     flags = pattern.findall(config["modules"])
     for i in range(len(flags)):
-        argumentStart = re.search(flags[i], config["modules"]).end()
-        argumentEnd = len(config["modules"]) if i == len(flags) - 1 else re.search(flags[i + 1], config["modules"]).start()
-        argument = config["modules"][argumentStart: argumentEnd]
+        argument_start = re.search(flags[i], config["modules"]).end()
+        argument_end = len(config["modules"]) if i == len(flags) - 1 else re.search(flags[i + 1], config["modules"]).start()
+        argument = config["modules"][argument_start: argument_end]
         match flags[i].rstrip():
             case "-t":
-                __setConfigOption(config, "trimmer", argument)
+                __set_config_option(config, "trimmer", argument)
             case "--trim":
-                __setConfigOption(config, "trimmer", argument)
+                __set_config_option(config, "trimmer", argument)
             case "-a":
-                __setConfigOption(config, "aligner", argument)
+                __set_config_option(config, "aligner", argument)
             case "--align":
-                __setConfigOption(config, "aligner", argument)
+                __set_config_option(config, "aligner", argument)
             case "-g":
-                __setConfigOption(config, "genome", argument)
+                __set_config_option(config, "genome", argument)
             case "--genome":
-                __setConfigOption(config, "genome", argument)
+                __set_config_option(config, "genome", argument)
             case _:
                 raise NotImplementedError(f"{flags[i]} flag is not supported")
 
-def __setConfigOption(config:dict, option: str, value: str) -> None:
+def __set_config_option(config:dict, option: str, value: str) -> None:
     config[option] = value.rstrip().lstrip()

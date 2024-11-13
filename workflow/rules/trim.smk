@@ -1,41 +1,45 @@
 import sys
 sys.path.append("workflow/scripts")
-from getFileNames import getFileNames 
+
+def get_trim_input(sample: str, path: str, ext: str, config: dict) -> list[str]:
+    samples = [f"{path}/{sample}_1.{ext}"]
+    if config["paired_end"]: samples.append(f"resources/reads/{sample}_2.{ext}")
+    return samples
 
 OUTPUTDIRS = {"trimgalore": "results/trim_galore", "cutadapt": "results/cutadapt", "fastp": "results/fastp"}
 
 rule trimgalore:
     input:
-        lambda wildcards: getFileNames(wildcards.sample, "resources/reads", "fastq", config)
+        lambda wildcards: get_trim_input(wildcards.sample,"resources/reads","fastq", config)
     output:
-        out1 = f"{OUTPUTDIRS["trimgalore"]}/{{sample}}_1.fastq",
-        out2 = f"{OUTPUTDIRS["trimgalore"]}/{{sample}}_2.fastq" if config["paired_end"] else []
+        out1 = f"{OUTPUTDIRS['trimgalore']}/{{sample}}_1.fastq",
+        out2 = f"{OUTPUTDIRS['trimgalore']}/{{sample}}_2.fastq" if config["paired_end"] else []
         #out = getFileNames("wildcards.sample", "results/trim_galore", "fastq", config)
     conda:
         "../envs/trim.yml"
     params:
         name = f"{{sample}}",
         args = config["trimgalore"]["args"],
-        outputdir = OUTPUTDIRS["trimgalore"],
+        output_dir = OUTPUTDIRS["trimgalore"],
         paired_end = config["paired_end"]
     shell:
         """
         if [[ {params.paired_end} ]]; then
-            trim_galore --paired --no_report_file -o {params.outputdir} --basename {params.name} {params.args} {input}
-            mv {params.outputdir}/{wildcards.sample}_val_1.fq {output.out1} 
-            mv {params.outputdir}/{wildcards.sample}_val_2.fq {output.out2}
+            trim_galore --paired --no_report_file -o {params.output_dir} --basename {params.name} {params.args} {input}
+            mv {params.output_dir}/{wildcards.sample}_val_1.fq {output.out1} 
+            mv {params.output_dir}/{wildcards.sample}_val_2.fq {output.out2}
         else
-            trim_galore --no_report_file -o {params.outputdir} --basename {params.name} {params.args} {input}
-            mv {params.outputdir}/{wildcards.sample}_val_1.fq {output.out1} 
+            trim_galore --no_report_file -o {params.output_dir} --basename {params.name} {params.args} {input}
+            mv {params.output_dir}/{wildcards.sample}_val_1.fq {output.out1} 
         fi
         """
 
 rule cutadapt:
     input:
-        lambda wildcards: getFileNames(wildcards.sample, "resources/reads", "fastq", config)
+        lambda wildcards: get_trim_input(wildcards.sample,"resources/reads","fastq", config)
     output:
-        out1 = f"{OUTPUTDIRS["cutadapt"]}/{{sample}}_1.fastq",
-        out2 = f"{OUTPUTDIRS["cutadapt"]}/{{sample}}_2.fastq" if config["paired_end"] else []
+        out1 = f"{OUTPUTDIRS['cutadapt']}/{{sample}}_1.fastq",
+        out2 = f"{OUTPUTDIRS['cutadapt']}/{{sample}}_2.fastq" if config["paired_end"] else []
     conda:
         "../envs/cutadapt.yml"
     params:
@@ -52,15 +56,15 @@ rule cutadapt:
 
 rule fastp:
     input:
-        samples = lambda wildcards: getFileNames(wildcards.sample, "resources/reads", "fastq", config)
+        samples = lambda wildcards: get_trim_input(wildcards.sample,"resources/reads","fastq", config)
     output:
-        out1 = f"{OUTPUTDIRS["fastp"]}/{{sample}}_1.fastq",
-        out2 = f"{OUTPUTDIRS["fastp"]}/{{sample}}_2.fastq" if config["paired_end"] else []
+        out1 = f"{OUTPUTDIRS['fastp']}/{{sample}}_1.fastq",
+        out2 = f"{OUTPUTDIRS['fastp']}/{{sample}}_2.fastq" if config["paired_end"] else []
     conda:
         "../envs/trim.yml"
     params:
         args = config["fastp"]["args"],
-        paired_end = config["paired_end"],
+        paired_end = config["paired_end"]
     shell:
         '''
         if [[ {params.paired_end} ]]; then
