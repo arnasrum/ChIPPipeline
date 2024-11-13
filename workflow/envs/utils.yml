@@ -5,3 +5,5 @@ channels:
   - conda-forge
 dependencies:
   - samtools==1.19.2
+  - picard==3.3.0-0
+  - gzip=1.13
