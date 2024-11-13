@@ -7,3 +7,4 @@ dependencies:
   - bwa==0.7.18
   - bowtie2==2.5.4
   - star==2.7.11b
+  - samtools==1.21

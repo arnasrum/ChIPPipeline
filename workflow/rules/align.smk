@@ -3,15 +3,15 @@ aligner = config["aligner"]
 
 
 def alignment_input(sample: str) -> list[str]:
-    reads = [f"results/{config["trimmer"]}/{sample}_1.fastq"]
+    reads = [f"results/{config['trimmer']}/{sample}_1.fastq"]
     if config["paired_end"]:
-        reads.append(f"results/{config["trimmer"]}/{sample}_2.fastq") 
+        reads.append(f"results/{config['trimmer']}/{sample}_2.fastq")
     return reads
 
 
 rule buildBowtie2Index:
     input:
-        f"resources/genomes/{config["genome"]}.fa.gz"
+        f"resources/genomes/{config['genome']}.fa.gz"
     output:
         expand("results/bowtie2-build/{genome}.{extension}", 
             extension=["1.bt2", "2.bt2", "3.bt2", "4.bt2"], 
@@ -53,12 +53,12 @@ rule bowtie2:
             echo 'single_end'
             inputOptions='-1 {input.reads[0]}'
         fi
-        bowtie2 -x results/bowtie2-build/{params.genome} ${{inputOptions}} -S {wildcards.sample}.sam {params.args} {params.extra} | samtools sort -o {output}
+        bowtie2 -x results/bowtie2-build/{params.genome} ${{inputOptions}} {params.args} {params.extra} | samtools sort -o {output}
         '''
 
 rule buildBWAIndex:
     input:
-        f"resources/genomes/{config["genome"]}.fa.gz"
+        f"resources/genomes/{config['genome']}.fa.gz"
     output: 
         expand("results/bwa-index/{genome}.{ext}", 
             genome=config["genome"], 
@@ -87,21 +87,22 @@ rule bwa:
     conda:
         "../envs/align.yml"
     params:
+        genome = config["genome"],
         args = config["bwa"]["args"],
         extra = config["bwa"]["extra"]
     shell:
         """
-        bwa mem {params.args} {params.extra} results/bwa-index/mm40 {input.reads} | samtools sort -o {output}
+        bwa mem {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools sort -o {output}
         """
 
 
 rule buildStarIndex:
     input:
-        f"resources/genomes/{config["genome"]}.fa"
+        f"resources/genomes/{config['genome']}.fa"
     output:
         expand("results/star-index/SA{index}", index=["", "index"])
     params:
-        pathToGenome = f"resources/genomes/{config["genome"]}.fa",
+        pathToGenome = f"resources/genomes/{config['genome']}.fa",
         args = config["STAR"]["args"]
     conda:
         "../envs/align.yml"
@@ -128,23 +129,6 @@ rule STAR:
         extra = config["STAR"]["extra"]
     shell:
         """
-        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample} --readFilesIn {input.reads} {params.args} {params.extra} | samtools -o {output}
+        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample}.sam --readFilesIn {input.reads} {params.args} {params.extra} | samtools -o {output}
         #mv results/STAR/{wildcards.sample}Aligned.out.sam results/STAR/{wildcards.sample}.sam
         """
-
-rule filterReads:
-    input:
-        f"results/{config["aligner"]}/{{id}}.sam"
-    output:
-        f"results/samtools/{{id}}_filtered.bam"
-    params:
-        args = config["samtools"],
-        aligner = config["aligner"]
-    shell:
-        '''
-        if [ ! -d "results/samtools" ]
-        then
-            mkdir "results/samtools"
-        fi
-        samtools view {params.args} -b -o {output} {input} 
-        '''
