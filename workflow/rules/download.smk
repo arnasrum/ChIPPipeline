@@ -1,7 +1,5 @@
 import sys
-import pandas as pd
-import numpy as np
-from sampleFileScripts import makeSampleInfo 
+from sampleFileScripts import makeSampleInfo
 sys.path.append("workflow/scripts")
 
 fileInfo = makeSampleInfo()
@@ -16,6 +14,8 @@ for srr in [run for value in fileInfo["public"].values() for run in value["runs"
         output:
             temp(f"resources/reads/{srr}_1.fastq"),
             temp(f"resources/reads/{srr}_2.fastq")
+        conda:
+            "../envs/download.yml"
         params:
             srr = srr
         shell:
