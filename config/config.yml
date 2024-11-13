@@ -18,7 +18,7 @@ bowtie2:
 bowtie2-build:
   args: ""
 bwa:
-  args: ""
+  args: "-Y"
   extra: ""
 bwa-index:
   args: ""

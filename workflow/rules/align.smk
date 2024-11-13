@@ -1,6 +1,3 @@
-trimmer = config["trimmer"]
-aligner = config["aligner"]
-
 
 def alignment_input(sample: str) -> list[str]:
     reads = [f"results/{config['trimmer']}/{sample}_1.fastq"]
