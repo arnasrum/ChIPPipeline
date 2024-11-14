@@ -39,12 +39,14 @@ rule picardMarkDuplicates:
     input:
         f"results/{config['aligner']}/{{sample}}.bam",
         f"resources/genomes/{config['genome']}.dict",
-        f"resources/genomes/{config['genome']}.fa"
+        f"resources/genomes/{config['genome']}.fa",
+        "resources/samtools-index/{sample}.bam.bai"
     output:
         temp("temp/{sample}_unmapped.sam"),
         temp("temp/{sample}_merged.bam"),
         "results/picard-MarkDuplicates/{sample}.metrics.txt",
         "results/picard-MarkDuplicates/{sample}.bam",
+        "results/picard-MarkDuplicates/{sample}.bam.bai"
     params:
         paired_end = config['paired_end'],
         genome = config['genome'],
@@ -62,4 +64,5 @@ rule picardMarkDuplicates:
         picard MergeBamAlignment -ALIGNED results/{params.aligner}/{wildcards.sample}.bam -UNMAPPED temp/{wildcards.sample}_unmapped.sam -O temp/{wildcards.sample}_merged.bam -R resources/genomes/{params.genome}.fa
         mkdir -p results/picard-MarkDuplicates
         picard MarkDuplicates -I temp/{wildcards.sample}_merged.bam -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt
+        cp results/samtools-index/{wildcards.sample}.bam.bai results/picard-MarkDuplicates/{wildcards.sample}.bam.bai
         """
