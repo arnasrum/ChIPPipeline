@@ -2,7 +2,6 @@ fasterq-dump:
   downloadPath: "resources/reads"
   args: ""
 
-
 # Trimmer config
 trimgalore:
   args: ""
@@ -12,6 +11,7 @@ fastp:
   args: ""
 trimmer: "trim_galore"
 
+# Aligner config
 bowtie2:
   args: ""
   extra: ""
@@ -27,13 +27,14 @@ STAR:
   threads: 8
   args: ""
 
+# Peak calling config
 macs3:
   args: ""
 
-aligner: "bowtie2"
-bowtie2_options: ""
-paired_end: true 
-providedFileExtension: "fastq"
-genome: "mm39"
+# Workflow config
 modules: ""
+duplicate: "picard-MarkDuplicates"
+aligner: "bowtie2"
+genome: "mm39"
+paired_end: true
 samtools: "-f 4"
