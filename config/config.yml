@@ -26,15 +26,14 @@ STAR:
   extra: ""
   threads: 8
   args: ""
+
+macs3:
+  args: ""
+
 aligner: "bowtie2"
 bowtie2_options: ""
 paired_end: true 
 providedFileExtension: "fastq"
-
 genome: "mm39"
-
-path_to_reads: ""
-
-samtools: "-f 4"
-
 modules: ""
+samtools: "-f 4"
