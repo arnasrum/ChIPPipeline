@@ -151,12 +151,32 @@ def __poll_request(url: str) -> Response:
         print("Retrying")
     return response
 
-
-
 def __make_clean_file_name(title: str) -> str:
     for old, new in [(" ", ""), (":", "_"), ("+", "_"), (",", "_"), (";", "_")]:
         title = title.replace(old, new)
     return title
 
+def get_macs_input():
+    with open("config/samples.json") as file:
+        macs_input = {}; samples = json.load(file)
+        for _, sample in __flatten_dict(samples).items():
+            if not (sample["sample"], sample["replicate"]) in macs_input:
+                macs_input[(sample["sample"], sample["replicate"])] = {"treatment": [], "control": []}
+            #macs_input[(sample["sample"], sample["replicate"])]
+            if sample["type"] == "chip":
+                macs_input[(sample["sample"], sample["replicate"])]["treatment"].append(sample["cleanFileName"])
+            elif sample["type"] == "input":
+                macs_input[(sample["sample"], sample["replicate"])]["control"].append(sample["cleanFileName"])
+    # Checks if a control sample has a treatment pair, if not ignores them
+    macs_input = {key: value for key, value in macs_input.items() if value["treatment"] and value["control"]}
+    return macs_input
+
+def __flatten_dict(old_dict: dict) -> dict:
+    new_dict = {}
+    for key, value in old_dict.items():
+        new_dict = new_dict | value
+    return new_dict
+
 if __name__ == "__main__":
-    make_sample_info()
+    #make_sample_info()
+    get_macs_input()

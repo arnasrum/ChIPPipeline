@@ -28,7 +28,7 @@ module alignmentWorkflow:
     config: config
 
 module peakCallingWorkflow:
-    snakefile: "rules/peakCalling.smk"
+    snakefile: "rules/peak_calling.smk"
     config: config
 
 
@@ -58,3 +58,7 @@ rule test:
     input:
         [*map(lambda file_name: f"results/picard-MarkDuplicates/{file_name[:-8]}.bam",get_all_sample_file_paths(config, include_directories=False)[::2])],
         [*map(lambda file_name: f"results/samtools-index/{file_name[:-8]}.bam.bai",get_all_sample_file_paths(config,include_directories=False)[::2])]
+
+rule macs:
+    input:
+        f"results/macs3/8cell_rep1_model.r"
