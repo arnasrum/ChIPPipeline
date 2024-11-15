@@ -1,3 +1,4 @@
-sample,type,replicate,accession
-8cell,chip,1,data/GSM1871972.fastq
-8cell,chip,2,data/GSM1871973.fastq
+mark,sample,type,replicate,accession
+H3K4me3,8cell,chip,1,data/GSM1871972.fastq
+H3K4me3,8cell,chip,2,data/GSM1871973.fastq
+-,8cell,input,1,data/GSM1871976.fastq

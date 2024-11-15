@@ -21,7 +21,7 @@ def make_sample_info(sample_sheet:str= "config/samples.csv") -> dict[str:dict]:
     sample_info: dict = {"public": {}, "provided": {}}
     with open(sample_sheet, "r") as file:
         for index, row in pd.read_csv(file).iterrows():
-            for sample in row.values[3:]:
+            for sample in row.values[4:]:
                 if pattern.match(sample):
                     availability_type = "public"
                     geo_accessions.add(sample)
@@ -39,6 +39,7 @@ def make_sample_info(sample_sheet:str= "config/samples.csv") -> dict[str:dict]:
                 sample_info[availability_type][sample]["type"] = row["type"]
                 sample_info[availability_type][sample]["sample"] = row["sample"]
                 sample_info[availability_type][sample]["replicate"] = row["replicate"]
+                sample_info[availability_type][sample]["mark"] = row["mark"]
 
 
     # Handle publicly available files
@@ -159,14 +160,18 @@ def __make_clean_file_name(title: str) -> str:
 def get_macs_input():
     with open("config/samples.json") as file:
         macs_input = {}; samples = json.load(file)
+        control_files: list[(str, str)] = []
         for _, sample in __flatten_dict(samples).items():
-            if not (sample["sample"], sample["replicate"]) in macs_input:
-                macs_input[(sample["sample"], sample["replicate"])] = {"treatment": [], "control": []}
-            #macs_input[(sample["sample"], sample["replicate"])]
+            name = f"{sample['mark']}_{sample['sample']}_rep{sample['replicate']}"
+            if not sample['type'] == "input" and not name in macs_input:
+                macs_input[name] = {"treatment": [], "control": []}
             if sample["type"] == "chip":
-                macs_input[(sample["sample"], sample["replicate"])]["treatment"].append(sample["cleanFileName"])
+                macs_input[name]["treatment"].append(sample["cleanFileName"])
             elif sample["type"] == "input":
-                macs_input[(sample["sample"], sample["replicate"])]["control"].append(sample["cleanFileName"])
+                control_files.append((name[2:], sample["cleanFileName"]))
+    for name, file in control_files:
+        for treatment_file in filter(lambda treatment_file: name in treatment_file, macs_input.keys()):
+            macs_input[treatment_file]["control"].append(file)
     # Checks if a control sample has a treatment pair, if not ignores them
     macs_input = {key: value for key, value in macs_input.items() if value["treatment"] and value["control"]}
     return macs_input

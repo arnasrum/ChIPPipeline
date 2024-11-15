@@ -61,4 +61,4 @@ rule test:
 
 rule macs:
     input:
-        f"results/macs3/8cell_rep1_model.r"
+        f"results/macs3/H3K4me3_8cell_rep1_model.r"
