@@ -30,6 +30,8 @@ rule picardCreateGenomeSequenceDictionary:
         "resources/genomes/{genome}.fa"
     output:
         "resources/genomes/{genome}.dict"
+    conda:
+        "../envs/utils.yml"
     shell:
         "picard CreateSequenceDictionary -R resources/genomes/{wildcards.genome}.fa -O resources/genomes/{wildcards.genome}.dict"
 
@@ -40,7 +42,7 @@ rule picardMarkDuplicates:
         f"results/{config['aligner']}/{{sample}}.bam",
         f"resources/genomes/{config['genome']}.dict",
         f"resources/genomes/{config['genome']}.fa",
-        "resources/samtools-index/{sample}.bam.bai"
+        "results/samtools-index/{sample}.bam.bai"
     output:
         temp("temp/{sample}_unmapped.sam"),
         temp("temp/{sample}_merged.bam"),
