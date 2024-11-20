@@ -1,7 +1,7 @@
 name download:
 channels:
-  - defaults
-  - bioconda
   - conda-forge
+  - bioconda
+  - defaults
 dependencies:
   - sra-tools==3.1.1

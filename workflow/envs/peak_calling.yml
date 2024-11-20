@@ -1,7 +1,8 @@
 name peak_calling:
 channels:
-  - defaults
-  - bioconda
   - conda-forge
+  - bioconda
+  - defaults
 dependencies:
-  - macs3==3.0.2
+  - macs3=3.0.2
+  - deeptools=3.5.5

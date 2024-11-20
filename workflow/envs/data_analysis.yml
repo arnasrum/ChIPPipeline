@@ -1,0 +1,7 @@
+name data_analysis:
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - deeptools=3.5.5
