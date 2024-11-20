@@ -21,7 +21,7 @@ def make_sample_info(sample_sheet:str= "config/samples.csv") -> dict[str:dict]:
     sample_info: dict = {"public": {}, "provided": {}}
     with open(sample_sheet, "r") as file:
         for index, row in pd.read_csv(file).iterrows():
-            for sample in row.values[4:]:
+            for sample in row.values[5:]:
                 if pattern.match(sample):
                     availability_type = "public"
                     geo_accessions.add(sample)
@@ -40,6 +40,7 @@ def make_sample_info(sample_sheet:str= "config/samples.csv") -> dict[str:dict]:
                 sample_info[availability_type][sample]["sample"] = row["sample"]
                 sample_info[availability_type][sample]["replicate"] = row["replicate"]
                 sample_info[availability_type][sample]["mark"] = row["mark"]
+                sample_info[availability_type][sample]["peak_type"] = row["peak_type"]
 
 
     # Handle publicly available files
@@ -165,9 +166,13 @@ def get_macs_input():
             name = f"{sample['mark']}_{sample['sample']}_rep{sample['replicate']}"
             if not sample['type'] == "input" and not name in macs_input:
                 macs_input[name] = {"treatment": [], "control": []}
-            if sample["type"] == "chip":
+            if sample["type"] == "treatment":
                 macs_input[name]["treatment"].append(sample["cleanFileName"])
-            elif sample["type"] == "input":
+                if not "peak_type" in macs_input[name]:
+                    macs_input[name]["peak_type"] = sample["peak_type"]
+                elif macs_input[name]["peak_type"] != sample["peak_type"]:
+                    raise Exception("Mismatch between treatment sample peak types. Please check the sample sheet")
+            elif sample["type"] == "control":
                 control_files.append((name[2:], sample["cleanFileName"]))
     for name, file in control_files:
         for treatment_file in filter(lambda treatment_file: name in treatment_file, macs_input.keys()):
