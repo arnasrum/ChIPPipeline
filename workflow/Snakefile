@@ -31,6 +31,9 @@ module peakCallingWorkflow:
     snakefile: "rules/peak_calling.smk"
     config: config
 
+module data_analysis:
+    snakefile: "rules/data_analysis.smk"
+    config: config
 
 use rule * from utils
 use rule * from QA as qa_*
@@ -38,6 +41,7 @@ use rule * from downloadWorkflow as download_*
 use rule * from trimWorkflow as trim_*
 use rule * from alignmentWorkflow as align_*
 use rule * from peakCallingWorkflow as peak_calling_*
+use rule * from data_analysis as data_analysis_*
 
 rule downloadSamples:
     input:
@@ -61,4 +65,5 @@ rule test:
 
 rule macs:
     input:
-        f"results/macs3/H3K4me3_8cell_rep1_model.r"
+        f"results/macs3/H3K4me3_8cell_rep1_model.r",
+        [*map(lambda file_name: f"results/deeptools/{file_name[:-8]}.bw",get_all_sample_file_paths(config,include_directories=False)[::2])]
