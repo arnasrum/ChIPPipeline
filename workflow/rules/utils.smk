@@ -12,9 +12,9 @@ rule unzip:
 
 rule indexBam:
     input:
-        f"results/{config['aligner']}/{{sample}}.bam"
+        "{sample}.bam"
     output:
-        "results/samtools-index/{sample}.bam.bai"
+        "{sample}.bam.bai"
     threads:
         2
     conda:
@@ -46,13 +46,12 @@ rule picardMarkDuplicates:
     output:
         temp("temp/{sample}_unmapped.sam"),
         temp("temp/{sample}_merged.bam"),
-        "results/picard-MarkDuplicates/{sample}.metrics.txt",
-        "results/picard-MarkDuplicates/{sample}.bam",
-        "results/picard-MarkDuplicates/{sample}.bam.bai"
+        multiext("results/picard-MarkDuplicates/{sample}", ".metrics.txt", ".bam", ".bam.bai")
     params:
         paired_end = config['paired_end'],
         genome = config['genome'],
-        aligner = config['aligner']
+        aligner = config['aligner'],
+        args = config['MarkDuplicates']['args']
     conda:
         "../envs/utils.yml"
     shell:
@@ -65,6 +64,6 @@ rule picardMarkDuplicates:
         picard FastqToSam ${{inputOptions}} -O temp/{wildcards.sample}_unmapped.sam -SAMPLE_NAME {wildcards.sample} 
         picard MergeBamAlignment -ALIGNED results/{params.aligner}/{wildcards.sample}.bam -UNMAPPED temp/{wildcards.sample}_unmapped.sam -O temp/{wildcards.sample}_merged.bam -R resources/genomes/{params.genome}.fa
         mkdir -p results/picard-MarkDuplicates
-        picard MarkDuplicates -I temp/{wildcards.sample}_merged.bam -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt
+        picard MarkDuplicates -I temp/{wildcards.sample}_merged.bam -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt {params.args}
         cp results/samtools-index/{wildcards.sample}.bam.bai results/picard-MarkDuplicates/{wildcards.sample}.bam.bai
         """
