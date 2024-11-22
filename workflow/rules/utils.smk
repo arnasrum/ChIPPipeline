@@ -41,7 +41,7 @@ rule picard_MarkDuplicates:
         aligned = f"results/{config['aligner']}/{{sample}}.bam",
         aligned_index= "results/picard-MarkDuplicates/{sample}.bam.bai",
     output:
-        sorted = temp("temp/{sample}_sorted"),
+        sorted = temp("temp/{sample}_sorted.bam"),
         marked = multiext("results/picard-MarkDuplicates/{sample}", ".metrics.txt", ".bam"),
     params:
         paired_end = config['paired_end'],

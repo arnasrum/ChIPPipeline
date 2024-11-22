@@ -70,5 +70,5 @@ rule macs:
 
 rule deeptools:
     input:
-        [*map(lambda name: f"results/deeptools/{name}_heatmap.png", get_macs_input().keys())]
+        [*map(lambda name: f"results/deeptools/{name}_heatmap.png", get_macs_input().keys())],
         [*map(lambda name: f"results/deeptools/{name}_profile.png",get_macs_input().keys())]
