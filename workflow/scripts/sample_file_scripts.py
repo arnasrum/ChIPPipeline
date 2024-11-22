@@ -158,7 +158,7 @@ def __make_clean_file_name(title: str) -> str:
         title = title.replace(old, new)
     return title
 
-def get_macs_input():
+def get_macs_input() -> dict[str: dict]:
     with open("config/samples.json") as file:
         macs_input = {}; samples = json.load(file)
         control_files: list[(str, str)] = []
@@ -167,11 +167,12 @@ def get_macs_input():
             if not sample['type'] == "input" and not name in macs_input:
                 macs_input[name] = {"treatment": [], "control": []}
             if sample["type"] == "treatment":
-                macs_input[name]["treatment"].append(sample["cleanFileName"])
+                # Check if grouped treatment files have the same peak type in the sample sheet
                 if not "peak_type" in macs_input[name]:
                     macs_input[name]["peak_type"] = sample["peak_type"]
                 elif macs_input[name]["peak_type"] != sample["peak_type"]:
                     raise Exception("Mismatch between treatment sample peak types. Please check the sample sheet")
+                macs_input[name]["treatment"].append(sample["cleanFileName"])
             elif sample["type"] == "control":
                 control_files.append((name[2:], sample["cleanFileName"]))
     for name, file in control_files:
