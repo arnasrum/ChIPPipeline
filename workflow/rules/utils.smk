@@ -1,4 +1,3 @@
-
 rule unzip:
     input:
         "{file}.fa.gz"
@@ -10,7 +9,7 @@ rule unzip:
         "gzip -dk {input} -f"
 
 
-rule indexBam:
+rule samtools_index:
     input:
         "{sample}.bam"
     output:
@@ -37,16 +36,13 @@ rule picardCreateGenomeSequenceDictionary:
 
 
 
-rule picardMarkDuplicates:
+rule picard_MarkDuplicates:
     input:
-        f"results/{config['aligner']}/{{sample}}.bam",
-        f"resources/genomes/{config['genome']}.dict",
-        f"resources/genomes/{config['genome']}.fa",
-        "results/samtools-index/{sample}.bam.bai"
+        aligned = f"results/{config['aligner']}/{{sample}}.bam",
+        aligned_index= "results/picard-MarkDuplicates/{sample}.bam.bai",
     output:
-        temp("temp/{sample}_unmapped.sam"),
-        temp("temp/{sample}_merged.bam"),
-        multiext("results/picard-MarkDuplicates/{sample}", ".metrics.txt", ".bam", ".bam.bai")
+        sorted = temp("temp/{sample}_sorted"),
+        marked = multiext("results/picard-MarkDuplicates/{sample}", ".metrics.txt", ".bam"),
     params:
         paired_end = config['paired_end'],
         genome = config['genome'],
@@ -56,14 +52,23 @@ rule picardMarkDuplicates:
         "../envs/utils.yml"
     shell:
         """
-        inputOptions='-F1 resources/reads/{wildcards.sample}_1.fastq'
-        if [[ {params.paired_end} ]]; then
-            inputOptions+=' -F2 resources/reads/{wildcards.sample}_2.fastq'
-        fi 
-        mkdir -p temp 
-        picard FastqToSam ${{inputOptions}} -O temp/{wildcards.sample}_unmapped.sam -SAMPLE_NAME {wildcards.sample} 
-        picard MergeBamAlignment -ALIGNED results/{params.aligner}/{wildcards.sample}.bam -UNMAPPED temp/{wildcards.sample}_unmapped.sam -O temp/{wildcards.sample}_merged.bam -R resources/genomes/{params.genome}.fa
-        mkdir -p results/picard-MarkDuplicates
-        picard MarkDuplicates -I temp/{wildcards.sample}_merged.bam -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt {params.args}
-        cp results/samtools-index/{wildcards.sample}.bam.bai results/picard-MarkDuplicates/{wildcards.sample}.bam.bai
+        picard SortSam -I {input.aligned}  -O {output.sorted} --SO coordinate
+        picard MarkDuplicates -I {output.sorted} -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt {params.args}
+        """
+
+rule samtools_markdup:
+    input:
+        f"results/{config['aligner']}/{{sample}}.bam"
+    output:
+        "results/samtools-markdup/{sample}.bam"
+    conda:
+        "../envs/utils.yml"
+    params:
+        args = config['markdup']['args']
+    threads:
+        min(workflow.threads, workflow.cores)
+    shell:
+        """
+        mkdir -p results/samtools-markdup
+        samtools collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup {params.args} -@ {threads} - {output}
         """

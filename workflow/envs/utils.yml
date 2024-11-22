@@ -5,6 +5,6 @@ channels:
   - defaults
 dependencies:
   - samtools=1.19.2
-  - picard=3.3.0-0
+  - picard=2.27.5-0
   - gzip=1.13
   - bedtools=2.31.1
