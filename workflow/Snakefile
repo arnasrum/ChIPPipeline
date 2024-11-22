@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("workflow/scripts")
-from sample_file_scripts import get_all_sample_file_paths, get_file_names
+from sample_file_scripts import get_all_sample_file_paths, get_file_names, get_macs_input
 from set_module_options import set_module_options
 
 configfile: "config/config.yml"
@@ -58,7 +58,7 @@ rule align:
     input:
         [*map(lambda file_name: f"results/{aligner}/{file_name[:-8]}.bam", get_all_sample_file_paths(config, include_directories=False)[::2])]
 
-rule test:
+rule pre_preprocessing:
     input:
         [*map(lambda file_name: f"results/picard-MarkDuplicates/{file_name[:-8]}.bam",get_all_sample_file_paths(config, include_directories=False)[::2])],
         [*map(lambda file_name: f"results/samtools-index/{file_name[:-8]}.bam.bai",get_all_sample_file_paths(config,include_directories=False)[::2])]
@@ -67,3 +67,8 @@ rule macs:
     input:
         f"results/macs3/H3K4me3_8cell_rep1_peaks.xls",
         [*map(lambda file_name: f"results/deeptools/{file_name[:-8]}.bw",get_all_sample_file_paths(config,include_directories=False)[::2])]
+
+rule deeptools:
+    input:
+        [*map(lambda name: f"results/deeptools/{name}_heatmap.png", get_macs_input().keys())]
+        [*map(lambda name: f"results/deeptools/{name}_profile.png",get_macs_input().keys())]
