@@ -9,29 +9,35 @@ for key, value in get_macs_input().items():
             control = [*map(lambda file: f"results/{config['duplicate_processor']}/" + file + ".bam", value["control"])],
             treatment = [*map(lambda file: f"results/{config['duplicate_processor']}/" + file + ".bam",value["treatment"])],
         output:
-            multiext(f"results/macs3/{key}", "_peaks.xls", "_model.r", "_summits.bed", "_peaks.narrowPeak") if value["peak_type"]
-            else multiext(f"results/macs3/{key}", "_peaks.xls", "_model.r", "_gapped.bed", "_peaks.broadPeak")
+            multiext(f"results/macs3/{key}", "_peaks.xls", "_model.r", "_summits.bed", "_peaks.narrowPeak") if value["peak_type"] == "narrow"
+            else multiext(f"results/macs3/{key}_peaks", ".xls", ".broadPeak", ".gappedPeak")
 
         params:
             args = config["macs3"]["args"],
+            broad_peaks = value["peak_type"] == "broad",
             paired_end = config['paired_end'],
             name = key
         conda:
             "../envs/peak_calling.yml"
         shell:
             """
-            if [[ {params.paired_end} ]]; then
-                {params.args} += '-f BAMPE'
+            inputOptions=''
+            shopt -s nocasematch
+            if [[ {params.broad_peaks} =~ true ]]; then
+                inputOptions+='--broad '
+            fi 
+            if [[ {params.paired_end} =~ true ]]; then
+                inputOptions+='-f BAMPE '
             else
-                {params.args} += '-f BAM'
-            fi
-            macs3 callpeak -c {input.control} -t {input.treatment} --outdir results/macs3 --name {params.name} {params.args}
+                inputOptions+='-f BAM '
+            fi 
+            macs3 callpeak -c {input.control} -t {input.treatment} --outdir results/macs3 --name {params.name} {params.args} $inputOptions
             """
 
 rule deeptools_bamCoverage:
     input:
-        bam = f"results/{config['aligner']}/{{sample}}.bam",
-        bam_index = f"results/{config['aligner']}/{{sample}}.bam.bai"
+        bam = f"results/{config['duplicate_processor']}/{{sample}}.bam",
+        bam_index = f"results/{config['duplicate_processor']}/{{sample}}.bam.bai"
     output:
         "results/deeptools/{sample}.bw"
     conda:
@@ -40,3 +46,17 @@ rule deeptools_bamCoverage:
         """
         bamCoverage -b {input.bam} -o {output}
         """
+
+rule deeptools_computeMatrix:
+    input:
+        ""
+    output:
+        ""
+    conda:
+        "../envs/peak_calling.yml"
+    shell:
+        """
+        computeMatrix 
+        """
+
+
