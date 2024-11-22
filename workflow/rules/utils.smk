@@ -66,7 +66,7 @@ rule samtools_markdup:
     params:
         args = config['markdup']['args']
     threads:
-        min(workflow.threads, workflow.cores)
+        8
     shell:
         """
         mkdir -p results/samtools-markdup
