@@ -65,5 +65,5 @@ rule test:
 
 rule macs:
     input:
-        f"results/macs3/H3K4me3_8cell_rep1_model.r",
+        f"results/macs3/H3K4me3_8cell_rep1_peaks.xls",
         [*map(lambda file_name: f"results/deeptools/{file_name[:-8]}.bw",get_all_sample_file_paths(config,include_directories=False)[::2])]
