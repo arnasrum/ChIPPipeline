@@ -41,16 +41,14 @@ rule bowtie2:
         paired_end = config["paired_end"]
     shell:
         '''
-        pairedEnd="{params.paired_end}"
-        #if [[ "$pairedEnd" == 'true' ]]; then
-        if [[ {params.paired_end} ]]; then
+        shopt -s nocasematch
+        if [[ {params.paired_end} =~ true ]]; then
             inputOptions=''; i=1
             for file in {input.reads}; do inputOptions+="-$i $file "; i=$((i+1)); done
         else
-            echo 'single_end'
             inputOptions='-1 {input.reads[0]}'
         fi
-        bowtie2 -x results/bowtie2-build/{params.genome} ${{inputOptions}} {params.args} {params.extra} | samtools sort -o {output}
+        bowtie2 -x results/bowtie2-build/{params.genome} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
         '''
 
 rule buildBWAIndex:
@@ -89,7 +87,7 @@ rule bwa:
         extra = config["bwa"]["extra"]
     shell:
         """
-        bwa mem {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools sort -o {output}
+        bwa mem {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools view -b -o {output}
         """
 
 
@@ -126,6 +124,6 @@ rule STAR:
         extra = config["STAR"]["extra"]
     shell:
         """
-        STAR --runThreadN {threads} --genomeDir results/star-index --outFileNamePrefix results/STAR/{wildcards.sample}.sam --readFilesIn {input.reads} {params.args} {params.extra} | samtools -o {output}
+        STAR --readFilesType Fastx --runThreadN {threads} --genomeDir results/star-index --readFilesIn {input.reads} {params.args} {params.extra} | samtools view -b -o {output}
         #mv results/STAR/{wildcards.sample}Aligned.out.sam results/STAR/{wildcards.sample}.sam
         """
