@@ -166,13 +166,14 @@ def get_macs_input() -> dict[str: dict]:
     for entry in __flatten_dict(samples).values():
         if entry["type"] == "treatment":
             file_name = f"{entry['mark']}_{entry['sample']}"
+            replicate = str(entry["replicate"])
             if not file_name in macs_input: macs_input[file_name] = {}
-            if not entry['replicate'] in macs_input[file_name]:
-                macs_input[file_name][entry['replicate']] = {"treatment": [entry['cleanFileName']], "control": [], "peak_type": entry["peak_type"]}
+            if not replicate in macs_input[file_name]:
+                macs_input[file_name][replicate] = {"treatment": [entry['cleanFileName']], "control": [], "peak_type": entry["peak_type"]}
             else:
-                macs_input[file_name][entry['replicate']]["treatment"].append(entry['cleanFileName'])
+                macs_input[file_name][replicate]["treatment"].append(entry['cleanFileName'])
         elif entry["type"] == "control":
-            control_files.append((entry['sample'], entry['replicate'], entry['cleanFileName']))
+            control_files.append((entry['sample'], replicate, entry['cleanFileName']))
         else:
             raise Exception(f"Entry type unrecognized for {entry['cleanFileName']}")
     for control in control_files:

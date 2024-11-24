@@ -124,13 +124,14 @@ rule bedtools_intersect:
         bedtools interect -a {input.beds[0]} -b {input.beds[1]}
         '''
 
+"""
 rule plot_genome_track:
     input:
-        beds = lambda wildcards: get_compute_matrix_input(wildcards.sample)["beds"],
-        bigwigs = lambda wildcards: get_compute_matrix_input(wildcards.sample)["bigwigs"]
+        beds = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["beds"],
+        bigwigs = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["bigwigs"]
     output:
-        tracks = temp("results/pyGenomeTracks/{sample}_tracks.ini"),
-        plot = "results/pyGenomeTracks/{sample}.png"
+        tracks = temp("results/pyGenomeTracks/{sample}_rep{replicate}_tracks.ini"),
+        plot = "results/pyGenomeTracks/{sample}_rep{replicate}.png"
     params:
         region = "chr1:10,000,000-11,000,000"
     conda:
@@ -145,4 +146,3 @@ rule annotate_peaks:
         beds = lambda wildcards: get_compute_matrix_input(wildcards.sample)["beds"]
     output:
         "pea"
-"""

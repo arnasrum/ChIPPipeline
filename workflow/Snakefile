@@ -1,7 +1,5 @@
 import sys
 
-from workflow.rules.peak_calling import macs_input
-
 sys.path.append("workflow/scripts")
 from sample_file_scripts import get_all_sample_file_paths, get_file_names, get_macs_input
 from set_module_options import set_module_options
@@ -72,12 +70,16 @@ rule macs:
         [*map(lambda file_name: f"results/deeptools-bamCoverage/{file_name[:-8]}.bw",get_all_sample_file_paths(config,include_directories=False)[::2])]
 
 print(get_macs_input().keys())
-def get_macs_replicates(key):
+def get_deeptools_input():
     macs_input = get_macs_input()
-    return [f"{key}_rep{replicate}" for replicate in macs_input[key]]
+    input_files = []
+    for key, value in macs_input.items():
+        for replicate in value:
+            input_files.append(f"results/deeptools/{key}_rep{replicate}_heatmap.png")
+            input_files.append(f"results/deeptools/{key}_rep{replicate}_profile.png")
+            input_files.append(f"results/pyGenomeTracks/{key}_rep{replicate}.png")
+    return input_files
 
 rule deeptools:
     input:
-        [*map(lambda name: f"results/deeptools/{get_macs_replicates(name)}_heatmap.png", get_macs_input().keys())],
-        [*map(lambda name: f"results/deeptools/{get_macs_replicates(name)}_profile.png", get_macs_input().keys())],
-        [*map(lambda name: f"results/pyGenomeTracks/{get_macs_replicates(name)}.png",get_macs_input().keys())]
+        get_deeptools_input()
