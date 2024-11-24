@@ -12,7 +12,7 @@ fastp:
 
 # Aligner config
 bowtie2:
-  args: "--quiet"
+  args: "--quiet --very-fast"
   extra: ""
 bowtie2-build:
   args: "--quiet"
@@ -34,13 +34,16 @@ markdup:
 
 # Peak calling config
 macs3:
-  args: ""
+  args: "--nomodel -g hs --bdg"
+
+computeMatrix:
+  args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
 
 # Workflow config
 modules: ""
 trimmer: "trim_galore"
 aligner: "bowtie2"
-duplicate_processor: "picard-MarkDuplicates"
+duplicate_processor: "samtools-markdup"
 peak_caller: "macs3"
 genome: "mm39"
 paired_end: True

@@ -39,6 +39,8 @@ rule bowtie2:
         extra = config["bowtie2"]["extra"],
         genome = config["genome"],
         paired_end = config["paired_end"]
+    threads:
+        8
     shell:
         '''
         shopt -s nocasematch
@@ -48,7 +50,7 @@ rule bowtie2:
         else
             inputOptions='-1 {input.reads[0]}'
         fi
-        bowtie2 -x results/bowtie2-build/{params.genome} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
+        bowtie2 --mm --threads {threads} -x results/bowtie2-build/{params.genome} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
         '''
 
 rule buildBWAIndex:
