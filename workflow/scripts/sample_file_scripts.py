@@ -3,7 +3,6 @@ from xml.etree import ElementTree
 import pandas as pd
 import pathlib
 import json
-import math
 import time
 import os
 import re
@@ -67,9 +66,9 @@ def get_all_sample_file_paths(config: dict, include_directories=True) -> list[st
 
 
 def get_sra_accessions(geo_accessions: set[str]) -> dict[str:str]:
-    '''
-        Given a list of GEO accessions retrieve their related SRA accessions 
-    '''
+    """
+        Given a list of GEO accessions retrieve their related SRA accessions
+    """
     if len(geo_accessions) == 0: return dict()
     enterez_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term="
     enterez_url += "+OR+".join(geo_accessions)
@@ -94,14 +93,13 @@ def get_sra_accessions(geo_accessions: set[str]) -> dict[str:str]:
     return gsm_to_sra_map
 
 def get_meta_data(sra_accessions: list[str]) -> dict[str: dict]:
-    '''
-        Fetch metadata for SRA samples 
-    '''
+    """
+        Fetch metadata for SRA samples
+    """
     if len(sra_accessions) == 0:
         return dict()
     enterez_url: str = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id={','.join(sra_accessions)}"
     print(enterez_url)
-    #response: Response = get(enterez_url, timeout=REQUEST_TIMEOUT)
     response = __poll_request(enterez_url)
     root: ElementTree.Element = ElementTree.fromstring(response.content)
     meta_data: dict[str: dict] = {}
@@ -164,9 +162,9 @@ def get_macs_input() -> dict[str: dict]:
     macs_input = {}
     control_files: list[(str, int, str)] = []
     for entry in __flatten_dict(samples).values():
+        replicate = str(entry["replicate"])
         if entry["type"] == "treatment":
             file_name = f"{entry['mark']}_{entry['sample']}"
-            replicate = str(entry["replicate"])
             if not file_name in macs_input: macs_input[file_name] = {}
             if not replicate in macs_input[file_name]:
                 macs_input[file_name][replicate] = {"treatment": [entry['cleanFileName']], "control": [], "peak_type": entry["peak_type"]}
