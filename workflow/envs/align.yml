@@ -1,8 +1,8 @@
 name align:
 channels:
-  - defaults
-  - bioconda
   - conda-forge
+  - bioconda
+  - defaults
 dependencies:
   - bwa==0.7.18
   - bowtie2==2.5.4
