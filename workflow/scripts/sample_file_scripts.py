@@ -2,8 +2,9 @@ from requests import get, Response
 from xml.etree import ElementTree
 import pandas as pd
 import pathlib
-import time
 import json
+import math
+import time
 import os
 import re
 
@@ -20,7 +21,7 @@ def make_sample_info(sample_sheet:str= "config/samples.csv") -> dict[str:dict]:
     geo_accessions = set()
     sample_info: dict = {"public": {}, "provided": {}}
     with open(sample_sheet, "r") as file:
-        for index, row in pd.read_csv(file).iterrows():
+        for index, row in pd.read_csv(file, keep_default_na=False).iterrows():
             for sample in row.values[5:]:
                 if pattern.match(sample):
                     availability_type = "public"
@@ -159,27 +160,32 @@ def __make_clean_file_name(title: str) -> str:
     return title
 
 def get_macs_input() -> dict[str: dict]:
-    with open("config/samples.json") as file:
-        macs_input = {}; samples = json.load(file)
-        control_files: list[(str, str)] = []
-        for _, sample in __flatten_dict(samples).items():
-            name = f"{sample['mark']}_{sample['sample']}_rep{sample['replicate']}"
-            if not sample['type'] == "input" and not name in macs_input:
-                macs_input[name] = {"treatment": [], "control": []}
-            if sample["type"] == "treatment":
-                # Check if grouped treatment files have the same peak type in the sample sheet
-                if not "peak_type" in macs_input[name]:
-                    macs_input[name]["peak_type"] = sample["peak_type"]
-                elif macs_input[name]["peak_type"] != sample["peak_type"]:
-                    raise Exception("Mismatch between treatment sample peak types. Please check the sample sheet")
-                macs_input[name]["treatment"].append(sample["cleanFileName"])
-            elif sample["type"] == "control":
-                control_files.append((name[2:], sample["cleanFileName"]))
-    for name, file in control_files:
-        for treatment_file in filter(lambda treatment_file: name in treatment_file, macs_input.keys()):
-            macs_input[treatment_file]["control"].append(file)
-    # Checks if a control sample has a treatment pair, if not ignores them
-    macs_input = {key: value for key, value in macs_input.items() if value["treatment"] and value["control"]}
+    with open("config/samples.json") as file: samples = json.load(file)
+    macs_input = {}
+    control_files: list[(str, int, str)] = []
+    for entry in __flatten_dict(samples).values():
+        if entry["type"] == "treatment":
+            file_name = f"{entry['mark']}_{entry['sample']}"
+            if not file_name in macs_input: macs_input[file_name] = {}
+            if not entry['replicate'] in macs_input[file_name]:
+                macs_input[file_name][entry['replicate']] = {"treatment": [entry['cleanFileName']], "control": [], "peak_type": entry["peak_type"]}
+            else:
+                macs_input[file_name][entry['replicate']]["treatment"].append(entry['cleanFileName'])
+        elif entry["type"] == "control":
+            control_files.append((entry['sample'], entry['replicate'], entry['cleanFileName']))
+        else:
+            raise Exception(f"Entry type unrecognized for {entry['cleanFileName']}")
+    for control in control_files:
+        for file_name in filter(lambda file_name: control[0] in file_name, macs_input.keys()):
+            macs_input[file_name][control[1]]["control"].append(control[2])
+
+
+    invalid_input: list[(str, str)] = []
+    for file_name in macs_input:
+        for missing_pair_replicate in filter(lambda replicate: len(macs_input[file_name][replicate]["treatment"]) == 0 or len(macs_input[file_name][replicate]["control"]) == 0, macs_input[file_name].keys()):
+            invalid_input.append((file_name, missing_pair_replicate))
+    for file, replicate in invalid_input:
+        macs_input[file].pop(replicate)
     return macs_input
 
 def __flatten_dict(old_dict: dict) -> dict:
