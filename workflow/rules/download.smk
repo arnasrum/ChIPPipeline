@@ -27,7 +27,7 @@ for srr in [run for value in file_info["public"].values() for run in value["runs
 for gsm, values in file_info["public"].items():
     rule:
         name:
-            f"download_{gsm}"
+            f"concatenate_{gsm}"
         input:
             expand("resources/reads/{run}_{readNum}.fastq", run=values["runs"], readNum=[1, 2])
         output:
@@ -37,11 +37,15 @@ for gsm, values in file_info["public"].items():
             outdir = "resources/reads",
             read1Files = " ".join(list(map(lambda run: f"resources/reads/{run}_1.fastq", values["runs"]))),
             read2Files = " ".join(list(map(lambda run: f"resources/reads/{run}_2.fastq", values["runs"]))),
-            outputName = values["cleanFileName"] 
+            outputName = values["cleanFileName"] ,
+            paired_end = config["paired_end"]
         shell:
             """
+            shopt -s nocasematch
             cat {params.read1Files} > {params.outdir}/{params.outputName}_1.fastq
-            cat {params.read2Files} > {params.outdir}/{params.outputName}_2.fastq
+            if [[ {params.paired_end} =~ true ]]; then
+                cat {params.read2Files} > {params.outdir}/{params.outputName}_2.fastq
+            fi
             """
 
 
@@ -60,11 +64,10 @@ for key, value in file_info["provided"].items():
             cleanFileName = value["cleanFileName"]
         shell:
             '''
-                if [[ {params.paired_end} ]]; then
-                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
+                shopt -s nocasematch
+                ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
+                if [[ {params.paired_end} =~ true ]]; then
                     ln {params.pathToOriginal}_2{params.fileExt} resources/reads/{params.cleanFileName}_2{params.fileExt}
-                elif [[ {params.paired_end} ]]; then
-                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
                 fi
             '''
 
