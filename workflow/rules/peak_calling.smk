@@ -51,16 +51,23 @@ rule deeptools_bamCoverage:
         bamCoverage -b {input.bam} -o {output}
         """
 
+def get_consensus_peak_input(sample: str) -> list[str]:
+    if len(macs_input[sample]) < 2: raise Exception("Cannot calculate consensus peak for sample with only one replicate.", sample)
+    macs_extension = "_peaks.narrowPeak" if macs_input[sample][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
+    return [*map(lambda replicate: f"results/{config['peak_caller']}/{sample}_rep{replicate}{macs_extension}", macs_input[sample].keys())]
+
 rule bedtools_consensus_peak:
     input:
-        ""
+        a = lambda wildcards: get_consensus_peak_input(wildcards.sample)[0],
+        b = lambda wildcards: get_consensus_peak_input(wildcards.sample)[1:]
     output:
-        ""
+        "results/bedtools/{sample}.consensusPeak"
     conda:
         "../envs/peak_calling.yml"
     shell:
-        """
-        """
+        '''
+        bedtools intersect -a {input.a} -b {input.b} -wa > {output}
+        '''
 
 
 def get_compute_matrix_input(name: str, replicate: str) -> dict[str:list[str]]:
@@ -111,20 +118,6 @@ rule deeptools_plotProfile:
         plotProfile -m {input} -o {output}
         """
 
-"""
-rule bedtools_intersect:
-    input:
-        beds = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["beds"]
-    output:
-        "results/bedtools_intersect/{sample}_rep{replicate}.bed"
-    conda:
-        "../envs/peak_calling.yml"
-    shell:
-        '''
-        bedtools interect -a {input.beds[0]} -b {input.beds[1]}
-        '''
-
-"""
 rule plot_genome_track:
     input:
         beds = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["beds"],
