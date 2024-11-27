@@ -155,3 +155,18 @@ rule annotate_peaks:
         fi 
         perl $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
         '''
+
+rule findMotifsGenome:
+    input:
+        "results/homer/{sample}_annotate.txt"
+    output:
+        multiext("results/homer/{sample}", "homerResults.html", "knownResults.html")
+    conda:
+        "../envs/peak_calling.yml"
+    params:
+        genome=config['genome'],
+        size = 200
+    shell:
+        '''
+        perl $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} results/homer -size {params.size}
+        '''
