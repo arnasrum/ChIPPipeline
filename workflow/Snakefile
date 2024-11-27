@@ -1,5 +1,4 @@
 import sys
-
 sys.path.append("workflow/scripts")
 from sample_file_scripts import get_all_sample_file_paths, get_file_names, get_macs_input
 from set_module_options import set_module_options
@@ -83,3 +82,7 @@ def get_deeptools_input():
 rule deeptools:
     input:
         get_deeptools_input()
+
+rule annotate_peaks:
+    input:
+        "results/homer/H3K4me3_8cell_annotate.txt"

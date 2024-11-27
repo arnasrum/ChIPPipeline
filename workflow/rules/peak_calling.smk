@@ -136,6 +136,22 @@ rule plot_genome_track:
         ''' 
 rule annotate_peaks:
     input:
-        beds = lambda wildcards: get_compute_matrix_input(wildcards.sample)["beds"]
+        peak ="results/bedtools/{sample}.consensusPeak",
     output:
-        "pea"
+        "results/homer/{sample}_annotate.txt"
+    conda:
+        "../envs/peak_calling.yml"
+    params:
+        genome = config['genome']
+    shell:
+        '''
+        keyword='{params.genome}'
+        grep_output=$(perl $CONDA_PREFIX/share/homer/configureHomer.pl -list | grep "+")
+        if echo "$grep_output" | grep -q "$keyword"; then
+            echo "Keyword '$keyword' found in the output."
+        else
+            perl $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
+            echo "Keyword '$keyword' not found in the output."
+        fi 
+        perl $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
+        '''
