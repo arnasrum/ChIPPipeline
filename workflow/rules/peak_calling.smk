@@ -52,6 +52,7 @@ rule deeptools_bamCoverage:
         """
 
 def get_consensus_peak_input(sample: str) -> list[str]:
+    print(macs_input)
     if len(macs_input[sample]) < 2: raise Exception("Cannot calculate consensus peak for sample with only one replicate.", sample)
     macs_extension = "_peaks.narrowPeak" if macs_input[sample][replicate]["peak_type"] == "narrow" else "_peaks.broadPeak"
     return [*map(lambda replicate: f"results/{config['peak_caller']}/{sample}_rep{replicate}{macs_extension}", macs_input[sample].keys())]
@@ -71,7 +72,7 @@ rule bedtools_consensus_peak:
 
 
 def get_compute_matrix_input(name: str, replicate: str) -> dict[str:list[str]]:
-    macs_extension = "_peaks.narrowPeak" if macs_input[name][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
+    macs_extension = ["_peaks.narrowPeak"] if macs_input[name][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
     beds = [*map(lambda ext: f"results/{config['peak_caller']}/{name}_rep{replicate}{ext}", macs_extension)]
     bigwigs = [*map(lambda sample: f"results/deeptools-bamCoverage/{sample}.bw", macs_input[name][replicate]["treatment"])]
     return {"bigwigs": bigwigs, "beds": beds}
@@ -82,6 +83,8 @@ rule deeptools_computeMatrix:
         bigwigs = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["bigwigs"]
     output:
         "results/deeptools/{sample}_rep{replicate}_matrix.gz"
+    wildcard_constraints:
+        replicate = r"[0-9]"
     conda:
         "../envs/peak_calling.yml"
     params:
@@ -160,7 +163,7 @@ rule findMotifsGenome:
     input:
         "results/homer/{sample}_annotate.txt"
     output:
-        multiext("results/homer/{sample}", "homerResults.html", "knownResults.html")
+        multiext("results/homer/{sample}/", "homerResults.html", "knownResults.html")
     conda:
         "../envs/peak_calling.yml"
     params:
@@ -168,5 +171,5 @@ rule findMotifsGenome:
         size = 200
     shell:
         '''
-        perl $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} results/homer -size {params.size}
+        perl $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} results/homer/{wildcards.sample} -size {params.size}
         '''
