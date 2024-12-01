@@ -68,8 +68,8 @@ rule macs:
         f"results/macs3/H3K4me3_8cell_rep2_peaks.xls",
         [*map(lambda file_name: f"results/deeptools-bamCoverage/{file_name[:-8]}.bw",get_all_sample_file_paths(config,include_directories=False)[::2])]
 
+macs_input = get_macs_input()
 def get_deeptools_input():
-    macs_input = get_macs_input()
     input_files = []
     for key, value in macs_input.items():
         for replicate in value:
@@ -85,4 +85,4 @@ rule deeptools:
 
 rule annotate_peaks:
     input:
-        "results/homer/H3K4me3_8cell_annotate.txt"
+        [*map(lambda sample: f"results/homer/{sample}/homerResults.html", macs_input.keys())]
