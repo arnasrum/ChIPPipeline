@@ -6,14 +6,13 @@ file_info = make_sample_info()
 
 
 
-
+read_ext = ["_1", "_2"] if config["paired_end"] else [""]
 for srr in [run for value in file_info["public"].values() for run in value["runs"]]:
     rule:
         name:
             f"download_{srr}"
         output:
-            temp(f"resources/reads/{srr}_1.fastq"),
-            temp(f"resources/reads/{srr}_2.fastq")
+            temp(expand("resources/reads/{srr}{read}.fastq", read=read_ext, srr=srr))
         conda:
             "../envs/download.yml"
         params:
@@ -29,12 +28,12 @@ for gsm, values in file_info["public"].items():
         name:
             f"concatenate_{gsm}"
         input:
-            expand("resources/reads/{run}_{readNum}.fastq", run=values["runs"], readNum=[1, 2])
+            expand("resources/reads/{run}{readNum}.fastq", run=values["runs"], readNum=read_ext)
         output:
-            f"resources/reads/{values['cleanFileName']}_1.fastq",
-            f"resources/reads/{values['cleanFileName']}_2.fastq"
+            expand(f"resources/reads/{values['cleanFileName']}{{read}}.fastq", read=read_ext)
         params:
             outdir = "resources/reads",
+            readFiles = " ".join(list(map(lambda run: f"resources/reads/{run}.fastq", values["runs"]))),
             read1Files = " ".join(list(map(lambda run: f"resources/reads/{run}_1.fastq", values["runs"]))),
             read2Files = " ".join(list(map(lambda run: f"resources/reads/{run}_2.fastq", values["runs"]))),
             outputName = values["cleanFileName"] ,
@@ -42,21 +41,23 @@ for gsm, values in file_info["public"].items():
         shell:
             """
             shopt -s nocasematch
-            cat {params.read1Files} > {params.outdir}/{params.outputName}_1.fastq
             if [[ {params.paired_end} =~ true ]]; then
+                cat {params.read1Files} > {params.outdir}/{params.outputName}_1.fastq
                 cat {params.read2Files} > {params.outdir}/{params.outputName}_2.fastq
+            else
+                cat {params.readFiles} > {params.outdir}/{params.outputName}.fastq
             fi
             """
 
 
-reads = ["1", "2"] if config["paired_end"] else ["1"]
+reads = ["_1", "_2"] if config["paired_end"] else [""]
 for key, value in file_info["provided"].items():
     rule:
         name: f"link_{value['cleanFileName']}"
         input:
             expand("{path}{fileName}_{num}{ext}", fileName=value["cleanFileName"], path=value["path"], num=reads, ext=value["fileExtension"])
         output:
-            expand("resources/reads/{fileName}_{num}{ext}", fileName=value["cleanFileName"], num=reads, ext=value["fileExtension"])
+            expand("resources/reads/{fileName}{num}{ext}", fileName=value["cleanFileName"], num=reads, ext=value["fileExtension"])
         params:
             paired_end = config["paired_end"],
             pathToOriginal = f"{value['path']}{value['cleanFileName']}",
@@ -65,9 +66,11 @@ for key, value in file_info["provided"].items():
         shell:
             '''
                 shopt -s nocasematch
-                ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
                 if [[ {params.paired_end} =~ true ]]; then
+                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
                     ln {params.pathToOriginal}_2{params.fileExt} resources/reads/{params.cleanFileName}_2{params.fileExt}
+                else
+                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}{params.fileExt}
                 fi
             '''
 

@@ -1,8 +1,9 @@
 
 def alignment_input(sample: str) -> list[str]:
-    reads = [f"results/{config['trimmer']}/{sample}_1.fastq"]
     if config["paired_end"]:
-        reads.append(f"results/{config['trimmer']}/{sample}_2.fastq")
+        reads = [f"results/{config['trimmer']}/{sample}_1.fastq", f"results/{config['trimmer']}/{sample}_2.fastq"]
+    else:
+        reads = [f"results/{config['trimmer']}/{sample}.fastq"]
     return reads
 
 
@@ -48,7 +49,7 @@ rule bowtie2:
             inputOptions=''; i=1
             for file in {input.reads}; do inputOptions+="-$i $file "; i=$((i+1)); done
         else
-            inputOptions='-1 {input.reads[0]}'
+            inputOptions='-q {input.reads}'
         fi
         bowtie2 --mm --threads {threads} -x results/bowtie2-build/{params.genome} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
         '''
