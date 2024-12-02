@@ -14,6 +14,8 @@ rule:
         temp(expand("resources/reads/{srr}{read}.fastq", read=read_ext, allow_missing=True))
     conda:
         "../envs/download.yml"
+    wildcard_constraints:
+        srr = r"SRR[0-9]*"
     shell:
         '''
         fasterq-dump --temp temp -O resources/reads -p {wildcards.srr}
