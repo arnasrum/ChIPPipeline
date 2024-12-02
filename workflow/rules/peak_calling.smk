@@ -148,6 +148,7 @@ rule annotate_peaks:
         genome = config['genome']
     shell:
         '''
+        
         keyword='{params.genome}'
         grep_output=$(perl $CONDA_PREFIX/share/homer/configureHomer.pl -list | grep "+")
         if echo "$grep_output" | grep -q "$keyword"; then
@@ -156,7 +157,8 @@ rule annotate_peaks:
             perl $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
             echo "Keyword '$keyword' not found in the output."
         fi 
-        perl $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
+        mkdir -p results/homer
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
         '''
 
 rule findMotifsGenome:
@@ -171,5 +173,6 @@ rule findMotifsGenome:
         size = 200
     shell:
         '''
-        perl $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} results/homer/{wildcards.sample} -size {params.size}
+        mkdir -p results/homer
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl ./{input} {params.genome} results/homer/{wildcards.sample} -size {params.size}
         '''
