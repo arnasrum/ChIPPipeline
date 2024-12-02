@@ -19,9 +19,11 @@ rule buildBowtie2Index:
     params:
         genome = config["genome"],
         args = config["bowtie2-build"]["args"]
+    threads:
+        8
     shell:
         '''
-        bowtie2-build {params.args} {input} results/bowtie2-build/{params.genome} 
+        bowtie2-build --threads {threads} {params.args} {input} results/bowtie2-build/{params.genome} 
         '''
 
 rule bowtie2:
@@ -88,9 +90,11 @@ rule bwa:
         genome = config["genome"],
         args = config["bwa"]["args"],
         extra = config["bwa"]["extra"]
+    threads:
+        8
     shell:
         """
-        bwa mem {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools view -b -o {output}
+        bwa mem -t {threads} {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools view -b -o {output}
         """
 
 
