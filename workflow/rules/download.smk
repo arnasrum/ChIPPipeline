@@ -6,21 +6,18 @@ file_info = make_sample_info()
 
 
 
-read_ext = ["_1", "_2"] if config["paired_end"] else [""]
-for srr in [run for value in file_info["public"].values() for run in value["runs"]]:
-    rule:
-        name:
-            f"download_{srr}"
-        output:
-            temp(expand("resources/reads/{srr}{read}.fastq", read=read_ext, srr=srr))
-        conda:
-            "../envs/download.yml"
-        params:
-            srr = srr
-        shell:
-            '''
-            fasterq-dump --temp temp -O resources/reads -p {params.srr}
-            '''
+read_ext = ["_1", "_2"] if str(config["paired_end"]).lower() == "true" else [""]
+rule:
+    name:
+        f"download_SRR"
+    output:
+        temp(expand("resources/reads/{srr}{read}.fastq", read=read_ext, allow_missing=True))
+    conda:
+        "../envs/download.yml"
+    shell:
+        '''
+        fasterq-dump --temp temp -O resources/reads -p {wildcards.srr}
+        '''
 
 
 for gsm, values in file_info["public"].items():

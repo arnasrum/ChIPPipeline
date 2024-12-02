@@ -2,8 +2,14 @@ import sys
 sys.path.append("workflow/scripts")
 
 def get_trim_input(sample: str, path: str, ext: str, config: dict) -> list[str]:
-    if config["paired_end"]: return [f"{path}/{sample}_1.{ext}", f"{path}/{sample}_2.{ext}"]
+    if str(config["paired_end"]).lower() == "true": return [f"{path}/{sample}_1.{ext}", f"{path}/{sample}_2.{ext}"]
     else: return [f"{path}/{sample}.{ext}"]
+
+def is_paired_end() -> bool:
+    if str(config["paired_end"]).lower == "true":
+        return True
+    else:
+        return False
 
 OUTPUTDIRS = {"trimgalore": "results/trim_galore", "cutadapt": "results/cutadapt", "fastp": "results/fastp"}
 
@@ -13,7 +19,7 @@ rule trimgalore:
     output:
         #out1 = f"{OUTPUTDIRS['trimgalore']}/{{sample}}_1.fastq",
         #out2 = f"{OUTPUTDIRS['trimgalore']}/{{sample}}_2.fastq" if config["paired_end"] else [],
-        expand("results/trim_galore/{sample}{read}.fastq", read=["_1", "_2"] if config["paired_end"] else [""], allow_missing=True)
+        expand("results/trim_galore/{sample}{read}.fastq", read=["_1", "_2"] if is_paired_end() else [""], allow_missing=True)
     conda:
         "../envs/trim.yml"
     params:
@@ -45,7 +51,7 @@ rule cutadapt:
     output:
         #out1 = f"{OUTPUTDIRS['cutadapt']}/{{sample}}_1.fastq",
         #out2 = f"{OUTPUTDIRS['cutadapt']}/{{sample}}_2.fastq" if config["paired_end"] else []
-        expand("results/cutadapt/{sample}{read}.fastq", read=["_1", "_2"] if config["paired_end"] else[""], allow_missing=True)
+        expand("results/cutadapt/{sample}{read}.fastq", read=["_1", "_2"] if is_paired_end() else[""], allow_missing=True)
 
     conda:
         "../envs/cutadapt.yml"
@@ -71,7 +77,7 @@ rule fastp:
     output:
         #out1 = f"{OUTPUTDIRS['fastp']}/{{sample}}_1.fastq",
         #out2 = f"{OUTPUTDIRS['fastp']}/{{sample}}_2.fastq" if config["paired_end"] else []
-        expand("results/fastp/{sample}{read}.fastq", read=["_1", "_2"] if config["paired_end"] else[""], allow_missing=True)
+        expand("results/fastp/{sample}{read}.fastq", read=["_1", "_2"] if is_paired_end() else[""], allow_missing=True)
     conda:
         "../envs/trim.yml"
     params:

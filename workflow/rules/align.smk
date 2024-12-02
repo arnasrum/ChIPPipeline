@@ -1,6 +1,6 @@
 
 def alignment_input(sample: str) -> list[str]:
-    if config["paired_end"]:
+    if str(config["paired_end"]).lower() == "true":
         reads = [f"results/{config['trimmer']}/{sample}_1.fastq", f"results/{config['trimmer']}/{sample}_2.fastq"]
     else:
         reads = [f"results/{config['trimmer']}/{sample}.fastq"]
