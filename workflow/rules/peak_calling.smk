@@ -156,6 +156,7 @@ rule annotate_peaks:
             perl $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
             echo "Keyword '$keyword' not found in the output."
         fi 
+        mkdir -p results/homer
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
         '''
 
@@ -171,5 +172,6 @@ rule findMotifsGenome:
         size = 200
     shell:
         '''
+        mkdir -p results/homer
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} results/homer/{wildcards.sample} -size {params.size}
         '''
