@@ -52,7 +52,6 @@ rule deeptools_bamCoverage:
         """
 
 def get_consensus_peak_input(sample: str) -> list[str]:
-    print(macs_input)
     if len(macs_input[sample]) < 2: raise Exception("Cannot calculate consensus peak for sample with only one replicate.", sample)
     macs_extension = "_peaks.narrowPeak" if macs_input[sample][replicate]["peak_type"] == "narrow" else "_peaks.broadPeak"
     return [*map(lambda replicate: f"results/{config['peak_caller']}/{sample}_rep{replicate}{macs_extension}", macs_input[sample].keys())]
