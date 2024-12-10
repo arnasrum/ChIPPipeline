@@ -42,32 +42,6 @@ use rule * from alignmentWorkflow as align_*
 use rule * from peakCallingWorkflow as peak_calling_*
 use rule * from data_analysis as data_analysis_*
 
-rule downloadSamples:
-    input:
-        *get_all_sample_file_paths(config)
-
-trimmer = config["trimmer"]
-rule trim:
-    input:
-        [*map(lambda file_name: f"results/{trimmer}/{file_name}", get_all_sample_file_paths(config, include_directories=False))],
-        [*map(lambda file_name: f"results/fastqc/{trimmer}/{file_name[:-8]}_1_fastqc.html", get_all_sample_file_paths(config, include_directories=False))]
-
-aligner = config["aligner"]
-rule align:
-    input:
-        [*map(lambda file_name: f"results/{aligner}/{file_name[:-8]}.bam", get_all_sample_file_paths(config, include_directories=False)[::2])]
-
-rule pre_preprocessing:
-    input:
-        [*map(lambda file_name: f"results/picard-MarkDuplicates/{file_name[:-8]}.bam",get_all_sample_file_paths(config, include_directories=False)[::2])],
-        [*map(lambda file_name: f"results/samtools-index/{file_name[:-8]}.bam.bai",get_all_sample_file_paths(config,include_directories=False)[::2])]
-
-rule macs:
-    input:
-        f"results/macs3/H3K4me3_8cell_rep1_peaks.xls",
-        f"results/macs3/H3K4me3_8cell_rep2_peaks.xls",
-        [*map(lambda file_name: f"results/deeptools-bamCoverage/{file_name[:-8]}.bw",get_all_sample_file_paths(config,include_directories=False)[::2])]
-
 macs_input = get_macs_input()
 def get_deeptools_input():
     input_files = []
@@ -79,10 +53,8 @@ def get_deeptools_input():
         input_files.append(f"results/bedtools/{key}.consensusPeak")
     return input_files
 
-rule deeptools:
+rule all:
     input:
+        [*map(lambda sample: f"results/homer/{sample}/homerResults.html",macs_input.keys())],
         get_deeptools_input()
-
-rule annotate_peaks:
-    input:
-        [*map(lambda sample: f"results/homer/{sample}/homerResults.html", macs_input.keys())]
+    default_target: True
