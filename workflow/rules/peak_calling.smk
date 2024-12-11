@@ -142,7 +142,7 @@ rule annotate_peaks:
     output:
         "results/homer/{sample}_annotate.txt"
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/homer.yml"
     params:
         genome = config['genome']
     shell:
@@ -166,7 +166,7 @@ rule findMotifsGenome:
     output:
         multiext("results/homer/{sample}/", "homerResults.html", "knownResults.html")
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/homer.yml"
     params:
         genome=config['genome'],
         size = 200
