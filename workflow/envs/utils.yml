@@ -2,7 +2,6 @@ name utils:
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - samtools=1.19.2
   - picard=2.27.5-0

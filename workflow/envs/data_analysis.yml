@@ -1,7 +1,6 @@
 name data_analysis:
 channels:
-  - defaults
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
   - deeptools=3.5.5
