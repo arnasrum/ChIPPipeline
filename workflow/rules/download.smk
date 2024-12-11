@@ -78,6 +78,8 @@ rule referenceGenome:
         "resources/genomes/{genome}.fa.gz"
     benchmark:
         "benchmarks/rsync/{genome}.benchmark.txt"
+    conda:
+        "../envs/download.yml"
     shell:
         '''
         rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz resources/genomes/
