@@ -1,0 +1,5 @@
+mark,sample,type,replicate,peak_type,accession
+H3K4me3,8cell,treatment,1,broad,GSM1871972
+H3K4me3,8cell,treatment,2,broad,GSM1871973
+,8cell,control,1,,GSM1871976
+,8cell,control,2,,GSM1871977
