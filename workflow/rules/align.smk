@@ -94,7 +94,7 @@ rule bwa:
         8
     shell:
         """
-        bwa mem -t {threads} {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools view -b -o {output}
+        bwa mem -t {threads} {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools view -b - > {output}
         """
 
 
