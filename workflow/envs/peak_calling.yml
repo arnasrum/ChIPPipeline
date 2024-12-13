@@ -4,8 +4,6 @@ channels:
   - bioconda
 dependencies:
   - macs3=3.0.2
-  - numpy=2.2.0
-  - deeptools=3.5.5
   - bedtools=2.31.1
   - pygenometracks=3.9-0
   - homer=4.11

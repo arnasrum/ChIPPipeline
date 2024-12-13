@@ -4,6 +4,11 @@ channels:
   - bioconda
 dependencies:
   - cxx-compiler
-  - r
   - gcc
+  - wget
+  - samtools
+  - r-essentials
+  - r-base
+  - bioconductor-deseq2
+  - bioconductor-edger
   - homer=4.11

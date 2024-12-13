@@ -85,7 +85,7 @@ rule deeptools_computeMatrix:
     wildcard_constraints:
         replicate = r"[0-9]"
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/data_analysis.yml"
     params:
         mode = "reference-point",
         args = config["computeMatrix"]["args"]
@@ -103,7 +103,7 @@ rule deeptools_plotHeatMap:
     output:
         "results/deeptools/{sample}_heatmap.png"
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/data_analysis.yml"
     shell:
         """
         plotHeatmap -m {input} -o {output}
@@ -114,7 +114,7 @@ rule deeptools_plotProfile:
     output:
         "results/deeptools/{sample}_profile.png"
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/data_analysis.yml"
     shell:
         """
         plotProfile -m {input} -o {output}
@@ -147,16 +147,16 @@ rule annotate_peaks:
         genome = config['genome']
     shell:
         '''
-        
-        keyword='{params.genome}'
-        grep_output=$(perl $CONDA_PREFIX/share/homer/configureHomer.pl -list | grep "+")
-        if echo "$grep_output" | grep -q "$keyword"; then
-            echo "Keyword '$keyword' found in the output."
-        else
-            perl $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
-            echo "Keyword '$keyword' not found in the output."
-        fi 
+        #keyword='{params.genome}'
+        #grep_output=$(perl $CONDA_PREFIX/share/homer/configureHomer.pl -list | grep "+")
+        #if echo "$grep_output" | grep -q "$keyword"; then
+            #echo "Keyword '$keyword' found in the output."
+        #else
+            #perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
+            #echo "Keyword '$keyword' not found in the output."
+        #fi 
         mkdir -p results/homer
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
         '''
 
