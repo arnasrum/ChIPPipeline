@@ -112,7 +112,6 @@ rule buildStarIndex:
         config["STAR"]["threads"]
     shell:
         """
-        mkdir -p results/starIndex
         STAR --runThreadN {threads} --runMode genomeGenerate --genomeDir results/star-index --genomeFastaFiles {params.pathToGenome} {params.args}
         """ 
 
@@ -131,6 +130,5 @@ rule STAR:
         extra = config["STAR"]["extra"]
     shell:
         """
-        STAR --readFilesType Fastx --runThreadN {threads} --genomeDir results/star-index --readFilesIn {input.reads} {params.args} {params.extra} | samtools view -b -o {output}
-        #mv results/STAR/{wildcards.sample}Aligned.out.sam results/STAR/{wildcards.sample}.sam
+        STAR --readFilesType Fastx --runThreadN {threads} --genomeDir results/star-index --readFilesIn {input.reads} {params.args} {params.extra} --outFileNamePrefix results/STAR/{wildcards.sample} --outStd SAM | samtools view -b -o {output}
         """
