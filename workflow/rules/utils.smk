@@ -18,8 +18,11 @@ rule samtools_index:
         2
     conda:
         "../envs/utils.yml"
+    log:
+        "logs/samtools-index/{sample}.log"
     shell:
         """
+        exec > {log} 2>&1
         mkdir -p results/samtools-index 
         samtools index -@ {threads} {input} -o {output}
         """
@@ -33,8 +36,6 @@ rule picardCreateGenomeSequenceDictionary:
         "../envs/utils.yml"
     shell:
         "picard CreateSequenceDictionary -R resources/genomes/{wildcards.genome}.fa -O resources/genomes/{wildcards.genome}.dict"
-
-
 
 rule picard_MarkDuplicates:
     input:
@@ -50,8 +51,11 @@ rule picard_MarkDuplicates:
         args = config['MarkDuplicates']['args']
     conda:
         "../envs/utils.yml"
+    log:
+        "logs/picard-MarkDuplicates/{sample}.log"
     shell:
         """
+        exec > {log} 2>&1
         picard SortSam -I {input.aligned}  -O {output.sorted} --SO coordinate
         picard MarkDuplicates -I {output.sorted} -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt {params.args}
         """
@@ -67,8 +71,11 @@ rule samtools_markdup:
         args = config['markdup']['args']
     threads:
         8
+    log:
+        "logs/samtools-markdup/{sample}.log"
     shell:
         """
+        exec > {log} 2>&1
         mkdir -p results/samtools-markdup
         samtools collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup {params.args} -@ {threads} - {output}
         """

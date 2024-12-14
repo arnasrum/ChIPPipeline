@@ -21,14 +21,16 @@ rule trimgalore:
     conda:
         "../envs/trim.yml"
     params:
-        name = f"{{sample}}",
         args = config["trimgalore"]["args"],
         output_dir = "results/trimgalore",
         paired_end = config["paired_end"]
     threads:
         8
+    log:
+        "logs/trim_galore/{sample}"
     shell:
         """
+        exec > {log} 2>&1
         shopt -s nocasematch
         if [[ {params.paired_end} =~ true ]]; then
             read -a output_array <<< "{output}"
@@ -48,14 +50,16 @@ rule cutadapt:
         lambda wildcards: get_trim_input(wildcards.sample,"resources/reads","fastq")
     output:
         expand("results/cutadapt/{sample}{read}.fastq", read=["_1", "_2"] if is_paired_end() else[""], allow_missing=True)
-
     conda:
         "../envs/cutadapt.yml"
     params:
         args = config["cutadapt"]["args"],
         paired_end = config["paired_end"]
+    log:
+        "logs/cutadapt/{sample}.log"
     shell:
         '''
+        exec > {log} 2>&1
         shopt -s nocasematch
         if [[ {params.paired_end} =~ true ]]; then
             read -a output_array <<< "{output}"
@@ -79,8 +83,11 @@ rule fastp:
         paired_end = config["paired_end"]
     threads:
         8
+    log:
+        "logs/fastp/{sample}.log"
     shell:
         '''
+        exec > {log} 2>&1
         shopt -s nocasematch
         if [[ {params.paired_end} =~ true ]]; then
             read -a output_array <<< "{output}"

@@ -21,8 +21,11 @@ rule buildBowtie2Index:
         args = config["bowtie2-build"]["args"]
     threads:
         8
+    log:
+        f"logs/bowtie2-build/{config['genome']}.log"
     shell:
         '''
+        exec > {log} 2>&1
         bowtie2-build --threads {threads} {params.args} {input} results/bowtie2-build/{params.genome} 
         '''
 
@@ -44,8 +47,11 @@ rule bowtie2:
         paired_end = config["paired_end"]
     threads:
         8
+    log:
+        "logs/bowtie2/{sample}.log"
     shell:
         '''
+        exec > {log} 2>&1
         shopt -s nocasematch
         if [[ {params.paired_end} =~ true ]]; then
             inputOptions=''; i=1
@@ -69,8 +75,11 @@ rule buildBWAIndex:
     params:
         genome = config["genome"],
         args = config["bwa-index"]["args"]
+    log:
+        f"logs/bwa-index/{config['genome']}.log"
     shell:
         """
+        exec > {log} 2>&1
         mkdir -p results/bwa-index
         bwa index {params.args} {input} -p results/bwa-index/{params.genome}
         """
@@ -92,8 +101,11 @@ rule bwa:
         extra = config["bwa"]["extra"]
     threads:
         8
+    log:
+        "logs/bwa-mem/{sample}.log"
     shell:
         """
+        exec > {log} 2>&1
         bwa mem -t {threads} {params.args} {params.extra} results/bwa-index/{params.genome} {input.reads} | samtools view -b - > {output}
         """
 
@@ -102,7 +114,7 @@ rule buildStarIndex:
     input:
         f"resources/genomes/{config['genome']}.fa"
     output:
-        expand("results/star-index/SA{index}", index=["", "index"])
+        multiext("results/star-index/SA", "", "index")
     params:
         pathToGenome = f"resources/genomes/{config['genome']}.fa",
         args = config["STAR"]["args"]
@@ -110,8 +122,11 @@ rule buildStarIndex:
         "../envs/align.yml"
     threads:
         config["STAR"]["threads"]
+    log:
+        f"logs/star-index/{config['genome']}.log"
     shell:
         """
+        exec > {log} 2>&1
         STAR --runThreadN {threads} --runMode genomeGenerate --genomeDir results/star-index --genomeFastaFiles {params.pathToGenome} {params.args}
         """ 
 
@@ -128,7 +143,10 @@ rule STAR:
     params:
         args = config["STAR"]["args"],
         extra = config["STAR"]["extra"]
+    log:
+        "logs/STAR/{sample}.log"
     shell:
         """
+        exec > {log} 2>&1
         STAR --readFilesType Fastx --runThreadN {threads} --genomeDir results/star-index --readFilesIn {input.reads} {params.args} {params.extra} --outFileNamePrefix results/STAR/{wildcards.sample} --outStd SAM | samtools view -b -o {output}
         """

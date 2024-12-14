@@ -16,8 +16,11 @@ rule:
         "../envs/download.yml"
     wildcard_constraints:
         srr = r"SRR[0-9]*"
+    log:
+        "logs/fasterq-dump/{srr}"
     shell:
         '''
+        exec > {log} 2>&1
         fasterq-dump --temp temp -O resources/reads -p {wildcards.srr}
         '''
 
@@ -37,8 +40,11 @@ for gsm, values in file_info["public"].items():
             read2Files = " ".join(list(map(lambda run: f"resources/reads/{run}_2.fastq", values["runs"]))),
             outputName = values["cleanFileName"] ,
             paired_end = config["paired_end"]
+        log:
+            f"logs/concatenate/{gsm}.log"
         shell:
             """
+            exec > {log} 2>&1
             shopt -s nocasematch
             if [[ {params.paired_end} =~ true ]]; then
                 cat {params.read1Files} > {params.outdir}/{params.outputName}_1.fastq
@@ -62,8 +68,11 @@ for key, value in file_info["provided"].items():
             pathToOriginal = f"{value['path']}{value['cleanFileName']}",
             fileExt = value["fileExtension"],
             cleanFileName = value["cleanFileName"]
+        log:
+            f"logs/link/{value['cleanFileName']}.log"
         shell:
             '''
+                exec > {log} 2>&1
                 shopt -s nocasematch
                 if [[ {params.paired_end} =~ true ]]; then
                     ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
@@ -80,7 +89,10 @@ rule referenceGenome:
         "benchmarks/rsync/{genome}.benchmark.txt"
     conda:
         "../envs/download.yml"
+    log:
+        "logs/rsync/{genome}.log"
     shell:
         '''
+        exec > {log} 2>&1
         rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz resources/genomes/
         '''

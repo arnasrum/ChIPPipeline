@@ -23,8 +23,11 @@ for sample, replicates in macs_input.items():
                 name = f"{sample}_rep{replicate}"
             conda:
                 "../envs/peak_calling.yml"
+            log:
+                f"logs/macs3/{sample}_rep{replicate}.log"
             shell:
                 """
+                exec > {log} 2>&1
                 inputOptions=''
                 shopt -s nocasematch
                 if [[ {params.broad_peaks} =~ true ]]; then
@@ -46,8 +49,11 @@ rule deeptools_bamCoverage:
         "results/deeptools-bamCoverage/{sample}.bw"
     conda:
         "../envs/peak_calling.yml"
+    log:
+        "logs/bamCoverage/{sample}.log"
     shell:
         """
+        exec > {log} 2>&1
         bamCoverage -b {input.bam} -o {output}
         """
 
@@ -64,8 +70,11 @@ rule bedtools_consensus_peak:
         "results/bedtools/{sample}.consensusPeak"
     conda:
         "../envs/peak_calling.yml"
+    log:
+        "logs/bedtools-intersect/{sample}.log"
     shell:
         '''
+        exec > {log} 2>&1
         bedtools intersect -a {input.a} -b {input.b} -wa > {output}
         '''
 
@@ -131,8 +140,11 @@ rule plot_genome_track:
         region = "chr1:10,000,000-11,000,000"
     conda:
         "../envs/peak_calling.yml"
+    log:
+        "logs/pyGenomeTracks/{sample}_rep{replicate}.log"
     shell:
         ''' 
+        exec > {log} 2>&1
         make_tracks_file -f {input.beds} {input.bigwigs} -o {output.tracks}
         pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot}
         ''' 
@@ -145,8 +157,11 @@ rule annotate_peaks:
         "../envs/homer.yml"
     params:
         genome = config['genome']
+    log:
+        "logs/homer/{sample}_annotate.log"
     shell:
         '''
+        exec > {log} 2>&1
         #keyword='{params.genome}'
         #grep_output=$(perl $CONDA_PREFIX/share/homer/configureHomer.pl -list | grep "+")
         #if echo "$grep_output" | grep -q "$keyword"; then
@@ -170,8 +185,11 @@ rule findMotifsGenome:
     params:
         genome=config['genome'],
         size = 200
+    log:
+        "logs/homer/{sample}_findMotifs.log"
     shell:
         '''
+        exec > {log} 2>&1
         mkdir -p results/homer
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl ./{input} {params.genome} results/homer/{wildcards.sample} -size {params.size}
         '''
