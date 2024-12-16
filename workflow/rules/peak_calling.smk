@@ -48,7 +48,7 @@ rule deeptools_bamCoverage:
     output:
         "results/deeptools-bamCoverage/{sample}.bw"
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/data_analysis.yml"
     log:
         "logs/bamCoverage/{sample}.log"
     shell:
