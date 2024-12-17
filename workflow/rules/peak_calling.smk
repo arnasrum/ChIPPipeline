@@ -20,6 +20,7 @@ for sample, replicates in macs_input.items():
                 args = config["macs3"]["args"],
                 broad_peaks = value["peak_type"] == "broad",
                 paired_end = config['paired_end'],
+                peak_type = value["peak_type"],
                 name = f"{sample}_rep{replicate}"
             conda:
                 "../envs/peak_calling.yml"
@@ -39,4 +40,5 @@ for sample, replicates in macs_input.items():
                     inputOptions+='-f BAM '
                 fi 
                 macs3 callpeak -c {input.control} -t {input.treatment} --outdir results/macs3 --name {params.name} {params.args} $inputOptions
+                python3 workflow/scripts/rename_peaks.py results/macs3/{params.name}_peaks.{params.peak_type}Peak
                 """
