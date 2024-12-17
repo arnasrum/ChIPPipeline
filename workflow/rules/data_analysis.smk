@@ -102,7 +102,7 @@ rule plot_genome_track:
         tracks = temp("results/pyGenomeTracks/{sample}_rep{replicate}_tracks.ini"),
         plot = "results/pyGenomeTracks/{sample}_rep{replicate}.png"
     params:
-        region = "chr1:10,000,000-11,000,000"
+        region = "chr1:10,000,000-11,000,000",
     conda:
         "../envs/peak_calling.yml"
     log:
@@ -110,6 +110,7 @@ rule plot_genome_track:
     shell:
         ''' 
         exec > {log} 2>&1
+        python3 workflow/scripts/rename_peaks.py
         make_tracks_file -f {input.beds} {input.bigwigs} -o {output.tracks}
         pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot}
         '''
