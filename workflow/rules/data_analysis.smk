@@ -110,7 +110,6 @@ rule plot_genome_track:
     shell:
         ''' 
         exec > {log} 2>&1
-        python3 workflow/scripts/rename_peaks.py
         make_tracks_file -f {input.beds} {input.bigwigs} -o {output.tracks}
         pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot}
         '''
@@ -137,6 +136,7 @@ rule annotate_peaks:
             echo "Keyword '$keyword' not found in the output."
         fi 
         mkdir -p results/homer
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
         '''
 
