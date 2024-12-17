@@ -10,17 +10,14 @@ def check_diff() -> bool:
     json_file.close()
     if len(sample_sheet) != len(samples_json["public"]) + len(samples_json["provided"]): return False
     for index, row in sample_sheet.iterrows():
-        if not row["accession"] in samples_json["public"]: return False
         if row["accession"] in samples_json["public"]:
             print(row["accession"], "in public")
             for header in sample_sheet.head():
                 if header == "accession": continue
-                if row[header] != samples_json["public"][row["accession"]][header]: return False
+                if not header in samples_json["public"][row["accession"]]: return False
             continue
-        if  row["accession"] in samples_json["provided"]:
+        if row["accession"] in samples_json["provided"]:
             print(row["accession"], "in provided")
             continue
+        return False
     return True
-
-if __name__ == "__main__":
-    print(check_diff())
