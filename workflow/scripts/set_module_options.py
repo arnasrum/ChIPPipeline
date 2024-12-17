@@ -8,6 +8,7 @@ def set_module_options(config: dict) -> None:
     '''
     # --flag- is not caught as a flag in regex
     # multi character flag with single dash is read as value
+    if not config["modules"]: return
     pattern = re.compile(r"(?i)\B--[a-z]*\s|\B-[a-z]\s")
     flags = pattern.findall(config["modules"])
     for i in range(len(flags)):
