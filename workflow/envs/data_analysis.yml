@@ -4,3 +4,4 @@ channels:
   - bioconda
 dependencies:
   - deeptools=3.5.5
+  - numpy=1.26.4
