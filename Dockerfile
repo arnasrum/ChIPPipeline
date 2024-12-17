@@ -2,8 +2,10 @@ FROM snakemake/snakemake:latest
 
 WORKDIR /pipeline
 
-COPY . . 
+COPY ./workflow ./workflow
+COPY ./config ./config
 
-RUN pip3 install pysradb
+RUN conda config --set channel_priority strict
+RUN conda config --add channels defaults 
 
 ENTRYPOINT [ "snakemake" ]
