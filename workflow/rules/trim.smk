@@ -36,11 +36,11 @@ rule trimgalore:
             read -a output_array <<< "{output}"
             out1="${{output_array[0]}}"
             out2="${{output_array[1]}}"
-            trim_galore --paired --no_report_file -j {threads} -o {params.output_dir} --basename {params.name} {params.args} {input}
+            trim_galore --paired --no_report_file -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
             mv {params.output_dir}/{wildcards.sample}_val_1.fq $out1
             mv {params.output_dir}/{wildcards.sample}_val_2.fq $out2
         else
-            trim_galore --no_report_file -j {threads} -o {params.output_dir} --basename {params.name} {params.args} {input}
+            trim_galore --no_report_file -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
             mv {params.output_dir}/{wildcards.sample}_trimmed.fq {output} 
         fi
         """
