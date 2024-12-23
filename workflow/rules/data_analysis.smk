@@ -1,8 +1,8 @@
 import sys
 sys.path.append("workflow/scripts")
-from sample_file_scripts import get_macs_input
+from sample_file_scripts import SampleFileScripts
 
-macs_input = get_macs_input()
+macs_input = SampleFileScripts.get_macs_input()
 rule deeptools_bamCoverage:
     input:
         bam = f"results/{config['duplicate_processor']}/{{sample}}.bam",

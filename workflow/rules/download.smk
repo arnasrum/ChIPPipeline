@@ -1,8 +1,8 @@
 import sys
-from sample_file_scripts import make_sample_info
+from sample_file_scripts import SampleFileScripts
 sys.path.append("workflow/scripts")
 
-file_info = make_sample_info()
+file_info = SampleFileScripts.get_file_info()
 
 
 
@@ -57,30 +57,26 @@ for gsm, values in file_info["public"].items():
 
 reads = ["_1", "_2"] if config["paired_end"] else [""]
 for key, value in file_info["provided"].items():
-    rule:
-        name: f"link_{value['cleanFileName']}"
-        input:
-            expand("{path}{fileName}_{num}{ext}", fileName=value["cleanFileName"], path=value["path"], num=reads, ext=value["fileExtension"])
-        output:
-            expand("resources/reads/{fileName}{num}{ext}", fileName=value["cleanFileName"], num=reads, ext=value["fileExtension"])
-        params:
-            paired_end = config["paired_end"],
-            pathToOriginal = f"{value['path']}{value['cleanFileName']}",
-            fileExt = value["fileExtension"],
-            cleanFileName = value["cleanFileName"]
-        log:
-            f"logs/link/{value['cleanFileName']}.log"
-        shell:
-            '''
+    reads = [file_info["provided"][key]["read1"]]
+    if "read2" in file_info["provided"][key]: reads.append(file_info["provided"][key]["read2"])
+    for read in reads:
+        rule:
+            name: f"link_{read.file_name}"
+            input:
+                read.path
+            output:
+                f"resources/reads/{read.file_name}{read.file_extension}"
+            params:
+                pathToOriginal = read.path,
+                file_extension = value["file_extension"],
+                file_name = value["file_name"]
+            log:
+                f"logs/link/{read.file_name}.log"
+            shell:
+                '''
                 exec > {log} 2>&1
-                shopt -s nocasematch
-                if [[ {params.paired_end} =~ true ]]; then
-                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
-                    ln {params.pathToOriginal}_2{params.fileExt} resources/reads/{params.cleanFileName}_2{params.fileExt}
-                else
-                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}{params.fileExt}
-                fi
-            '''
+                ln {input} {output} 
+                '''
 
 rule referenceGenome:
     output:
