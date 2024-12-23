@@ -8,6 +8,17 @@ import yaml
 
 from fetch_data import get_meta_data, get_sra_accessions
 
+def find_prefix(strings):
+    if not strings:
+        return ""
+    if len(strings) == 1:
+        return strings[0]
+    i = 0; j = 0
+    prefix = [] 
+    while len(strings[0]) > i and len(strings[1]) > j and strings[0][i] == strings[1][j]:
+        prefix.append(strings[0][i])
+        i+=1; j+=1
+    return "".join(prefix)[:-1]
 
 class SampleFileScripts:
 
@@ -19,10 +30,6 @@ class SampleFileScripts:
             self.sample_sheet = config["sample_sheet"]
 
     def make_sample_info(self) -> dict[str:dict]:
-        print(self.sample_sheet)
-        #if os.path.isfile("config/samples.json"):
-            #with open("config/samples.json", "r") as file:
-                #return json.load(file)
         pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
@@ -34,20 +41,20 @@ class SampleFileScripts:
                     geo_accessions.add(sample)
                     sample_info[availability_type][sample] = {}
                 else:
+                    # Check if the included files exist
                     reads = sample.split(";")
-                    print(reads)
                     availability_type = "provided"
-                    path = pathlib.Path(sample)
-                    file_extension = "".join(path.suffixes)
-                    file_name = path.name.split(file_extension)[0]
-                    sample_info[availability_type][file_name] = {}
+                    sample_info[availability_type][sample] = {}
+                    read_file_names = []
                     for i, read in enumerate(reads):
                         path = pathlib.Path(read)
-                        sample_info[availability_type][file_name][f"read{i + 1}"] = {
+                        sample_info[availability_type][sample][f"read{i + 1}"] = {
                             "path": read,
                             "file_extension": "".join(path.suffixes),
-                            "file_name": path.name.split("".join(path.suffixes))[0]
+                            "file_name": path.name.split("".join(path.suffixes))[0]#.split(f"_{i + 1}")[0]
                         }
+                        read_file_names.append(sample_info[availability_type][sample][f"read{i + 1}"]["file_name"])
+                    sample_info[availability_type][sample]["cleanFileName"] = find_prefix(read_file_names)
                 sample_info[availability_type][sample].update({
                     "type": row["type"],
                     "sample": row["sample"],

@@ -55,23 +55,22 @@ for gsm, values in file_info["public"].items():
             """
 
 
-reads = ["_1", "_2"] if config["paired_end"] else [""]
 for key, value in file_info["provided"].items():
     reads = [file_info["provided"][key]["read1"]]
     if "read2" in file_info["provided"][key]: reads.append(file_info["provided"][key]["read2"])
     for read in reads:
         rule:
-            name: f"link_{read.file_name}"
+            name: f"link_{read['file_name']}"
             input:
-                read.path
+                read["path"]
             output:
-                f"resources/reads/{read.file_name}{read.file_extension}"
+                f"resources/reads/{read['file_name']}{read['file_extension']}"
             params:
-                pathToOriginal = read.path,
-                file_extension = value["file_extension"],
-                file_name = value["file_name"]
+                pathToOriginal = read["path"],
+                file_extension = read["file_extension"],
+                file_name = read["file_name"]
             log:
-                f"logs/link/{read.file_name}.log"
+                f"logs/link/{read['file_name']}.log"
             shell:
                 '''
                 exec > {log} 2>&1
