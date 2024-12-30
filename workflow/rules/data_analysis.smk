@@ -127,14 +127,6 @@ rule annotate_peaks:
     shell:
         '''
         exec > {log} 2>&1
-        keyword='{params.genome}'
-        grep_output=$(perl $CONDA_PREFIX/share/homer/configureHomer.pl -list | grep "+")
-        if echo "$grep_output" | grep -q "$keyword"; then
-            echo "Keyword '$keyword' found in the output."
-        else
-            perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
-            echo "Keyword '$keyword' not found in the output."
-        fi 
         mkdir -p results/homer
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}

@@ -74,7 +74,7 @@ for key, value in file_info["provided"].items():
             shell:
                 '''
                 exec > {log} 2>&1
-                ln {input} {output} 
+                ln -s {input} {output} 
                 '''
 
 rule referenceGenome:
