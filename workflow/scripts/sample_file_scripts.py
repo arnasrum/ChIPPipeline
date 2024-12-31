@@ -8,6 +8,9 @@ import yaml
 
 from fetch_data import get_meta_data, get_sra_accessions
 
+
+JSON_LOCATION="samples.json"
+
 def find_prefix(strings):
     if not strings:
         return ""
@@ -33,6 +36,7 @@ class SampleFileScripts:
         pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
+        print(f"sample_sheet: {self.sample_sheet}")
         with open(self.sample_sheet, "r") as file:
             for index, row in pd.read_csv(file, keep_default_na=False).iterrows():
                 sample = row.values[5]
@@ -62,25 +66,23 @@ class SampleFileScripts:
                     "mark": row["mark"],
                     "peak_type": row["peak_type"],
                 })
-
-
         # Handle publicly available files
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
 
-        with open(f"config/samples.json", "w") as outfile:
+        with open(JSON_LOCATION, "w") as outfile:
             outfile.write(json.dumps(sample_info, indent=4))
         return sample_info
 
     @staticmethod
     def get_file_info():
-        with open("config/samples.json", "r") as file:
+        with open(JSON_LOCATION, "r") as file:
             json_data = json.load(file)
         return json_data
 
     @staticmethod
     def get_macs_input() -> dict[str: dict]:
-        with open("config/samples.json") as file: samples = json.load(file)
+        with open(JSON_LOCATION) as file: samples = json.load(file)
         macs_input = {}
         control_files: list[(str, int, str)] = []
         for entry in SampleFileScripts.__flatten_dict(samples).values():
