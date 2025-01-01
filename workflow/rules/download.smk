@@ -38,7 +38,7 @@ for gsm, values in file_info["public"].items():
             readFiles = " ".join(list(map(lambda run: f"resources/reads/{run}.fastq", values["runs"]))),
             read1Files = " ".join(list(map(lambda run: f"resources/reads/{run}_1.fastq", values["runs"]))),
             read2Files = " ".join(list(map(lambda run: f"resources/reads/{run}_2.fastq", values["runs"]))),
-            outputName = values["cleanFileName"] ,
+            outputName = values["cleanFileName"],
             paired_end = config["paired_end"]
         log:
             f"logs/concatenate/{gsm}.log"

@@ -102,7 +102,7 @@ rule plot_genome_track:
         tracks = temp("results/pyGenomeTracks/{sample}_rep{replicate}_tracks.ini"),
         plot = "results/pyGenomeTracks/{sample}_rep{replicate}.png"
     params:
-        region = "chr1:10,000,000-11,000,000",
+        region = config["pyGenomeTracks"]["region"],
     conda:
         "../envs/peak_calling.yml"
     log:
@@ -140,7 +140,7 @@ rule findMotifsGenome:
     conda:
         "../envs/homer.yml"
     params:
-        genome=config['genome'],
+        genome = config['genome'],
         size = 200
     log:
         "logs/homer/{sample}_findMotifs.log"

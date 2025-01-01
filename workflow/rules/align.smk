@@ -20,13 +20,12 @@ rule buildBowtie2Index:
         genome = config["genome"],
         args = config["bowtie2-build"]["args"]
     threads:
-        8
+        int(config["bowtie2-build"]["threads"])
     log:
         f"logs/bowtie2-build/{config['genome']}.log"
     shell:
         '''
-        exec > {log} 2>&1
-        bowtie2-build --threads {threads} {params.args} {input} results/bowtie2-build/{params.genome} 
+        bowtie2-build --threads {threads} {params.args} {input} results/bowtie2-build/{params.genome} 2>&1 {log}
         '''
 
 rule bowtie2:

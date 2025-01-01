@@ -3,41 +3,54 @@ fasterq-dump:
   args: ""
 
 # Trimmer config
-trimgalore:
-  args: ""
+trim_galore:
+  threads: 8
+  args: "--no_report_file "
+
 cutadapt:
-  args: "--quiet"
+  threads: 8
+  args: ""
+
 fastp:
+  threads: 8
   args: ""
 
 # Aligner config
 bowtie2:
-  args: "--quiet --very-fast"
+  args: "--very-fast"
   extra: ""
+  threads: 8
 bowtie2-build:
   args: "--quiet"
+  threads: 8
 bwa:
   args: "-v 1 -Y"
   extra: ""
 bwa-index:
   args: ""
 STAR:
+  args: ""
   extra: ""
   threads: 8
-  args: ""
 
 # Utils config
+samtools-index:
+  threads: 8
 MarkDuplicates:
   args: "--REMOVE_SEQUENCING_DUPLICATES true"
 markdup:
   args: ""
+  threads: 8
 
 # Peak calling config
 macs3:
-  args: "--nomodel -g hs --bdg"
+  args: "--nomodel -g hs"
 
 computeMatrix:
   args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
+
+pyGenomeTracks:
+  region: "chr1:10,000,000-11,000,000"
 
 # Workflow config
 modules: ""
@@ -48,3 +61,4 @@ peak_caller: "macs3"
 genome: "mm39"
 paired_end: True
 samtools: "-f 4"
+sample_sheet: "config/samplesTest.csv"

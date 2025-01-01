@@ -15,14 +15,11 @@ rule samtools_index:
     output:
         "{sample}.bam.bai"
     threads:
-        2
+        int(config["samtools-index"]["threads"])
     conda:
         "../envs/utils.yml"
-    log:
-        "logs/samtools-index/{sample}.log"
     shell:
         """
-        exec > {log} 2>&1
         mkdir -p results/samtools-index 
         samtools index -@ {threads} {input} -o {output}
         """
@@ -56,7 +53,7 @@ rule picard_MarkDuplicates:
     shell:
         """
         exec > {log} 2>&1
-        picard SortSam -I {input.aligned}  -O {output.sorted} --SO coordinate
+        picard SortSam -I {input.aligned} -O {output.sorted} --SO coordinate
         picard MarkDuplicates -I {output.sorted} -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt {params.args}
         """
 
@@ -70,7 +67,7 @@ rule samtools_markdup:
     params:
         args = config['markdup']['args']
     threads:
-        8
+        int(config["markdup"]["threads"])
     log:
         "logs/samtools-markdup/{sample}.log"
     shell:

@@ -2,9 +2,9 @@
 
 rule fastqc_after_trim:
     input:
-        f"results/{config["trimmer"]}/{{id}}.fastq",
+        f"results/{config['trimmer']}/{{sample}}.fastq",
     output:
-        expand("results/fastqc/{trimmer}/{id}_fastqc.{ext}", trimmer=config["trimmer"], ext=["zip", "html"], allow_missing=True)
+        multiext(f"results/fastqc/{config['trimmer']}/{{sample}}.", "zip", "html")
     params:
         outputPath = "results/fastqc/" + config["trimmer"]
     shell:
