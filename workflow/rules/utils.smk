@@ -1,10 +1,10 @@
 rule unzip:
     input:
-        "{file}.fastq.gz"
+        "{file}.gz"
     output:
-        "{file}.fastq"
-    #wildcard_constraints:
-        #file = r"^([\/A-Za-z0-9])*"
+        "{file}"
+    wildcard_constraints:
+        file = r"^([\/A-Za-z0-9])*.(fastq|fq).gz"
     shell:
         "gzip -dk {input} -f"
 

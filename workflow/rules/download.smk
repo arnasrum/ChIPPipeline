@@ -1,9 +1,12 @@
 import sys
-from sample_file_scripts import SampleFileScripts
+from sample_file_scripts import SampleFileScripts, is_paired_end
 sys.path.append("workflow/scripts")
 
 file_info = SampleFileScripts.get_file_info()
-
+def get_link_input(sample: str):
+    files = [file_info["provided"][sample]["read1"]["path"].rstrip(".gz")]
+    if is_paired_end(): files.append(file_info["provided"][sample]["read2"]["path"].rstrip(".gz"))
+    return files
 
 
 read_ext = ["_1", "_2"] if str(config["paired_end"]).lower() == "true" else [""]
@@ -32,13 +35,13 @@ for gsm, values in file_info["public"].items():
         input:
             expand("resources/reads/{run}{readNum}.fastq", run=values["runs"], readNum=read_ext)
         output:
-            expand(f"resources/reads/{values['cleanFileName']}{{read}}.fastq", read=read_ext)
+            expand(f"resources/reads/{values['file_name']}{{read}}.fastq", read=read_ext)
         params:
             outdir = "resources/reads",
             readFiles = " ".join(list(map(lambda run: f"resources/reads/{run}.fastq", values["runs"]))),
             read1Files = " ".join(list(map(lambda run: f"resources/reads/{run}_1.fastq", values["runs"]))),
             read2Files = " ".join(list(map(lambda run: f"resources/reads/{run}_2.fastq", values["runs"]))),
-            outputName = values["cleanFileName"],
+            outputName = values["file_name"],
             paired_end = config["paired_end"]
         log:
             f"logs/concatenate/{gsm}.log"
@@ -56,26 +59,21 @@ for gsm, values in file_info["public"].items():
 
 
 for key, value in file_info["provided"].items():
-    reads = [file_info["provided"][key]["read1"]]
-    if "read2" in file_info["provided"][key]: reads.append(file_info["provided"][key]["read2"])
-    for read in reads:
-        rule:
-            name: f"link_{read['file_name']}"
-            input:
-                read["path"]
-            output:
-                f"resources/reads/{read['file_name']}{read['file_extension']}"
-            params:
-                pathToOriginal = read["path"],
-                file_extension = read["file_extension"],
-                file_name = read["file_name"]
-            log:
-                f"logs/link/{read['file_name']}.log"
-            shell:
-                '''
-                exec > {log} 2>&1
-                ln -s {input} {output} 
-                '''
+    rule:
+        name: f"link_{value['file_name']}"
+        input:
+            get_link_input(key)
+        output:
+            f"resources/reads/{value['file_name']}.fastq"
+            if not is_paired_end() else
+            [f"resources/reads/{value['file_name']}_1.fastq", f"resources/reads/{value['file_name']}_2.fastq"]
+        log:
+            f"logs/link/{value['file_name']}.log"
+        shell:
+            '''
+            exec > {log} 2>&1
+            ln -s {input} {output} 
+            '''
 
 rule referenceGenome:
     output:

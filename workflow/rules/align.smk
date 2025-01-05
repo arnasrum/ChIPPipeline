@@ -1,19 +1,27 @@
+import sys
+sys.path.append("workflow/scripts")
+from sample_file_scripts import SampleFileScripts, is_paired_end
 
 def alignment_input(sample: str) -> list[str]:
-    if str(config["paired_end"]).lower() == "true":
-        reads = [f"results/{config['trimmer']}/{sample}_1.fastq", f"results/{config['trimmer']}/{sample}_2.fastq"]
+    file_info = SampleFileScripts.get_file_info()
+    if is_paired_end():
+        if sample in [*map(lambda accession: file_info['public'][accession]['file_name'], file_info["public"].keys())]:
+            reads = [f"results/{config['trimmer']}/{sample}_1.fastq", f"results/{config['trimmer']}/{sample}_2.fastq"]
+        else:
+            reads = [f"results/{config['trimmer']}/{file_info['provided'][sample]['file_name']}_1.fastq",
+                     f"results/{config['trimmer']}/{file_info['provided'][sample]['file_name']}_2.fastq"]
     else:
-        reads = [f"results/{config['trimmer']}/{sample}.fastq"]
+        if sample in [*map(lambda accession: file_info['public'][accession]['file_name'],file_info["public"].keys())]:
+            reads = [f"results/{config['trimmer']}/{sample}.fastq"]
+        else:
+            reads = [f"results/{config['trimmer']}/{file_info['provided'][sample]['file_name']}.fastq"]
     return reads
-
 
 rule buildBowtie2Index:
     input:
         f"resources/genomes/{config['genome']}.fa.gz"
     output:
-        expand("results/bowtie2-build/{genome}.{extension}", 
-            extension=["1.bt2", "2.bt2", "3.bt2", "4.bt2"], 
-            genome=[config["genome"]])
+        multiext(f"results/bowtie2-build/{config['genome']}.", "1.bt2", "2.bt2", "3.bt2", "4.bt2"),
     conda:
         "../envs/align.yml"
     params:
@@ -30,13 +38,10 @@ rule buildBowtie2Index:
 
 rule bowtie2:
     input:
-        expand("results/bowtie2-build/{genome}.{extension}", 
-            extension=["1.bt2", "2.bt2", "3.bt2", "4.bt2"], 
-            genome=config["genome"]
-        ),
+        multiext(f"results/bowtie2-build/{config['genome']}.", "1.bt2", "2.bt2", "3.bt2", "4.bt2"),
         reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
-        f"results/bowtie2/{{sample}}.bam"
+        "results/bowtie2/{sample}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -45,7 +50,7 @@ rule bowtie2:
         genome = config["genome"],
         paired_end = config["paired_end"]
     threads:
-        8
+        int(config["bowtie2"]["threads"])
     log:
         "logs/bowtie2/{sample}.log"
     shell:
@@ -65,10 +70,7 @@ rule buildBWAIndex:
     input:
         f"resources/genomes/{config['genome']}.fa.gz"
     output: 
-        expand("results/bwa-index/{genome}.{ext}", 
-            genome=config["genome"], 
-            ext=["amb", "ann", "pac", "sa", "bwt"]
-        ) 
+        multiext(f"results/bwa-index/{config['genome']}.", "amb", "ann", "pac", "sa", "bwt")
     conda:
         "../envs/align.yml"
     params:
@@ -86,10 +88,7 @@ rule buildBWAIndex:
 rule bwa:
     input:
         reads = lambda wildcards: alignment_input(wildcards.sample),
-        genomeIndex = expand("results/bwa-index/{genome}.{ext}",
-            genome=config["genome"], 
-            ext=["amb", "ann", "pac", "sa", "bwt"]
-        ) 
+        genomeIndex = multiext(f"results/bwa-index/{config['genome']}.", "amb", "ann", "pac", "sa", "bwt")
     output:
         "results/bwa/{sample}.bam"
     conda:
@@ -131,7 +130,7 @@ rule buildStarIndex:
 
 rule STAR:
     input:
-        expand("results/star-index/SA{index}", index=["", "index"]),
+        multiext("results/star-index/SA", "", "index"),
         reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
         "results/STAR/{sample}.bam"

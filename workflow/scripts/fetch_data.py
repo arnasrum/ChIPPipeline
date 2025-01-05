@@ -50,7 +50,7 @@ def get_meta_data(sra_accessions: list[str]) -> dict[str: dict]:
     for node in root:
         run_accessions: list[str] = []
         geo_accession = node[4].attrib["alias"]
-        meta_data[geo_accession] = {"cleanFileName": __make_clean_file_name(node[0][1].text)}
+        meta_data[geo_accession] = {"file_name": __make_clean_file_name(node[0][1].text)}
         for run in node[6]:
             run_accessions.append(run.attrib["accession"])
         meta_data[geo_accession]["runs"] = run_accessions

@@ -3,9 +3,11 @@ sys.path.append("workflow/scripts")
 
 def get_trim_input(sample: str, path: str, ext: str) -> list[str]:
     if is_paired_end():
-        return [f"{path}/{sample}_1.{ext}", f"{path}/{sample}_2.{ext}"]
+        input = [f"{path}/{sample}_1.{ext}", f"{path}/{sample}_2.{ext}"]
     else:
-        return [f"{path}/{sample}.{ext}"]
+        input = [f"{path}/{sample}.{ext}"]
+    print(input)
+    return input
 
 def is_paired_end() -> bool:
     if str(config["paired_end"]).lower() == "true":

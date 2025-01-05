@@ -11,20 +11,7 @@ from fetch_data import get_meta_data, get_sra_accessions
 
 JSON_LOCATION="samples.json"
 
-def find_prefix(strings):
-    if not strings:
-        return ""
-    if len(strings) == 1:
-        return strings[0]
-    i = 0; j = 0
-    prefix = [] 
-    while len(strings[0]) > i and len(strings[1]) > j and strings[0][i] == strings[1][j]:
-        prefix.append(strings[0][i])
-        i+=1; j+=1
-    return "".join(prefix)[:-1]
-
 class SampleFileScripts:
-
     sample_sheet = None
     def __init__(self, config):
         if config["sample_sheet"] is None or config["sample_sheet"] == '':
@@ -33,39 +20,39 @@ class SampleFileScripts:
             self.sample_sheet = config["sample_sheet"]
 
     def make_sample_info(self) -> dict[str:dict]:
-        pattern = re.compile(r"^GSM[0-9]*$")
+        geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
         print(f"sample_sheet: {self.sample_sheet}")
         with open(self.sample_sheet, "r") as file:
-            for index, row in pd.read_csv(file, keep_default_na=False).iterrows():
-                sample = row.values[5]
-                if pattern.match(sample):
-                    availability_type = "public"
-                    geo_accessions.add(sample)
-                    sample_info[availability_type][sample] = {}
-                else:
-                    # Check if the included files exist
-                    reads = sample.split(";")
-                    availability_type = "provided"
-                    sample_info[availability_type][sample] = {}
-                    read_file_names = []
-                    for i, read in enumerate(reads):
-                        path = pathlib.Path(read)
-                        sample_info[availability_type][sample][f"read{i + 1}"] = {
-                            "path": read,
-                            "file_extension": "".join(path.suffixes),
-                            "file_name": path.name.split("".join(path.suffixes))[0]#.split(f"_{i + 1}")[0]
-                        }
-                        read_file_names.append(sample_info[availability_type][sample][f"read{i + 1}"]["file_name"])
-                    sample_info[availability_type][sample]["cleanFileName"] = find_prefix(read_file_names)
-                sample_info[availability_type][sample].update({
-                    "type": row["type"],
-                    "sample": row["sample"],
-                    "replicate": row["replicate"],
-                    "mark": row["mark"],
-                    "peak_type": row["peak_type"],
-                })
+            sample_sheet = pd.read_csv(file, keep_default_na=False)
+        for index, row in sample_sheet.iterrows():
+            sample = row.values[5]
+            if geo_accession_pattern.match(sample):
+                availability_type = "public"
+                geo_accessions.add(sample)
+                sample_info[availability_type][sample] = {}
+            else:
+                # Check if the included files exist
+                availability_type = "provided"
+                paths = sample.split(";")
+                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}".lstrip("_")
+                sample_info[availability_type][sample] = {}
+                for i, read in enumerate(paths):
+                    path = pathlib.Path(read)
+                    sample_info[availability_type][sample][f"read{i + 1}"] = {
+                        "path": read,
+                        "file_extension": "".join(path.suffixes),
+                        "file_name": path.name.split("".join(path.suffixes))[0]#.split(f"_{i + 1}")[0]
+                    }
+                    sample_info[availability_type][sample]['file_name'] = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}".lstrip("_")
+            sample_info[availability_type][sample].update({
+                "type": row["type"],
+                "sample": row["sample"],
+                "replicate": row["replicate"],
+                "mark": row["mark"],
+                "peak_type": row["peak_type"],
+            })
         # Handle publicly available files
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
@@ -73,6 +60,22 @@ class SampleFileScripts:
         with open(JSON_LOCATION, "w") as outfile:
             outfile.write(json.dumps(sample_info, indent=4))
         return sample_info
+
+
+    def generate_json(self):
+        pattern = re.compile(r"^GSM[0-9]*$")
+        geo_accessions = set()
+        sample_info: dict = {}
+        print(f"sample_sheet: {self.sample_sheet}")
+        with open(self.sample_sheet, "r") as file:
+            sample_sheet = pd.read_csv(file, keep_default_na=False)
+        for index, row in sample_sheet.iterrows():
+            if row["sample"] and row["mark"]:
+                sample_info[f"{row['mark']}_{row['sample']}"] = {}
+        #for index, row in sample_sheet.iterrows():
+            #for sample in sample_info.keys():
+                #if row["mark"] in sample:
+        print(sample_info)
 
     @staticmethod
     def get_file_info():
@@ -82,22 +85,23 @@ class SampleFileScripts:
 
     @staticmethod
     def get_macs_input() -> dict[str: dict]:
-        with open(JSON_LOCATION) as file: samples = json.load(file)
+        with open(JSON_LOCATION) as file:
+            samples = json.load(file)
         macs_input = {}
         control_files: list[(str, int, str)] = []
-        for entry in SampleFileScripts.__flatten_dict(samples).values():
+        for key, entry in SampleFileScripts.__flatten_dict(samples).items():
             replicate = str(entry["replicate"])
             if entry["type"] == "treatment":
                 file_name = f"{entry['mark']}_{entry['sample']}"
                 if not file_name in macs_input: macs_input[file_name] = {}
                 if not replicate in macs_input[file_name]:
-                    macs_input[file_name][replicate] = {"treatment": [entry['cleanFileName']], "control": [], "peak_type": entry["peak_type"]}
+                    macs_input[file_name][replicate] = {"treatment": [entry['file_name']], "control": [], "peak_type": entry['peak_type']}
                 else:
-                    macs_input[file_name][replicate]["treatment"].append(entry['cleanFileName'])
+                    macs_input[file_name][replicate]["treatment"].append(entry['file_name'])
             elif entry["type"] == "control":
-                control_files.append((entry['sample'], replicate, entry['cleanFileName']))
+                control_files.append((entry['sample'], replicate, entry['file_name']))
             else:
-                raise Exception(f"Entry type unrecognized for {entry['cleanFileName']}")
+                raise Exception(f"Entry type unrecognized for {entry['file_name']}")
         for control in control_files:
             for file_name in filter(lambda file_name: control[0] in file_name, macs_input.keys()):
                 macs_input[file_name][control[1]]["control"].append(control[2])
@@ -117,6 +121,17 @@ class SampleFileScripts:
             new_dict = new_dict | value
         return new_dict
 
+def is_paired_end() -> bool:
+    with open ("config/config.yml") as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+    if str(config["paired_end"]).lower() == "true":
+        return True
+    else:
+        return False
+
+
 if __name__ == "__main__":
     config = yaml.load(open("config/config.yml", "r"), Loader=yaml.FullLoader)
+    config["sample_sheet"] = "config/samplesTest.csv"
     SampleFileScripts(config).make_sample_info()
+    print(SampleFileScripts(config).get_macs_input())
