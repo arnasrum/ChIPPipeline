@@ -1,10 +1,9 @@
 import sys
-
 sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts
+from input_scripts import get_macs_input
 
 
-macs_input = SampleFileScripts.get_macs_input()
+macs_input = get_macs_input()
 for sample, replicates in macs_input.items():
     for replicate, value in replicates.items():
         rule:

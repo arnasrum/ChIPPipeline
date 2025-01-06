@@ -3,11 +3,6 @@ from sample_file_scripts import SampleFileScripts, is_paired_end
 sys.path.append("workflow/scripts")
 
 file_info = SampleFileScripts.get_file_info()
-def get_link_input(sample: str):
-    files = [file_info["provided"][sample]["read1"]["path"].rstrip(".gz")]
-    if is_paired_end(): files.append(file_info["provided"][sample]["read2"]["path"].rstrip(".gz"))
-    return files
-
 
 read_ext = ["_1", "_2"] if str(config["paired_end"]).lower() == "true" else [""]
 rule:
@@ -20,7 +15,7 @@ rule:
     wildcard_constraints:
         srr = r"SRR[0-9]*"
     log:
-        "logs/fasterq-dump/{srr}"
+        "logs/fasterq-dump/{srr}.log"
     shell:
         '''
         exec > {log} 2>&1
@@ -60,13 +55,11 @@ for gsm, values in file_info["public"].items():
 
 for key, value in file_info["provided"].items():
     rule:
-        name: f"link_{value['file_name']}"
+        name: f"link_{value['file_name']}_SE"
         input:
-            get_link_input(key)
+            [file_info["provided"][key]["read1"]["path"].rstrip(".gz")]
         output:
-            f"resources/reads/{value['file_name']}.fastq"
-            if not is_paired_end() else
-            [f"resources/reads/{value['file_name']}_1.fastq", f"resources/reads/{value['file_name']}_2.fastq"]
+            [f"resources/reads/{value['file_name']}.fastq"]
         log:
             f"logs/link/{value['file_name']}.log"
         shell:
@@ -74,6 +67,22 @@ for key, value in file_info["provided"].items():
             exec > {log} 2>&1
             ln -s {input} {output} 
             '''
+    rule:
+        name: f"symlink_{value['file_name']}_PE"
+        input:
+            files = [file_info["provided"][key]["read1"]["path"].rstrip(".gz"), file_info["provided"][key]["read2"]["path"].rstrip(".gz")]
+        output:
+            out_files = [f"resources/reads/{value['file_name']}_1.fastq",f"resources/reads/{value['file_name']}_2.fastq"]
+        log:
+            f"logs/link/{value['file_name']}.log"
+        shell:
+            '''
+            exec > {log} 2>&1
+            ln -sr {input.files[0]} {output.out_files[0]} 
+            ln -sr {input.files[1]} {output.out_files[1]} 
+            '''
+
+
 
 rule referenceGenome:
     output:

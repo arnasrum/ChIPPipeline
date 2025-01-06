@@ -2,7 +2,7 @@ import json
 import argparse
 import sys
 sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts
+from input_scripts import get_macs_input
 
 def __flatten_dict(old_dict: dict) -> dict:
     new_dict = {}
@@ -12,7 +12,7 @@ def __flatten_dict(old_dict: dict) -> dict:
 
 
 def rename_peaks(bed_file: str) -> None:
-    macs_input = SampleFileScripts.get_macs_input()
+    macs_input = get_macs_input()
     peak_files = {}
     with open(bed_file, "r") as file:
         lines = file.readlines()

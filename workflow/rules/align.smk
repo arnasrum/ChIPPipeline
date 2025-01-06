@@ -33,7 +33,8 @@ rule buildBowtie2Index:
         f"logs/bowtie2-build/{config['genome']}.log"
     shell:
         '''
-        bowtie2-build --threads {threads} {params.args} {input} results/bowtie2-build/{params.genome} 2>&1 {log}
+        exec > {log} 2>&1
+        bowtie2-build --threads {threads} {params.args} {input} results/bowtie2-build/{params.genome}
         '''
 
 rule bowtie2:

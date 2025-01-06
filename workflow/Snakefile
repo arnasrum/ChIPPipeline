@@ -2,6 +2,7 @@ import sys
 sys.path.append("workflow/scripts")
 from sample_file_scripts import SampleFileScripts
 from set_module_options import set_module_options
+from input_scripts import get_macs_input
 
 configfile: "config/config.yml"
 set_module_options(config)
@@ -45,7 +46,7 @@ use rule * from alignmentWorkflow as align_*
 use rule * from peakCallingWorkflow as peak_calling_*
 use rule * from data_analysis as data_analysis_*
 
-macs_input = SampleFileScripts.get_macs_input()
+macs_input = get_macs_input()
 def get_deeptools_input():
     input_files = []
     for key, value in macs_input.items():
