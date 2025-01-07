@@ -13,11 +13,13 @@ JSON_LOCATION="samples.json"
 
 class SampleFileScripts:
     sample_sheet = None
+    paired_end = None
     def __init__(self, config):
         if config["sample_sheet"] is None or config["sample_sheet"] == '':
             self.sample_sheet = "config/samples.csv"
         else:
             self.sample_sheet = config["sample_sheet"]
+        self.paired_end = config["paired_end"]
 
     def make_sample_info(self) -> dict[str:dict]:
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
@@ -61,21 +63,8 @@ class SampleFileScripts:
             outfile.write(json.dumps(sample_info, indent=4))
         return sample_info
 
-
-    def generate_json(self):
-        pattern = re.compile(r"^GSM[0-9]*$")
-        geo_accessions = set()
-        sample_info: dict = {}
-        print(f"sample_sheet: {self.sample_sheet}")
-        with open(self.sample_sheet, "r") as file:
-            sample_sheet = pd.read_csv(file, keep_default_na=False)
-        for index, row in sample_sheet.iterrows():
-            if row["sample"] and row["mark"]:
-                sample_info[f"{row['mark']}_{row['sample']}"] = {}
-        #for index, row in sample_sheet.iterrows():
-            #for sample in sample_info.keys():
-                #if row["mark"] in sample:
-        print(sample_info)
+    def is_paired_end(self) -> bool:
+        return str(self.paired_end).lower() == "true"
 
     @staticmethod
     def get_file_info():
@@ -83,14 +72,6 @@ class SampleFileScripts:
             json_data = json.load(file)
         return json_data
 
-
-def is_paired_end() -> bool:
-    with open ("config/config.yml") as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
-    if str(config["paired_end"]).lower() == "true":
-        return True
-    else:
-        return False
 
 
 if __name__ == "__main__":

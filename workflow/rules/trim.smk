@@ -1,19 +1,14 @@
 import sys
 sys.path.append("workflow/scripts")
+from sample_file_scripts import SampleFileScripts
+sfs = SampleFileScripts(config)
 
 def get_trim_input(sample: str, path: str, ext: str) -> list[str]:
-    if is_paired_end():
+    if sfs.is_paired_end():
         input = [f"{path}/{sample}_1.{ext}", f"{path}/{sample}_2.{ext}"]
     else:
         input = [f"{path}/{sample}.{ext}"]
-    print(input)
     return input
-
-def is_paired_end() -> bool:
-    if str(config["paired_end"]).lower() == "true":
-        return True
-    else:
-        return False
 
 rule trim_galore:
     input:
