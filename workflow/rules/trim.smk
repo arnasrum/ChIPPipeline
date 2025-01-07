@@ -14,7 +14,7 @@ rule trim_galore:
     input:
         lambda wildcards: get_trim_input(wildcards.sample,"resources/reads","fastq")
     output:
-        expand("results/trim_galore/{sample}{read}.fastq", read=["_1", "_2"] if is_paired_end() else [""], allow_missing=True),
+        expand("results/trim_galore/{sample}{read}.fastq", read=["_1", "_2"] if sfs.is_paired_end() else [""], allow_missing=True),
     conda:
         "../envs/trim.yml"
     params:
@@ -46,7 +46,7 @@ rule cutadapt:
     input:
         lambda wildcards: get_trim_input(wildcards.sample,"resources/reads","fastq")
     output:
-        expand("results/cutadapt/{sample}{read}.fastq", read=["_1", "_2"] if is_paired_end() else[""], allow_missing=True)
+        expand("results/cutadapt/{sample}{read}.fastq", read=["_1", "_2"] if sfs.is_paired_end() else[""], allow_missing=True)
     conda:
         "../envs/cutadapt.yml"
     params:
@@ -74,7 +74,7 @@ rule fastp:
     input:
         samples = lambda wildcards: get_trim_input(wildcards.sample,"resources/reads","fastq")
     output:
-        expand("results/fastp/{sample}{read}.fastq", read=["_1", "_2"] if is_paired_end() else[""], allow_missing=True)
+        expand("results/fastp/{sample}{read}.fastq", read=["_1", "_2"] if sfs.is_paired_end() else[""], allow_missing=True)
     conda:
         "../envs/trim.yml"
     params:

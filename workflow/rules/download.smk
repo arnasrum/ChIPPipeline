@@ -1,6 +1,6 @@
 import sys
-from sample_file_scripts import SampleFileScripts
 sys.path.append("workflow/scripts")
+from sample_file_scripts import SampleFileScripts
 
 sfs = SampleFileScripts(config)
 file_info = SampleFileScripts.get_file_info()
@@ -36,7 +36,7 @@ rule fastq_dump_PE:
         fastq-dump -O resources/reads --split-3 {wildcards.srr}
         '''
 
-
+read_ext = ["_1", "_2"] if sfs.is_paired_end() else [""]
 for gsm, values in file_info["public"].items():
     rule:
         name:
