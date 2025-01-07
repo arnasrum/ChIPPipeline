@@ -1,10 +1,12 @@
 import sys
 sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts, is_paired_end
+from sample_file_scripts import SampleFileScripts
+
+sfs = SampleFileScripts(config)
 
 def alignment_input(sample: str) -> list[str]:
     file_info = SampleFileScripts.get_file_info()
-    if is_paired_end():
+    if sfs.is_paired_end():
         if sample in [*map(lambda accession: file_info['public'][accession]['file_name'], file_info["public"].keys())]:
             reads = [f"results/{config['trimmer']}/{sample}_1.fastq", f"results/{config['trimmer']}/{sample}_2.fastq"]
         else:
