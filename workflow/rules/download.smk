@@ -1,25 +1,39 @@
 import sys
-from sample_file_scripts import SampleFileScripts, is_paired_end
+from sample_file_scripts import SampleFileScripts
 sys.path.append("workflow/scripts")
 
+sfs = SampleFileScripts(config)
 file_info = SampleFileScripts.get_file_info()
 
-read_ext = ["_1", "_2"] if str(config["paired_end"]).lower() == "true" else [""]
-rule:
-    name:
-        f"download_SRR"
+rule fastq_dump_SE:
     output:
-        temp(expand("resources/reads/{srr}{read}.fastq", read=read_ext, allow_missing=True))
+        temp("resources/reads/{srr}.fastq")
     conda:
         "../envs/download.yml"
     wildcard_constraints:
         srr = r"SRR[0-9]*"
     log:
-        "logs/fasterq-dump/{srr}.log"
+        "logs/fastq-dump/{srr}_SE.log"
     shell:
         '''
         exec > {log} 2>&1
-        fasterq-dump --temp temp -O resources/reads -p {wildcards.srr}
+        fastq-dump -O resources/reads {wildcards.srr}
+        '''
+
+rule fastq_dump_PE:
+    output:
+        temp("resources/reads/{srr}_1.fastq"),
+        temp("resources/reads/{srr}_2.fastq")
+    conda:
+        "../envs/download.yml"
+    wildcard_constraints:
+        srr = r"SRR[0-9]*"
+    log:
+        "logs/fastq-dump/{srr}_PE.log"
+    shell:
+        '''
+        exec > {log} 2>&1
+        fastq-dump -O resources/reads --split-3 {wildcards.srr}
         '''
 
 
