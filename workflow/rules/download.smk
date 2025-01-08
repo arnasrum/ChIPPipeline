@@ -53,7 +53,6 @@ rule fastq_dump_PE:
         fastq-dump -O {params.path} --split-3 {wildcards.srr}
         '''
 
-read_ext = ["_1", "_2"] if sfs.is_paired_end() else [""]
 def join_read_files(runs: list, paired_end: bool):
     if paired_end:
         return [" ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", runs))),
@@ -64,10 +63,9 @@ rule concatenate_runs_SE:
     input:
         lambda wildcards: expand(RESOURCES + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
     output:
-        RESOURCES + f"/reads/{{gsm}}_{{file_suffix}}.fastq"
+        RESOURCES + "/reads/{gsm}_{file_suffix}.fastq"
     wildcard_constraints:
         gsm = r"GSM[0-9]*",
-        file_suffix = r"^(?!.*(_1|_2)$).*"
     params:
         read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.gsm]["runs"], False)
     log:
@@ -82,23 +80,21 @@ rule concatenate_runs_SE:
 
 rule concatenate_runs_PE:
     input:
-        lambda wildcards: expand(RESOURCES + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.gsm]["runs"], read=["_1", "_2"])
+        lambda wildcards: expand(RESOURCES + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.sample.split("_")[0]]["runs"], read=["_1", "_2"])
     output:
-        read1 = RESOURCES + "/reads/{gsm}{file_suffix}_1.fastq",
-        read2 = RESOURCES + "/reads/{gsm}{file_suffix}_2.fastq"
-    wildcard_constraints:
-        gsm = r"GSM[0-9]*",
+        read1 = RESOURCES + "/reads/{sample}_1.fastq",
+        read2 = RESOURCES + "/reads/{sample}_2.fastq"
     params:
-        read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.gsm]["runs"], True)
+        read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"], True)
     log:
-        LOGS + "/concatenate/{gsm}_{file_suffix}.log"
+        LOGS + "/concatenate/{sample}.log"
     resources:
         tmpdir=TEMP
     shell:
         """
         exec > {log} 2>&1
-        cat {params.read_files[0]} > {output.read1} 
-        cat {params.read_files[1]} > {output.read2} 
+        cat {params.read_files} > {output.read1} 
+        cat {params.read_files} > {output.read2} 
         """
 
 for key, value in file_info["provided"].items():
