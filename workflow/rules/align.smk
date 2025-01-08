@@ -94,7 +94,7 @@ rule buildBWAIndex:
     conda:
         "../envs/align.yml"
     params:
-        index_path = f"{RESULTS}/bwa-index/config['genome']",
+        index_path = f"{RESULTS}/bwa-index/{config['genome']}",
         dir = f"{RESULTS}/bwa-index/",
         args = config["bwa-index"]["args"]
     log:
