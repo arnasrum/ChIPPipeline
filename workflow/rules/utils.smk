@@ -10,7 +10,7 @@ rule unzip:
     output:
         "{file}"
     wildcard_constraints:
-        file = r"^([\/A-Za-z0-9])*.(fastq|fq).gz"
+        file = r"^([\/A-Za-z0-9])*.(fastq|fq|fa|fasta).gz"
     resources:
         tmpdir=TEMP
     shell:
@@ -95,5 +95,5 @@ rule samtools_markdup:
         """
         exec > {log} 2>&1
         mkdir -p {params.path} 
-        samtools collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup {params.args} -@ {threads} - {output}
+        samtools collate -T {resources.tmpdir} -@ {threads} -O -u {input} | samtools fixmate -T {resources.tmpdir} -@ {threads} -m -u - - | samtools sort -T {resources.tmpdir}-@ {threads} -u - | samtools markdup {params.args} -T {resources.tmpdir}  -@ {threads} - {output}
         """
