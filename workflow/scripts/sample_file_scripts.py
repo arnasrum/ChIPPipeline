@@ -58,9 +58,8 @@ class SampleFileScripts:
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
 
-        print(json_path.split("/")[:-1])
         json_dir = "/".join(json_path.split("/")[:-1]) + "/"
-        if not os.path.exists(json_dir): os.mkdirs(json_dir)
+        if not os.path.exists(json_dir): os.makedirs(json_dir)
         with open(json_path, "w") as outfile:
             outfile.write(json.dumps(sample_info, indent=4))
         return sample_info
@@ -74,9 +73,3 @@ class SampleFileScripts:
             json_data = json.load(file)
         return json_data
 
-
-
-if __name__ == "__main__":
-    config = yaml.load(open("config/config.yml", "r"), Loader=yaml.FullLoader)
-    config["sample_sheet"] = "config/samplesTest.csv"
-    SampleFileScripts(config).make_sample_info()

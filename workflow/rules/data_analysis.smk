@@ -125,6 +125,8 @@ rule plot_genome_track:
         "../envs/peak_calling.yml"
     log:
         LOGS + "/pyGenomeTracks/{sample}_rep{replicate}.log"
+    resources:
+        tmpdir=TEMP
     shell:
         ''' 
         exec > {log} 2>&1

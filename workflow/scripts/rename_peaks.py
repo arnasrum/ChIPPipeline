@@ -1,18 +1,6 @@
-import json
 import argparse
-import sys
-sys.path.append("workflow/scripts")
-from input_scripts import get_macs_input
-
-def __flatten_dict(old_dict: dict) -> dict:
-    new_dict = {}
-    for key, value in old_dict.items():
-        new_dict = new_dict | value
-    return new_dict
-
 
 def rename_peaks(bed_file: str) -> None:
-    macs_input = get_macs_input()
     peak_files = {}
     with open(bed_file, "r") as file:
         lines = file.readlines()

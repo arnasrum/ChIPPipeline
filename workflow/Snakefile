@@ -6,7 +6,8 @@ from input_scripts import get_macs_input
 
 configfile: "config/config.yml"
 set_module_options(config)
-for key in ["json_path", "benchmarks_path", "results_path", "resources_path", "temp_path"]:
+if config["prefix"] != "" and config["prefix"][-1] != "/": config["prefix"] += "/"
+for key in ["json_path", "benchmarks_path", "results_path", "resources_path", "temp_path", "logs_path"]:
     config[key] = config["prefix"] + config[key]
 sfs = SampleFileScripts(config)
 sfs.make_sample_info(config["json_path"])
@@ -61,6 +62,6 @@ def get_deeptools_input():
 
 rule all:
     input:
-        [*map(lambda sample: f"results/homer/{sample}/homerResults.html",macs_input.keys())],
+        [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html",macs_input.keys())],
         get_deeptools_input()
     default_target: True

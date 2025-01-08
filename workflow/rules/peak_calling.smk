@@ -4,6 +4,7 @@ from input_scripts import get_macs_input
 
 RESULTS: str = config['results_path']
 LOGS: str = config['logs_path']
+TEMP: str = config['temp_path']
 BENCHMARKS: str = config['benchmarks_path']
 
 macs_input = get_macs_input(config["json_path"])
@@ -33,6 +34,8 @@ for sample, replicates in macs_input.items():
                 f"{LOGS}/macs3/{sample}_rep{replicate}.log"
             benchmark:
                 f"{BENCHMARKS}/macs3/{sample}_rep{replicate}.log"
+            resources:
+                tmpdir=TEMP
             shell:
                 """
                 exec > {log} 2>&1

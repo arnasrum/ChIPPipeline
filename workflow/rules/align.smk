@@ -43,6 +43,8 @@ rule buildBowtie2Index:
         f"{LOGS}/bowtie2-build/{config['genome']}.log"
     benchmark:
         f"{BENCHMARKS}/bowtie2-build/{config['genome']}.txt"
+    resources:
+        tmpdir=TEMP
     shell:
         '''
         exec > {log} 2>&1

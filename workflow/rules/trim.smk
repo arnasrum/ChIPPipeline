@@ -6,6 +6,7 @@ sfs = SampleFileScripts(config)
 RESULTS: str = config['results_path']
 RESOURCES: str = config['resources_path']
 LOGS: str = config['logs_path']
+TEMP: str = config['temp_path']
 BENCHMARKS: str = config['benchmarks_path']
 
 def get_trim_input(sample: str) -> list[str]:
@@ -33,6 +34,8 @@ rule trim_galore:
         LOGS + "/trim_galore/{sample}.log"
     benchmark:
         BENCHMARKS + "/trim_galore/{sample}.txt"
+    resources:
+        tmpdir=TEMP
     shell:
         """
         exec > {log} 2>&1
@@ -66,6 +69,8 @@ rule cutadapt:
         LOGS + "/cutadapt/{sample}.log"
     benchmark:
         BENCHMARKS + "/cutadapt/{sample}.txt"
+    resources:
+        tmpdir=TEMP
     shell:
         '''
         exec > {log} 2>&1
@@ -95,6 +100,8 @@ rule fastp:
         int(config["fastp"]["threads"])
     log:
         LOGS + "/fastp/{sample}.log"
+    resources:
+        tmpdir=TEMP
     shell:
         '''
         exec > {log} 2>&1

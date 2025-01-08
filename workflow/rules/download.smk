@@ -68,7 +68,7 @@ for gsm, values in file_info["public"].items():
             outputName = values["file_name"],
             paired_end = config["paired_end"]
         log:
-            LOGS + f"concatenate/{gsm}.log"
+            LOGS + f"/concatenate/{gsm}.log"
         resources:
             tmpdir=TEMP
         shell:
@@ -90,7 +90,7 @@ for gsm, values in file_info["public"].items():
             read1Files = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", values["runs"]))),
             read2Files = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", values["runs"])))
         log:
-            RESOURCES + f"logs/concatenate/{gsm}.log"
+            LOGS + f"/concatenate/{gsm}.log"
         resources:
             tmpdir=TEMP
         shell:
