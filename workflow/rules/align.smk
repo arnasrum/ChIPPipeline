@@ -44,7 +44,7 @@ rule bowtie2:
         multiext(f"results/bowtie2-build/{config['genome']}.", "1.bt2", "2.bt2", "3.bt2", "4.bt2"),
         reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
-        "results/bowtie2/{sample}.bam"
+        temp("results/bowtie2/{sample}.bam")
     conda:
         "../envs/align.yml"
     params:
@@ -93,7 +93,7 @@ rule bwa:
         reads = lambda wildcards: alignment_input(wildcards.sample),
         genomeIndex = multiext(f"results/bwa-index/{config['genome']}.", "amb", "ann", "pac", "sa", "bwt")
     output:
-        "results/bwa/{sample}.bam"
+        temp("results/bwa/{sample}.bam")
     conda:
         "../envs/align.yml"
     params:
@@ -136,7 +136,7 @@ rule STAR:
         multiext("results/star-index/SA", "", "index"),
         reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
-        "results/STAR/{sample}.bam"
+        temp("results/STAR/{sample}.bam")
     conda:
         "../envs/align.yml"
     threads:
