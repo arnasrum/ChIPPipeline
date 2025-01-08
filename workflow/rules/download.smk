@@ -54,51 +54,52 @@ rule fastq_dump_PE:
         '''
 
 read_ext = ["_1", "_2"] if sfs.is_paired_end() else [""]
-for gsm, values in file_info["public"].items():
-    rule:
-        name:
-            f"concatenate_{gsm}_SE"
-        input:
-            expand(RESOURCES + "/reads/{run}.fastq", run=values["runs"])
-        output:
-            RESOURCES + f"/reads/{values['file_name']}.fastq"
-        params:
-            path =  RESOURCES + "/reads",
-            readFiles = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", values["runs"]))),
-            outputName = values["file_name"],
-            paired_end = config["paired_end"]
-        log:
-            LOGS + f"/concatenate/{gsm}.log"
-        resources:
-            tmpdir=TEMP
-        shell:
-            """
-            exec > {log} 2>&1
-            cat {params.readFiles} > {params.path}/{params.outputName}.fastq
-            """
-    rule:
-        name:
-            f"concatenate_{gsm}_PE"
-        input:
-            expand(RESOURCES + "/reads/{run}{read}.fastq", run=values["runs"], read=["_1", "_2"])
-        output:
-            expand(RESOURCES + f"/reads/{values['file_name']}{{read}}.fastq", read=["_1", "_2"])
-        params:
-            path =  RESOURCES + "/reads",
-            outputName= values["file_name"],
-            paired_end= config["paired_end"],
-            read1Files = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", values["runs"]))),
-            read2Files = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", values["runs"])))
-        log:
-            LOGS + f"/concatenate/{gsm}.log"
-        resources:
-            tmpdir=TEMP
-        shell:
-            """
-            exec > {log} 2>&1
-            cat {params.read1Files} > {params.path}/{params.outputName}_1.fastq
-            cat {params.read2Files} > {params.path}/{params.outputName}_2.fastq
-            """
+def join_read_files(runs: list, paired_end: bool):
+    if paired_end:
+        return [" ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", runs))),
+                " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", runs)))]
+    return " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", runs))),
+
+rule concatenate_runs_SE:
+    input:
+        lambda wildcards: expand(RESOURCES + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
+    output:
+        RESOURCES + f"/reads/{{gsm}}_{{file_suffix}}.fastq"
+    wildcard_constraints:
+        gsm = r"GSM[0-9]*",
+        file_suffix = r"^(?!.*(_1|_2)$).*"
+    params:
+        read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.gsm]["runs"], False)
+    log:
+        LOGS + "/concatenate/{gsm}_{file_suffix}.log"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        cat {params.read_files} > {output} 
+        """
+
+rule concatenate_runs_PE:
+    input:
+        lambda wildcards: expand(RESOURCES + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.gsm]["runs"], read=["_1", "_2"])
+    output:
+        read1 = RESOURCES + "/reads/{gsm}{file_suffix}_1.fastq",
+        read2 = RESOURCES + "/reads/{gsm}{file_suffix}_2.fastq"
+    wildcard_constraints:
+        gsm = r"GSM[0-9]*",
+    params:
+        read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.gsm]["runs"], True)
+    log:
+        LOGS + "/concatenate/{gsm}_{file_suffix}.log"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        cat {params.read_files[0]} > {output.read1} 
+        cat {params.read_files[1]} > {output.read2} 
+        """
 
 for key, value in file_info["provided"].items():
     rule:
