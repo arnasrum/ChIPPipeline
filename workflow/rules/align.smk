@@ -95,6 +95,7 @@ rule buildBWAIndex:
         "../envs/align.yml"
     params:
         index_path = f"{RESULTS}/bwa-index/config['genome']",
+        dir = f"{RESULTS}/bwa-index/",
         args = config["bwa-index"]["args"]
     log:
         f"{LOGS}/bwa-index/{config['genome']}.log"
@@ -105,7 +106,7 @@ rule buildBWAIndex:
     shell:
         """
         exec > {log} 2>&1
-        mkdir -p results/bwa-index
+        mkdir -p {params.dir} 
         bwa index {params.args} {input} -p {params.index_path} 
         """
 
