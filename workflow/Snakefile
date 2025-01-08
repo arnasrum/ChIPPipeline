@@ -54,7 +54,7 @@ def get_deeptools_input():
             input_files.append(f"results/deeptools/{key}_rep{replicate}_heatmap.png")
             input_files.append(f"results/deeptools/{key}_rep{replicate}_profile.png")
             input_files.append(f"results/pyGenomeTracks/{key}_rep{replicate}.png")
-        input_files.append(f"results/bedtools/{key}.consensusPeak")
+        #input_files.append(f"results/bedtools/{key}.consensusPeak")
     return input_files
 
 rule all:

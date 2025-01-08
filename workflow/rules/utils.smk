@@ -20,7 +20,6 @@ rule samtools_index:
         "../envs/utils.yml"
     shell:
         """
-        mkdir -p results/samtools-index 
         samtools index -@ {threads} {input} -o {output}
         """
 
@@ -37,7 +36,7 @@ rule picardCreateGenomeSequenceDictionary:
 rule picard_MarkDuplicates:
     input:
         aligned = f"results/{config['aligner']}/{{sample}}.bam",
-        aligned_index= "results/picard-MarkDuplicates/{sample}.bam.bai",
+        aligned_index= f"results/{config['aligner']}/{{sample}}.bam.bai",
     output:
         sorted = temp("temp/{sample}_sorted.bam"),
         marked = multiext("results/picard-MarkDuplicates/{sample}", ".metrics.txt", ".bam"),
@@ -70,6 +69,8 @@ rule samtools_markdup:
         int(config["markdup"]["threads"])
     log:
         "logs/samtools-markdup/{sample}.log"
+    resources:
+        tmpdir="temp"
     shell:
         """
         exec > {log} 2>&1
