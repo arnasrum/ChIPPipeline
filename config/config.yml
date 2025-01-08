@@ -6,11 +6,9 @@ fasterq-dump:
 trim_galore:
   threads: 8
   args: "--no_report_file "
-
 cutadapt:
   threads: 8
   args: ""
-
 fastp:
   threads: 8
   args: ""
@@ -26,6 +24,7 @@ bowtie2-build:
 bwa:
   args: "-v 1 -Y"
   extra: ""
+  threads: 8
 bwa-index:
   args: ""
 STAR:
@@ -53,6 +52,15 @@ pyGenomeTracks:
   region: "chr1:10,000,000-11,000,000"
 
 # Workflow config
+prefix: ""
+json_path: "samples.json"
+results_path: "results"
+resources_path: "resources"
+logs_path: "logs"
+benchmarks_path: "benchmarks"
+temp_path: "temp"
+
+
 modules: ""
 trimmer: "trim_galore"
 aligner: "bowtie2"

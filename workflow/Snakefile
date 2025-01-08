@@ -6,8 +6,10 @@ from input_scripts import get_macs_input
 
 configfile: "config/config.yml"
 set_module_options(config)
+for key in ["json_path", "benchmarks_path", "results_path", "resources_path", "temp_path"]:
+    config[key] = config["prefix"] + config[key]
 sfs = SampleFileScripts(config)
-sfs.make_sample_info()
+sfs.make_sample_info(config["json_path"])
 
 
 module utils:
@@ -46,15 +48,15 @@ use rule * from alignmentWorkflow as align_*
 use rule * from peakCallingWorkflow as peak_calling_*
 use rule * from data_analysis as data_analysis_*
 
-macs_input = get_macs_input()
+macs_input = get_macs_input(config["json_path"])
 def get_deeptools_input():
     input_files = []
+    path = config["results_path"]
     for key, value in macs_input.items():
         for replicate in value:
-            input_files.append(f"results/deeptools/{key}_rep{replicate}_heatmap.png")
-            input_files.append(f"results/deeptools/{key}_rep{replicate}_profile.png")
-            input_files.append(f"results/pyGenomeTracks/{key}_rep{replicate}.png")
-        #input_files.append(f"results/bedtools/{key}.consensusPeak")
+            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_heatmap.png")
+            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_profile.png")
+            input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
     return input_files
 
 rule all:

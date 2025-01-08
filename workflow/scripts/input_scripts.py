@@ -1,9 +1,8 @@
 import json
 
-JSON_LOCATION = "samples.json"
 
-def get_macs_input() -> dict[str: dict]:
-    with open(JSON_LOCATION) as file:
+def get_macs_input(json_path) -> dict[str: dict]:
+    with open(json_path) as file:
         samples = json.load(file)
     macs_input = {}
     control_files: list[(str, int, str)] = []

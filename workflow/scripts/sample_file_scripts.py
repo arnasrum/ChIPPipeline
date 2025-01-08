@@ -8,8 +8,7 @@ import yaml
 
 from fetch_data import get_meta_data, get_sra_accessions
 
-
-JSON_LOCATION="samples.json"
+#JSON_LOCATION = "/tmp/samples.json"
 
 class SampleFileScripts:
     sample_sheet = None
@@ -21,7 +20,7 @@ class SampleFileScripts:
             self.sample_sheet = config["sample_sheet"]
         self.paired_end = config["paired_end"]
 
-    def make_sample_info(self) -> dict[str:dict]:
+    def make_sample_info(self, json_path) -> dict[str:dict]:
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
@@ -59,7 +58,10 @@ class SampleFileScripts:
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
 
-        with open(JSON_LOCATION, "w") as outfile:
+        print(json_path.split("/")[:-1])
+        json_dir = "/".join(json_path.split("/")[:-1]) + "/"
+        if not os.path.exists(json_dir): os.mkdirs(json_dir)
+        with open(json_path, "w") as outfile:
             outfile.write(json.dumps(sample_info, indent=4))
         return sample_info
 
@@ -67,8 +69,8 @@ class SampleFileScripts:
         return str(self.paired_end).lower() == "true"
 
     @staticmethod
-    def get_file_info():
-        with open(JSON_LOCATION, "r") as file:
+    def get_file_info(json_path):
+        with open(json_path, "r") as file:
             json_data = json.load(file)
         return json_data
 

@@ -3,69 +3,102 @@ sys.path.append("workflow/scripts")
 from sample_file_scripts import SampleFileScripts
 
 sfs = SampleFileScripts(config)
-file_info = SampleFileScripts.get_file_info()
+file_info = SampleFileScripts.get_file_info(config["json_path"])
+
+RESOURCES: str = config['resources_path']
+LOGS: str = config['logs_path']
+TEMP: str = config['temp_path']
+BENCHMARKS: str = config['benchmarks_path']
 
 rule fastq_dump_SE:
     output:
-        temp("resources/reads/{srr}.fastq")
+        temp(RESOURCES + "/reads/{srr}.fastq")
+    params:
+        path = f"{RESOURCES}/reads"
     conda:
         "../envs/download.yml"
     wildcard_constraints:
         srr = r"SRR[0-9]*"
     log:
-        "logs/fastq-dump/{srr}_SE.log"
+        LOGS + "/fastq-dump/{srr}_SE.log"
+    benchmark:
+        BENCHMARKS + "/fastq-dump/{srr}_SE.log"
+    resources:
+        tmpdir=TEMP
     shell:
         '''
         exec > {log} 2>&1
-        fastq-dump -O resources/reads {wildcards.srr}
+        fastq-dump -O {params.path} {wildcards.srr}
         '''
 
 rule fastq_dump_PE:
     output:
-        temp("resources/reads/{srr}_1.fastq"),
-        temp("resources/reads/{srr}_2.fastq")
+        temp(RESOURCES + "/reads/{srr}_1.fastq"),
+        temp(RESOURCES + "/reads/{srr}_2.fastq")
+    params:
+        path = f"{RESOURCES}/reads"
     conda:
         "../envs/download.yml"
     wildcard_constraints:
         srr = r"SRR[0-9]*"
     log:
-        "logs/fastq-dump/{srr}_PE.log"
+        LOGS + "/fastq-dump/{srr}_PE.log"
+    benchmark:
+        BENCHMARKS + "/fastq-dump/{srr}_PE.log"
+    resources:
+        tmpdir=TEMP
     shell:
         '''
         exec > {log} 2>&1
-        fastq-dump -O resources/reads --split-3 {wildcards.srr}
+        fastq-dump -O {params.path} --split-3 {wildcards.srr}
         '''
 
 read_ext = ["_1", "_2"] if sfs.is_paired_end() else [""]
 for gsm, values in file_info["public"].items():
     rule:
         name:
-            f"concatenate_{gsm}"
+            f"concatenate_{gsm}_SE"
         input:
-            expand("resources/reads/{run}{readNum}.fastq", run=values["runs"], readNum=read_ext)
+            expand(RESOURCES + "/reads/{run}.fastq", run=values["runs"])
         output:
-            expand(f"resources/reads/{values['file_name']}{{read}}.fastq", read=read_ext)
+            RESOURCES + f"/reads/{values['file_name']}.fastq"
         params:
-            outdir = "resources/reads",
-            readFiles = " ".join(list(map(lambda run: f"resources/reads/{run}.fastq", values["runs"]))),
-            read1Files = " ".join(list(map(lambda run: f"resources/reads/{run}_1.fastq", values["runs"]))),
-            read2Files = " ".join(list(map(lambda run: f"resources/reads/{run}_2.fastq", values["runs"]))),
+            path =  RESOURCES + "/reads",
+            readFiles = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", values["runs"]))),
             outputName = values["file_name"],
             paired_end = config["paired_end"]
         log:
-            f"logs/concatenate/{gsm}.log"
+            LOGS + f"concatenate/{gsm}.log"
+        resources:
+            tmpdir=TEMP
         shell:
             """
             exec > {log} 2>&1
-            shopt -s nocasematch
-            if [[ {params.paired_end} =~ true ]]; then
-                cat {params.read1Files} > {params.outdir}/{params.outputName}_1.fastq
-                cat {params.read2Files} > {params.outdir}/{params.outputName}_2.fastq
-            else
-                cat {params.readFiles} > {params.outdir}/{params.outputName}.fastq
-            fi
+            cat {params.readFiles} > {params.path}/{params.outputName}.fastq
             """
-
+    rule:
+        name:
+            f"concatenate_{gsm}_PE"
+        input:
+            expand(RESOURCES + "/reads/{run}{read}.fastq", run=values["runs"], read=["_1", "_2"])
+        output:
+            expand(RESOURCES + f"/reads/{values['file_name']}{{read}}.fastq", read=["_1", "_2"])
+        params:
+            path =  RESOURCES + "/reads",
+            outputName= values["file_name"],
+            paired_end= config["paired_end"],
+            read1Files = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", values["runs"]))),
+            read2Files = " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", values["runs"])))
+        log:
+            RESOURCES + f"logs/concatenate/{gsm}.log"
+        resources:
+            tmpdir=TEMP
+        shell:
+            """
+            exec > {log} 2>&1
+            cat {params.read1Files} > {params.path}/{params.outputName}_1.fastq
+            cat {params.read2Files} > {params.path}/{params.outputName}_2.fastq
+            """
 
 for key, value in file_info["provided"].items():
     rule:
@@ -73,9 +106,11 @@ for key, value in file_info["provided"].items():
         input:
             [file_info["provided"][key]["read1"]["path"].rstrip(".gz")]
         output:
-            [f"resources/reads/{value['file_name']}.fastq"]
+            RESOURCES + f"/reads/{value['file_name']}.fastq"
         log:
-            f"logs/link/{value['file_name']}.log"
+            LOGS + f"/link/{value['file_name']}.log"
+        resources:
+            tmpdir=TEMP
         shell:
             '''
             exec > {log} 2>&1
@@ -86,9 +121,11 @@ for key, value in file_info["provided"].items():
         input:
             files = [file_info["provided"][key]["read1"]["path"].rstrip(".gz"), file_info["provided"][key]["read2"]["path"].rstrip(".gz")]
         output:
-            out_files = [f"resources/reads/{value['file_name']}_1.fastq",f"resources/reads/{value['file_name']}_2.fastq"]
+            out_files = [RESOURCES + f"/reads/{value['file_name']}_1.fastq", RESOURCES + f"/reads/{value['file_name']}_2.fastq"]
         log:
-            f"logs/link/{value['file_name']}.log"
+             LOGS + f"/link/{value['file_name']}.log"
+        resources:
+            tmpdir=TEMP
         shell:
             '''
             exec > {log} 2>&1
@@ -96,19 +133,19 @@ for key, value in file_info["provided"].items():
             ln -sr {input.files[1]} {output.out_files[1]} 
             '''
 
-
-
 rule referenceGenome:
     output:
-        "resources/genomes/{genome}.fa.gz"
-    benchmark:
-        "benchmarks/rsync/{genome}.benchmark.txt"
+        RESOURCES + "/genomes/{genome}.fa.gz"
     conda:
         "../envs/download.yml"
     log:
-        "logs/rsync/{genome}.log"
+        LOGS + "/rsync/{genome}.log"
+    benchmark:
+        BENCHMARKS + "/rsync/{genome}.benchmark.txt"
+    resources:
+        tmpdir=TEMP
     shell:
         '''
         exec > {log} 2>&1
-        rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz resources/genomes/
+        rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz {output}
         '''
