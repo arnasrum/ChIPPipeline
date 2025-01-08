@@ -1,3 +1,9 @@
+RESULTS = config['results_path']
+RESOURCES = config['resources_path']
+LOGS = config['logs_path']
+BENCHMARKS = config['benchmarks_path']
+TEMP = config['temp_path']
+
 rule unzip:
     input:
         "{file}.gz"
@@ -5,6 +11,8 @@ rule unzip:
         "{file}"
     wildcard_constraints:
         file = r"^([\/A-Za-z0-9])*.(fastq|fq).gz"
+    resources:
+        tmpdir=TEMP
     shell:
         "gzip -dk {input} -f"
 
@@ -18,6 +26,8 @@ rule samtools_index:
         int(config["samtools-index"]["threads"])
     conda:
         "../envs/utils.yml"
+    resources:
+        tmpdir=TEMP
     shell:
         """
         samtools index -@ {threads} {input} -o {output}
@@ -25,21 +35,24 @@ rule samtools_index:
 
 rule picardCreateGenomeSequenceDictionary:
     input:
-        "resources/genomes/{genome}.fa"
+        RESOURCES + "/genomes/{genome}.fa"
     output:
-        "resources/genomes/{genome}.dict"
+        RESOURCES + "/genomes/{genome}.dict"
     conda:
         "../envs/utils.yml"
+    resources:
+        tmpdir=TEMP
     shell:
-        "picard CreateSequenceDictionary -R resources/genomes/{wildcards.genome}.fa -O resources/genomes/{wildcards.genome}.dict"
+        "picard CreateSequenceDictionary -R {input} -O {output}"
 
 rule picard_MarkDuplicates:
     input:
-        aligned = f"results/{config['aligner']}/{{sample}}.bam",
-        aligned_index= f"results/{config['aligner']}/{{sample}}.bam.bai",
+        aligned = f"{RESULTS}/{config['aligner']}/{{sample}}.bam",
+        aligned_index= f"{RESULTS}/{config['aligner']}/{{sample}}.bam.bai",
     output:
-        sorted = temp("temp/{sample}_sorted.bam"),
-        marked = multiext("results/picard-MarkDuplicates/{sample}", ".metrics.txt", ".bam"),
+        sorted = temp(RESULTS + "/picard-MarkDuplicates/{sample}_sorted.bam"),
+        marked = RESULTS + "/picard-MarkDuplicates/{sample}.bam",
+        metrics = RESULTS + "/picard-MarkDuplicates/{sample}.metrics.txt"
     params:
         paired_end = config['paired_end'],
         genome = config['genome'],
@@ -48,32 +61,39 @@ rule picard_MarkDuplicates:
     conda:
         "../envs/utils.yml"
     log:
-        "logs/picard-MarkDuplicates/{sample}.log"
+        LOGS + "/picard-MarkDuplicates/{sample}.log"
+    benchmark:
+        BENCHMARKS + "/picard-MarkDuplicates/{sample}.log"
+    resources:
+        tmpdir=TEMP
     shell:
         """
         exec > {log} 2>&1
         picard SortSam -I {input.aligned} -O {output.sorted} --SO coordinate
-        picard MarkDuplicates -I {output.sorted} -O results/picard-MarkDuplicates/{wildcards.sample}.bam -M results/picard-MarkDuplicates/{wildcards.sample}.metrics.txt {params.args}
+        picard MarkDuplicates -I {output.sorted} -O {output.marked} -M {output.metrics} {params.args}
         """
 
 rule samtools_markdup:
     input:
-        f"results/{config['aligner']}/{{sample}}.bam"
+        f"{RESULTS}/{config['aligner']}/{{sample}}.bam"
     output:
-        "results/samtools-markdup/{sample}.bam"
+        RESULTS + "/samtools-markdup/{sample}.bam"
     conda:
         "../envs/utils.yml"
     params:
-        args = config['markdup']['args']
+        args = config['markdup']['args'],
+        path = f"{RESULTS}/samtools-markdup"
     threads:
         int(config["markdup"]["threads"])
     log:
-        "logs/samtools-markdup/{sample}.log"
+        LOGS + "/samtools-markdup/{sample}.log"
+    benchmark:
+        BENCHMARKS + "/samtools-markdup/{sample}.txt"
     resources:
-        tmpdir="temp"
+        tmpdir=TEMP
     shell:
         """
         exec > {log} 2>&1
-        mkdir -p results/samtools-markdup
+        mkdir -p {params.path} 
         samtools collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup {params.args} -@ {threads} - {output}
         """
