@@ -11,6 +11,8 @@ rule deeptools_bamCoverage:
         "results/deeptools-bamCoverage/{sample}.bw"
     conda:
         "../envs/data_analysis.yml"
+    resources:
+        tmpdir="temp"
     log:
         "logs/bamCoverage/{sample}.log"
     shell:
@@ -65,6 +67,8 @@ rule deeptools_computeMatrix:
         args = config["computeMatrix"]["args"]
     threads:
         8
+    resources:
+        tmpdir="temp"
     shell:
         """
         mkdir -p results/deeptools
@@ -78,6 +82,8 @@ rule deeptools_plotHeatMap:
         "results/deeptools/{sample}_heatmap.png"
     conda:
         "../envs/data_analysis.yml"
+    resources:
+        tmpdir="temp"
     shell:
         """
         plotHeatmap -m {input} -o {output}
@@ -113,9 +119,10 @@ rule plot_genome_track:
         make_tracks_file -f {input.beds} {input.bigwigs} -o {output.tracks}
         pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot}
         '''
+
 rule annotate_peaks:
     input:
-        peak ="results/bedtools/{sample}.consensusPeak",
+        lambda wildcards: f"results/bedtools/{wildcards.sample}.consensusPeak" if len(get_consensus_peak_input(wildcards.sample)) > 1 else get_consensus_peak_input(wildcards.sample)
     output:
         "results/homer/{sample}_annotate.txt"
     conda:
@@ -124,12 +131,14 @@ rule annotate_peaks:
         genome = config['genome']
     log:
         "logs/homer/{sample}_annotate.log"
+    resources:
+        tmpdir="temp"
     shell:
         '''
         exec > {log} 2>&1
         mkdir -p results/homer
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peak} {params.genome} > {output}
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input} {params.genome} > {output}
         '''
 
 rule findMotifsGenome:
@@ -144,6 +153,8 @@ rule findMotifsGenome:
         size = 200
     log:
         "logs/homer/{sample}_findMotifs.log"
+    resources:
+        tmpdir="temp"
     shell:
         '''
         exec > {log} 2>&1
