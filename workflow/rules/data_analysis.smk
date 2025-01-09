@@ -41,7 +41,7 @@ rule bedtools_consensus_peak:
     output:
         RESULTS + "/bedtools/{sample}.consensusPeak"
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/data_analysis.yml"
     log:
         LOGS + "/bedtools-intersect/{sample}.log"
     benchmark:
@@ -122,7 +122,7 @@ rule plot_genome_track:
     params:
         region = config["plot_regions"],
     conda:
-        "../envs/peak_calling.yml"
+        "../envs/data_analysis.yml"
     log:
         LOGS + "/pyGenomeTracks/{sample}_rep{replicate}.log"
     resources:
