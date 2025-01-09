@@ -116,7 +116,7 @@ for key, value in file_info["provided"].items():
     rule:
         name: f"symlink_{value['file_name']}_PE"
         input:
-            files = [file_info["provided"][key]["read1"]["path"].rstrip(".gz"), file_info["provided"][key]["read2"]["path"].rstrip(".gz")]
+            files = [file_info["provided"][key]["read1"]["path"].rstrip(".gz"), file_info["provided"][key]["read2"]["path"].rstrip(".gz")] if sfs.is_paired_end() else []
         output:
             out_files = [RESOURCES + f"/reads/{value['file_name']}_1.fastq", RESOURCES + f"/reads/{value['file_name']}_2.fastq"]
         log:
