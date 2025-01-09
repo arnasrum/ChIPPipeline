@@ -10,6 +10,9 @@ LOGS: str = config['logs_path']
 TEMP: str = config['temp_path']
 BENCHMARKS: str = config['benchmarks_path']
 
+ruleorder: concatenate_runs_PE > concatenate_runs_SE
+
+
 rule fastq_dump_SE:
     output:
         temp(RESOURCES + "/reads/{srr}.fastq")
