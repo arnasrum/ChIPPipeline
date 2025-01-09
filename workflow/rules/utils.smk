@@ -95,5 +95,5 @@ rule samtools_markdup:
         """
         exec > {log} 2>&1
         mkdir -p {params.path} 
-        samtools collate -T {resources.tmpdir} -@ {threads} -O -u {input} | samtools fixmate -T {resources.tmpdir} -@ {threads} -m -u - - | samtools sort -T {resources.tmpdir}-@ {threads} -u - | samtools markdup {params.args} -T {resources.tmpdir}  -@ {threads} - {output}
+        samtools collate -T {resources.tmpdir}/{wildcards.sample}_collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -T {resources.tmpdir}/{wildcards.sample}_sort -@ {threads} -u - | samtools markdup {params.args} -T {resources.tmpdir}/{wildcards.sample}_markdup -@ {threads} - {output}
         """
