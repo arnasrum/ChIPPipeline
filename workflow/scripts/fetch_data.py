@@ -81,4 +81,4 @@ def __poll_request(url: str) -> Response:
 def __make_clean_file_name(title: str) -> str:
     for old, new in [(" ", ""), (":", "_"), ("+", "_"), (",", "_"), (";", "_"), (".", "_")]:
         title = title.replace(old, new)
-    return title
+    return title.rstrip("_1").rstrip("_2")
