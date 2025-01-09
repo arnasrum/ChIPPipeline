@@ -160,7 +160,7 @@ rule buildStarIndex:
     shell:
         """
         exec > {log} 2>&1
-        STAR --runThreadN {threads} --runMode genomeGenerate --genomeDir {params.result_path} --genomeFastaFiles {params.genome_path} {params.args}
+        STAR --outTmpDir {resources.tmpdir}/star-index --runThreadN {threads} --runMode genomeGenerate --genomeDir {params.result_path} --genomeFastaFiles {params.genome_path} {params.args}
         """ 
 
 rule STAR:
@@ -186,6 +186,5 @@ rule STAR:
     shell:
         """
         exec > {log} 2>&1
-        #STAR --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outFileNamePrefix results/STAR/{wildcards.sample} --outStd SAM | samtools view -b -o {output}
-        STAR --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools view -b -o {output}
+        STAR --outTmpDir {resources.tmpdir}/STAR --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools view -b -o {output}
         """
