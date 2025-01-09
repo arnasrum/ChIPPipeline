@@ -120,7 +120,7 @@ rule plot_genome_track:
         tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_rep{replicate}_tracks.ini"),
         plot = RESULTS + "/pyGenomeTracks/{sample}_rep{replicate}.png"
     params:
-        region = config["pyGenomeTracks"]["region"],
+        region = config["plot_regions"],
     conda:
         "../envs/peak_calling.yml"
     log:

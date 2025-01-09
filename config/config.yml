@@ -48,8 +48,7 @@ macs3:
 computeMatrix:
   args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
 
-pyGenomeTracks:
-  region: "chr1:10,000,000-11,000,000"
+
 
 # Workflow config
 prefix: ""
@@ -60,13 +59,22 @@ logs_path: "logs"
 benchmarks_path: "benchmarks"
 temp_path: "temp"
 
-
+# String to overwrite which tools are to be ran
 modules: ""
 trimmer: "trim_galore"
 aligner: "bowtie2"
 duplicate_processor: "samtools-markdup"
 peak_caller: "macs3"
+
+# Genome to be used to peak call and align
 genome: "mm39"
+
+plot_regions: "chr1:10,000,000-11,000,000"
+
+# Defined reads in sample sheet are paired end
 paired_end: True
-samtools: "-f 4"
-sample_sheet: "config/samplesTest.csv"
+
+# Path to sample sheet
+sample_sheet: "config/samples.csv"
+
+
