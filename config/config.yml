@@ -4,42 +4,42 @@ fasterq-dump:
 
 # Trimmer config
 trim_galore:
-  threads: 8
+  threads: 4
   args: "--no_report_file "
 cutadapt:
-  threads: 8
+  threads: 4
   args: ""
 fastp:
-  threads: 8
+  threads: 4
   args: ""
 
 # Aligner config
 bowtie2:
   args: "--very-fast"
   extra: ""
-  threads: 8
+  threads: 4
 bowtie2-build:
   args: "--quiet"
-  threads: 8
+  threads: 4
 bwa:
   args: "-v 1 -Y"
   extra: ""
-  threads: 8
+  threads: 4
 bwa-index:
   args: ""
 STAR:
   args: ""
   extra: ""
-  threads: 8
+  threads: 4
 
 # Utils config
 samtools-index:
-  threads: 8
+  threads: 4
 MarkDuplicates:
   args: "--REMOVE_SEQUENCING_DUPLICATES true"
 markdup:
   args: ""
-  threads: 8
+  threads: 4
 
 # Peak calling config
 macs3:
