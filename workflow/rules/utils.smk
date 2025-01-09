@@ -10,7 +10,7 @@ rule unzip:
     output:
         "{file}"
     wildcard_constraints:
-        file = r"^([\/A-Za-z0-9])*.(fastq|fq|fa|fasta).gz"
+        file = r"^([\/A-Za-z0-9])*.(fastq|fq|fa|fasta)$"
     resources:
         tmpdir=TEMP
     shell:
