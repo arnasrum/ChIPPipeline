@@ -13,41 +13,13 @@ sfs = SampleFileScripts(config)
 sfs.make_sample_info(config["json_path"])
 
 
-module utils:
-    snakefile: "rules/utils.smk"
-    config: config
-
-module QA:
-    snakefile: "rules/fastqc.smk"
-    config: config
-
-module downloadWorkflow:
-    snakefile: "rules/download.smk"
-    config: config
-
-module trimWorkflow:
-    snakefile: "rules/trim.smk"
-    config: config
-
-module alignmentWorkflow:
-    snakefile: "rules/align.smk"
-    config: config
-
-module peakCallingWorkflow:
-    snakefile: "rules/peak_calling.smk"
-    config: config
-
-module data_analysis:
-    snakefile: "rules/data_analysis.smk"
-    config: config
-
-use rule * from utils as utils_*
-use rule * from QA as qa_*
-use rule * from downloadWorkflow as download_*
-use rule * from trimWorkflow as trim_*
-use rule * from alignmentWorkflow as align_*
-use rule * from peakCallingWorkflow as peak_calling_*
-use rule * from data_analysis as data_analysis_*
+include: "rules/utils.smk"
+include: "rules/fastqc.smk"
+include: "rules/download.smk"
+include: "rules/trim.smk"
+include: "rules/align.smk"
+include: "rules/peak_calling.smk"
+include: "rules/data_analysis.smk"
 
 macs_input = get_macs_input(config["json_path"])
 def get_deeptools_input():
@@ -58,6 +30,12 @@ def get_deeptools_input():
             input_files.append(f"{path}/deeptools/{key}_rep{replicate}_heatmap.png")
             input_files.append(f"{path}/deeptools/{key}_rep{replicate}_profile.png")
             input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
+            if sfs.is_paired_end():
+                input_files.append(([*map(lambda file: f"{path}/fastqc/{config['trimmer']}/{file}_1_fastqc.html", macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"])]))
+                input_files.append(([*map(lambda file: f"{path}/fastqc/{config['trimmer']}/{file}_2_fastqc.html", macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"])]))
+            else:
+                input_files.append(([*map(lambda file: f"{path}/fastqc/{config['trimmer']}/{file}_fastqc.html", macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"])]))
+
     return input_files
 
 rule all:

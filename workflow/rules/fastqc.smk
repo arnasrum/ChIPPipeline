@@ -1,15 +1,25 @@
 
-
-rule fastqc_after_trim:
+# Add prefix to these paths
+rule fastqc:
     input:
-        f"results/{config['trimmer']}/{{sample}}.fastq",
+        f"{config['results_path']}/{{tool}}/{{sample}}.fastq",
     output:
-        multiext(f"results/fastqc/{config['trimmer']}/{{sample}}.", "zip", "html")
+        multiext(f"{config['results_path']}/fastqc/{{tool}}/{{sample}}_fastqc.", "zip", "html")
     params:
-        outputPath = "results/fastqc/" + config["trimmer"]
+        outputPath = lambda wildcards: f"{config['results_path']}/fastqc/" + wildcards.tool
+    conda:
+        "../envs/fastqc.yml"
+    log:
+        config['logs_path'] + "/fastqc/{tool}/{sample}.log"
+    threads:
+        int(config["fastqc"]["threads"])
+    resources:
+        tmpdir=config["temp_path"],
+        mem="1024MB"
     shell:
         """
-        fastqc -o {params.outputPath} {input} 
+        exec > {log} 2>&1
+        fastqc -t {threads} -o {params.outputPath} --memory {resources.mem} {input} 
         """
 
 
