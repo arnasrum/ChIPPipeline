@@ -2,9 +2,14 @@ fasterq-dump:
   downloadPath: "resources/reads"
   args: ""
 
+fastqc:
+  args: ""
+  extra: ""
+  threads: 4
+
 # Trimmer config
 trim_galore:
-  threads: 4
+  threads: 8
   args: "--no_report_file "
 cutadapt:
   threads: 4
@@ -43,7 +48,7 @@ markdup:
 
 # Peak calling config
 macs3:
-  args: "--nomodel -g hs"
+  args: "--nomodel -g hs -q 0.01"
 
 computeMatrix:
   args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
