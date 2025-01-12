@@ -140,7 +140,7 @@ rule annotate_peaks:
     output:
         RESULTS + "/homer/{sample}_annotate.txt"
     conda:
-        "../envs/homer.yml"
+        "../envs/data_analysis.yml"
     params:
         outdir = RESULTS + "/homer",
         genome = config['genome']
@@ -162,7 +162,7 @@ rule findMotifsGenome:
     output:
         multiext(RESULTS + "/homer/{sample}/", "homerResults.html", "knownResults.html")
     conda:
-        "../envs/homer.yml"
+        "../envs/data_analysis.yml"
     params:
         outdir = RESULTS + "/homer",
         genome = config['genome'],
