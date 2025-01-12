@@ -185,7 +185,7 @@ rule bwa_mem2:
     shell:
         """
         exec > {log} 2>&1
-        bwa-mem2 -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools view -b - > {output}
+        bwa-mem2 mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools view -b - > {output}
         """
 
 
