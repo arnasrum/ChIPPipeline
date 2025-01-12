@@ -50,8 +50,8 @@ rule picardCreateGenomeSequenceDictionary:
 
 rule picard_MarkDuplicates:
     input:
-        aligned = f"{RESULTS}/{config['aligner']}/{{sample}}.bam",
-        aligned_index= f"{RESULTS}/{config['aligner']}/{{sample}}.bam.bai",
+        aligned = RESULTS + "/" + config['aligner'] + "/{{sample}}.bam",
+        aligned_index = RESULTS + "/" + config['aligner'] + "/{{sample}}.bam.bai",
     output:
         sorted = temp(RESULTS + "/picard-MarkDuplicates/{sample}_sorted.bam"),
         marked = RESULTS + "/picard-MarkDuplicates/{sample}.bam",
@@ -78,7 +78,7 @@ rule picard_MarkDuplicates:
 
 rule samtools_markdup:
     input:
-        f"{RESULTS}/{config['aligner']}/{{sample}}.bam"
+        RESULTS + "/" + config['aligner'] + "/{sample}.bam"
     output:
         RESULTS + "/samtools-markdup/{sample}.bam"
     conda:

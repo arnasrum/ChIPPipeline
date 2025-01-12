@@ -31,10 +31,12 @@ def get_deeptools_input():
             input_files.append(f"{path}/deeptools/{key}_rep{replicate}_profile.png")
             input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
             if sfs.is_paired_end():
-                input_files.append(([*map(lambda file: f"{path}/fastqc/{config['trimmer']}/{file}_1_fastqc.html", macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"])]))
-                input_files.append(([*map(lambda file: f"{path}/fastqc/{config['trimmer']}/{file}_2_fastqc.html", macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"])]))
+                for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
+                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_1_fastqc.html", )
+                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_2_fastqc.html")
             else:
-                input_files.append(([*map(lambda file: f"{path}/fastqc/{config['trimmer']}/{file}_fastqc.html", macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"])]))
+                for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
+                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_fastqc.html")
 
     return input_files
 
