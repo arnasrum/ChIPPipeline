@@ -10,8 +10,8 @@ TEMP: str = config['temp_path']
 macs_input = get_macs_input(config["json_path"])
 rule deeptools_bamCoverage:
     input:
-        bam = RESULTS + "/" + config['duplicate_processor'] + " + /{sample}.bam",
-        bam_index = RESULTS + "/" + config['duplicate_processor'] + " + /{sample}.bam.bai",
+        bam = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam",
+        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam.bai",
     output:
         RESULTS + "/deeptools-bamCoverage/{sample}.bw"
     conda:

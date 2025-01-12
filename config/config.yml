@@ -24,8 +24,8 @@ bowtie2:
   extra: ""
   threads: 4
 bowtie2-build:
-  args: "--quiet"
-  threads: 4
+  args: ""
+  threads: 12
 bwa-mem:
   args: "-v 1 -Y"
   extra: ""

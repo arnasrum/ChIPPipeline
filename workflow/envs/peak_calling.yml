@@ -1,4 +1,4 @@
-name peak_calling:
+name: peak_calling
 channels:
   - conda-forge
   - bioconda

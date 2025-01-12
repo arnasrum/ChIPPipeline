@@ -1,4 +1,4 @@
-name utils:
+name: utils
 channels:
   - conda-forge
   - bioconda

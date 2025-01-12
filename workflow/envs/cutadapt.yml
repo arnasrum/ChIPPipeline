@@ -1,4 +1,4 @@
-name cutadapt:
+name: cutadapt
 channels:
   - conda-forge
   - bioconda
