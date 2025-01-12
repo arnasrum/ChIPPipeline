@@ -1,9 +1,9 @@
 # non-slurm profile defaults
-restart-times: 3
-local-cores: 1
+restart-times: 1
+local-cores: 10
 latency-wait: 60
 use-conda: True
-jobs: 1
+jobs: 5
 keep-going: True
 rerun-incomplete: True
 printshellcmds: True
