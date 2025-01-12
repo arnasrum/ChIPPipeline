@@ -7,3 +7,4 @@ dependencies:
   - numpy=1.26.4
   - bedtools=2.31.1
   - pygenometracks=3.9-0
+  - homer=4.11

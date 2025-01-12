@@ -1,9 +1,0 @@
-name homer:
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - cxx-compiler
-  - gcc
-  - samtools
-  - homer=4.11
