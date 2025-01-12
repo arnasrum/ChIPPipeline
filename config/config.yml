@@ -26,10 +26,14 @@ bowtie2:
 bowtie2-build:
   args: "--quiet"
   threads: 4
-bwa:
+bwa-mem:
   args: "-v 1 -Y"
   extra: ""
   threads: 4
+bwa-mem2:
+  args: "-v 1 -Y"
+  extra: ""
+  threads: 12
 bwa-index:
   args: ""
 STAR:

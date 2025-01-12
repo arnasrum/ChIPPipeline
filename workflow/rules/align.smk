@@ -120,11 +120,11 @@ rule bwa:
         "../envs/align.yml"
     params:
         genome = config["genome"],
-        args = config["bwa"]["args"],
-        extra = config["bwa"]["extra"],
+        args = config["bwa-mem"]["args"],
+        extra = config["bwa-mem"]["extra"],
         index_path= f"{RESULTS}/bwa-index/{config['genome']}",
     threads:
-        int(config['bwa']['threads'])
+        int(config['bwa-mem']['threads'])
     log:
         LOGS + "/bwa-mem/{sample}.log"
     benchmark:
@@ -171,11 +171,11 @@ rule bwa_mem2:
         "../envs/align.yml"
     params:
         genome = config["genome"],
-        args = config["bwa"]["args"],
-        extra = config["bwa"]["extra"],
+        args = config["bwa-mem2"]["args"],
+        extra = config["bwa-mem2"]["extra"],
         index_path= f"{RESULTS}/bwa2-index/{config['genome']}",
     threads:
-        int(config['bwa']['threads'])
+        int(config['bwa-mem2']['threads'])
     log:
         LOGS + "/bwa-mem2/{sample}.log"
     benchmark:
