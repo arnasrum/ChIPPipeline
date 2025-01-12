@@ -49,6 +49,6 @@ for sample, replicates in macs_input.items():
                 else
                     inputOptions+='-f BAM '
                 fi 
-                macs3 callpeak -c {input.control} -t {input.treatment} --outdir {params.outdir} --name {params.name} {params.args} $inputOptions
+                macs3 callpeak --tempdir {resources.tmpdir} -c {input.control} -t {input.treatment} --outdir {params.outdir} --name {params.name} {params.args} $inputOptions
                 python3 workflow/scripts/rename_peaks.py {params.outdir}/{params.name}_peaks.{params.peak_type}Peak
                 """
