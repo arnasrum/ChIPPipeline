@@ -122,7 +122,7 @@ rule bwa:
         genome = config["genome"],
         args = config["bwa"]["args"],
         extra = config["bwa"]["extra"],
-        index_path= f"{RESULTS}/bwa-index/config['genome']",
+        index_path= f"{RESULTS}/bwa-index/{config['genome']}",
     threads:
         int(config['bwa']['threads'])
     log:
@@ -136,6 +136,59 @@ rule bwa:
         exec > {log} 2>&1
         bwa mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools view -b - > {output}
         """
+
+rule buildBWA2Index:
+    input:
+        f"{RESOURCES}/genomes/{config['genome']}.fa.gz"
+    output:
+        multiext(f"{RESULTS}/bwa2-index/{config['genome']}.", "amb", "ann", "pac")
+    conda:
+        "../envs/align.yml"
+    params:
+        index_path = f"{RESULTS}/bwa2-index/{config['genome']}",
+        dir = f"{RESULTS}/bwa-index/",
+        args = config["bwa-index"]["args"]
+    log:
+        f"{LOGS}/bwa2-index/{config['genome']}.log"
+    benchmark:
+        f"{BENCHMARKS}/bwa2-index/{config['genome']}.txt"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        mkdir -p {params.dir} 
+        bwa-mem2 index {params.args} -p {params.index_path} {input} 
+        """
+
+rule bwa_mem2:
+    input:
+        reads = lambda wildcards: alignment_input(wildcards.sample),
+        genomeIndex = multiext(f"{RESULTS}/bwa2-index/{config['genome']}.", "amb", "ann", "pac", "0123", "bwt.2bit.64")
+    output:
+        temp(RESULTS + "/bwa-mem2/{sample}.bam")
+    conda:
+        "../envs/align.yml"
+    params:
+        genome = config["genome"],
+        args = config["bwa"]["args"],
+        extra = config["bwa"]["extra"],
+        index_path= f"{RESULTS}/bwa2-index/{config['genome']}",
+    threads:
+        int(config['bwa']['threads'])
+    log:
+        LOGS + "/bwa-mem2/{sample}.log"
+    benchmark:
+        BENCHMARKS + "/bwa-mem2/{sample}.txt"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        bwa-mem2 -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools view -b - > {output}
+        """
+
+
 
 
 rule buildStarIndex:
@@ -160,6 +213,7 @@ rule buildStarIndex:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {resources.tmpdir}/star-index
         STAR --outTmpDir {resources.tmpdir}/star-index --runThreadN {threads} --runMode genomeGenerate --genomeDir {params.result_path} --genomeFastaFiles {params.genome_path} {params.args}
         """ 
 
@@ -186,5 +240,6 @@ rule STAR:
     shell:
         """
         exec > {log} 2>&1
-        STAR --outTmpDir {resources.tmpdir}/STAR --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools view -b -o {output}
+        rm -rf {resources.tmpdir}/STAR-{wildcards.sample}
+        STAR --outTmpDir {resources.tmpdir}/STAR-{wildcards.sample} --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools view -b -o {output}
         """
