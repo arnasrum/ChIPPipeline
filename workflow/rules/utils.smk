@@ -24,13 +24,16 @@ rule samtools_index:
         "{sample}.bam.bai"
     threads:
         int(config["samtools-index"]["threads"])
+    log:
+        LOGS + "/samtools-index/{sample}.log"
     conda:
         "../envs/utils.yml"
     resources:
         tmpdir=TEMP
     shell:
         """
-        samtools index -@ {threads} {input} -o {output}
+        exec > {log} 2>&1
+        samtools sort {input} -@ {threads} | samtools index -@ {threads} -o {output} -
         """
 
 rule picardCreateGenomeSequenceDictionary:
