@@ -11,7 +11,7 @@ TEMP: str = config['temp_path']
 BENCHMARKS: str = config['benchmarks_path']
 
 ruleorder: concatenate_runs_PE > concatenate_runs_SE
-
+localrules: referenceGenome
 
 rule fastq_dump_SE:
     output:
@@ -31,29 +31,33 @@ rule fastq_dump_SE:
     shell:
         '''
         exec > {log} 2>&1
-        fastq-dump -O {params.path} {wildcards.srr}
+        prefetch -O {resources.tmpdir} {wildcards.srr}
+        fastq-dump -O {params.path} {resources.tmpdir}/{wildcards.srr}
         '''
 
 rule fastq_dump_PE:
     output:
         temp(RESOURCES + "/reads/{srr}_1.fastq"),
         temp(RESOURCES + "/reads/{srr}_2.fastq")
+    wildcard_constraints:
+        srr = r"SRR[0-9]*"
     params:
         path = f"{RESOURCES}/reads"
     conda:
         "../envs/download.yml"
-    wildcard_constraints:
-        srr = r"SRR[0-9]*"
     log:
         LOGS + "/fastq-dump/{srr}_PE.log"
     benchmark:
         BENCHMARKS + "/fastq-dump/{srr}_PE.log"
     resources:
         tmpdir=TEMP
+    threads: 2
     shell:
         '''
         exec > {log} 2>&1
-        fastq-dump -O {params.path} --split-3 {wildcards.srr}
+        prefetch -O {resources.tmpdir} {wildcards.srr}
+        fasterq-dump -t {resources.tmpdir} -e {threads} -O {params.path} --split-files {resources.tmpdir}/{wildcards.srr}
+        rm -r {resources.tmpdir}/{wildcards.srr}
         '''
 
 def join_read_files(runs: list, paired_end: bool):
