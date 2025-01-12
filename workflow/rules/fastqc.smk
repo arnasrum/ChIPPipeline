@@ -2,9 +2,9 @@
 # Add prefix to these paths
 rule fastqc:
     input:
-        f"{config['results_path']}/{{tool}}/{{sample}}.fastq",
+        config['results_path'] + "/" + "{tool}/{sample}.fastq",
     output:
-        multiext(f"{config['results_path']}/fastqc/{{tool}}/{{sample}}_fastqc.", "zip", "html")
+        multiext(config['results_path'] + "/fastqc/{tool}/{sample}_fastqc.", "zip", "html")
     params:
         outputPath = lambda wildcards: f"{config['results_path']}/fastqc/" + wildcards.tool
     conda:
