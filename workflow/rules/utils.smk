@@ -33,7 +33,7 @@ rule samtools_index:
     shell:
         """
         exec > {log} 2>&1
-        samtools sort {input} -@ {threads} | samtools index -@ {threads} -o {output} -
+        samtools sort -@ {threads} {input} | samtools index -@ {threads} - -o {output}
         """
 
 rule picardCreateGenomeSequenceDictionary:
@@ -50,8 +50,8 @@ rule picardCreateGenomeSequenceDictionary:
 
 rule picard_MarkDuplicates:
     input:
-        aligned = RESULTS + "/" + config['aligner'] + "/{{sample}}.bam",
-        aligned_index = RESULTS + "/" + config['aligner'] + "/{{sample}}.bam.bai",
+        aligned = RESULTS + "/" + config['aligner'] + "/{sample}.bam",
+        aligned_index = RESULTS + "/" + config['aligner'] + "/{sample}.bam.bai",
     output:
         sorted = temp(RESULTS + "/picard-MarkDuplicates/{sample}_sorted.bam"),
         marked = RESULTS + "/picard-MarkDuplicates/{sample}.bam",
@@ -73,14 +73,41 @@ rule picard_MarkDuplicates:
         """
         exec > {log} 2>&1
         picard SortSam -I {input.aligned} -O {output.sorted} --SO coordinate
-        picard MarkDuplicates -I {output.sorted} -O {output.marked} -M {output.metrics} {params.args}
+        picard MarkDuplicates -ASO coordinate -I {output.sorted} -O {output.marked} -M {output.metrics} {params.args}
         """
+    
+    
+rule samtools_markdup:
+    input:
+        f"results/{config['aligner']}/{{sample}}.bam"
+    output:
+        collate = temp("results/samtools-markdup/{sample}_collate.bam"),
+        fixmate = temp("results/samtools-markdup/{sample}_fixmate.bam"),
+        sort = temp("results/samtools-markdup/{sample}_sort.bam"),
+        marked = "results/samtools-markdup/{sample}.bam"
+    conda:
+        "../envs/utils.yml"
+    params:
+        args = config['markdup']['args']
+    threads:
+        12
+    shell:
+        """
+        mkdir -p results/samtools-markdup
+        samtools collate -@ {threads} -o {output.collate} {input} 
+        samtools fixmate -@ {threads} -m {output.collate} {output.fixmate}
+        samtools sort -@ {threads} -o {output.sort} {output.fixmate}
+        samtools markdup -@ {threads} {output.sort} {output.marked}
+        """
+    
+    
 
+'''
 rule samtools_markdup:
     input:
         RESULTS + "/" + config['aligner'] + "/{sample}.bam"
     output:
-        RESULTS + "/samtools-markdup/{sample}.bam"
+        RESULTS + "/samtools-markdup/{sample}.bam",
     conda:
         "../envs/utils.yml"
     params:
@@ -98,5 +125,7 @@ rule samtools_markdup:
         """
         exec > {log} 2>&1
         mkdir -p {params.path} 
+        rm -rf {resources.tmpdir}/{wildcards.sample}_collate &&  rm -rf {resources.tmpdir}/{wildcards.sample}_sort && rm -rf {resources.tmpdir}/{wildcards.sample}_markdup
         samtools collate -T {resources.tmpdir}/{wildcards.sample}_collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -T {resources.tmpdir}/{wildcards.sample}_sort -@ {threads} -u - | samtools markdup {params.args} -T {resources.tmpdir}/{wildcards.sample}_markdup -@ {threads} - {output}
         """
+'''
