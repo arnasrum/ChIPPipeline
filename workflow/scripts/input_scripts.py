@@ -34,6 +34,12 @@ def get_macs_input(json_path) -> dict[str: dict]:
         macs_input[file].pop(replicate)
     return macs_input
 
+def symlink_input(json_path: str, file_name: str) -> None:
+    with open(json_path) as file:
+        samples = json.load(file)["provided"]
+    return next((item for item in samples.values() if item["file_name"] == file_name), None)
+
+
 def __flatten_dict(old_dict: dict) -> dict:
     new_dict = {}
     for key, value in old_dict.items():

@@ -7,10 +7,11 @@ import re
 import yaml
 
 from fetch_data import get_meta_data, get_sra_accessions
+from input_scripts import symlink_input
 
 
 class SampleFileScripts:
-    def __init__(self, config):
+    def __init__(self, config: dict):
         if config["sample_sheet"] is None or config["sample_sheet"] == '':
             self.sample_sheet = "config/samples.csv"
         else:
@@ -112,5 +113,7 @@ if __name__ == "__main__":
     file.close()
     sfs = SampleFileScripts(config)
     sfs.make_sample_info("")
+    symlink_input(config["json_path"], "test")
+
 
 

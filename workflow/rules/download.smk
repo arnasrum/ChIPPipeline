@@ -1,6 +1,7 @@
 import sys
 sys.path.append("workflow/scripts")
 from sample_file_scripts import SampleFileScripts
+from input_scripts import symlink_input
 
 sfs = SampleFileScripts(config)
 file_info = SampleFileScripts.get_file_info(config["json_path"])
@@ -10,12 +11,13 @@ LOGS: str = config['logs_path']
 TEMP: str = config['temp_path']
 BENCHMARKS: str = config['benchmarks_path']
 
-ruleorder: concatenate_runs_PE > concatenate_runs_SE
-localrules: referenceGenome
+ruleorder: symlink_PE > concatenate_runs_PE
+ruleorder: symlink_SE > concatenate_runs_SE
+localrules: referenceGenome, symlink_SE, symlink_PE
 
 rule fastq_dump_SE:
     output:
-        temp(RESOURCES + "/reads/{srr}.fastq")
+        temp(TEMP + "/reads/{srr}.fastq")
     params:
         path = f"{RESOURCES}/reads"
     conda:
@@ -37,8 +39,8 @@ rule fastq_dump_SE:
 
 rule fastq_dump_PE:
     output:
-        temp(RESOURCES + "/reads/{srr}_1.fastq"),
-        temp(RESOURCES + "/reads/{srr}_2.fastq")
+        temp(TEMP + "/reads/{srr}_1.fastq"),
+        temp(TEMP + "/reads/{srr}_2.fastq")
     wildcard_constraints:
         srr = r"SRR[0-9]*"
     params:
@@ -68,11 +70,12 @@ def join_read_files(runs: list, paired_end: bool):
 
 rule concatenate_runs_SE:
     input:
-        lambda wildcards: expand(RESOURCES + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
+        lambda wildcards: expand(TEMP + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
     output:
         RESOURCES + "/reads/{gsm}_{file_suffix}.fastq"
     wildcard_constraints:
         gsm = r"GSM[0-9]*",
+        file_suffix = r"^.*(?<!_1|_2)$"
     params:
         read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.gsm]["runs"], False)
     log:
@@ -87,7 +90,7 @@ rule concatenate_runs_SE:
 
 rule concatenate_runs_PE:
     input:
-        lambda wildcards: expand(RESOURCES + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.sample.split("_")[0]]["runs"], read=["_1", "_2"])
+        lambda wildcards: expand(TEMP + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.sample.split("_")[0]]["runs"], read=["_1", "_2"])
     output:
         read1 = RESOURCES + "/reads/{sample}_1.fastq",
         read2 = RESOURCES + "/reads/{sample}_2.fastq"
@@ -104,38 +107,41 @@ rule concatenate_runs_PE:
         cat {params.read_files} > {output.read2} 
         """
 
-for key, value in file_info["provided"].items():
-    rule:
-        name: f"link_{value['file_name']}_SE"
-        input:
-            [file_info["provided"][key]["read1"]["path"].rstrip(".gz")]
-        output:
-            RESOURCES + f"/reads/{value['file_name']}.fastq"
-        log:
-            LOGS + f"/link/{value['file_name']}.log"
-        resources:
-            tmpdir=TEMP
-        shell:
-            '''
-            exec > {log} 2>&1
-            ln -s {input} {output} 
-            '''
-    rule:
-        name: f"symlink_{value['file_name']}_PE"
-        input:
-            files = [file_info["provided"][key]["read1"]["path"].rstrip(".gz"), file_info["provided"][key]["read2"]["path"].rstrip(".gz")] if sfs.is_paired_end() else []
-        output:
-            out_files = [RESOURCES + f"/reads/{value['file_name']}_1.fastq", RESOURCES + f"/reads/{value['file_name']}_2.fastq"]
-        log:
-             LOGS + f"/link/{value['file_name']}.log"
-        resources:
-            tmpdir=TEMP
-        shell:
-            '''
-            exec > {log} 2>&1
-            ln -sr {input.files[0]} {output.out_files[0]} 
-            ln -sr {input.files[1]} {output.out_files[1]} 
-            '''
+
+rule symlink_SE:
+    input:
+        lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read1"]["path"]
+    output:
+        RESOURCES + "/reads/{file_name}.fastq"
+    log:
+        LOGS + "/link/{file_name}.log"
+    resources:
+        tmpdir=TEMP
+    wildcard_constraints: 
+        file_name = r"^.*(?<!_1|_2)$"
+    shell:
+        """
+        exec > {log} 2>&1
+        ln -s -r {input} {output} 
+        """
+rule symlink_PE:
+    input:
+        read1 = lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read1"]["path"],
+        read2 = lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read2"]["path"]
+    output:
+        read1 = RESOURCES + "/reads/{file_name}_1.fastq",
+        read2 = RESOURCES+ "/reads/{file_name}_2.fastq"
+    log:
+        LOGS + "/link/{file_name}.log"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        ln -s -r {input.read1} {output.read1} 
+        ln -s -r {input.read2} {output.read2} 
+        """
+
 
 rule referenceGenome:
     output:
