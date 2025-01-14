@@ -138,7 +138,7 @@ rule bwa:
     resources:
         tmpdir=TEMP,
         mem_per_cpu=2096,
-        cpus_per_task=int(config["bwa"]["threads"])
+        cpus_per_task=int(config["bwa-mem"]["threads"])
     shell:
         """
         exec > {log} 2>&1
