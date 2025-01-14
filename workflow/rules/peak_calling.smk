@@ -27,7 +27,6 @@ for sample, replicates in macs_input.items():
                 peak_type = value["peak_type"],
                 name = f"{sample}_rep{replicate}",
                 outdir = f"{RESULTS}/macs3"
-
             conda:
                 "../envs/peak_calling.yml"
             log:
@@ -49,6 +48,6 @@ for sample, replicates in macs_input.items():
                 else
                     inputOptions+='-f BAM '
                 fi 
-                macs3 callpeak --tempdir {resources.tmpdir} -c {input.control} -t {input.treatment} --outdir {params.outdir} --name {params.name} {params.args} $inputOptions
-                python3 workflow/scripts/rename_peaks.py {params.outdir}/{params.name}_peaks.{params.peak_type}Peak
+                macs3 callpeak {params.args} --tempdir {resources.tmpdir} -c {input.control} -t {input.treatment} --outdir {params.outdir} --name {params.name} $inputOptions
+                #python3 workflow/scripts/rename_peaks.py {params.outdir}/{params.name}_peaks.{params.peak_type}Peak
                 """
