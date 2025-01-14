@@ -44,7 +44,9 @@ rule buildBowtie2Index:
     benchmark:
         f"{BENCHMARKS}/bowtie2-build/{config['genome']}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task=int(config["bowtie2-build"]["threads"]),
+        mem_mb=20000
     shell:
         '''
         exec > {log} 2>&1
@@ -56,7 +58,7 @@ rule bowtie2:
         multiext(f"{RESULTS}/bowtie2-build/{config['genome']}.", "1.bt2", "2.bt2", "3.bt2", "4.bt2"),
         reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
-        temp(RESULTS + "/bowtie2/{sample}.bam")
+        RESULTS + "/bowtie2/{sample}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -72,7 +74,9 @@ rule bowtie2:
     benchmark:
         BENCHMARKS + "/bowtie2/{sample}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        mem_per_cpu=2096,
+        cpus_per_task=int(config["bowtie2"]["threads"])
     shell:
         '''
         exec > {log} 2>&1
@@ -83,7 +87,8 @@ rule bowtie2:
         else
             inputOptions='-q -1 {input.reads}'
         fi
-        bowtie2 --threads {threads} -x {params.index_path} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
+        echo $inputOptions
+        bowtie2 -k1 --threads {threads} -x {params.index_path} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
         '''
 
 rule buildBWAIndex:
@@ -102,7 +107,8 @@ rule buildBWAIndex:
     benchmark:
         f"{BENCHMARKS}/bwa-index/{config['genome']}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        mem_mb=16000
     shell:
         """
         exec > {log} 2>&1
@@ -130,7 +136,9 @@ rule bwa:
     benchmark:
         BENCHMARKS + "/bwa-mem/{sample}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        mem_per_cpu=2096,
+        cpus_per_task=int(config["bwa"]["threads"])
     shell:
         """
         exec > {log} 2>&1
@@ -153,7 +161,8 @@ rule buildBWA2Index:
     benchmark:
         f"{BENCHMARKS}/bwa2-index/{config['genome']}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        mem_mb=20000,
     shell:
         """
         exec > {log} 2>&1
@@ -181,15 +190,14 @@ rule bwa_mem2:
     benchmark:
         BENCHMARKS + "/bwa-mem2/{sample}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task=int(config['bwa-mem2']['threads']),
+        mem_per_cpu=2096
     shell:
         """
         exec > {log} 2>&1
         bwa-mem2 mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools view -b - > {output}
         """
-
-
-
 
 rule buildStarIndex:
     input:

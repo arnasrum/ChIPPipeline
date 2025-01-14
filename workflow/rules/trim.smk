@@ -35,7 +35,9 @@ rule trim_galore:
     benchmark:
         BENCHMARKS + "/trim_galore/{sample}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpu_per_task=int(config["trim_galore"]["threads"]),
+        mem_per_cpu=2096
     shell:
         """
         exec > {log} 2>&1
@@ -70,7 +72,9 @@ rule cutadapt:
     benchmark:
         BENCHMARKS + "/cutadapt/{sample}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpu_per_task=int(config["cutadapt"]["threads"]),
+        mem_per_cpu=2096
     shell:
         '''
         exec > {log} 2>&1
@@ -101,7 +105,9 @@ rule fastp:
     log:
         LOGS + "/fastp/{sample}.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpu_per_task=int(config["fastp"]["threads"]),
+        mem_per_cpu=2096
     shell:
         '''
         exec > {log} 2>&1
