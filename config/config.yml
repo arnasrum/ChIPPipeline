@@ -9,7 +9,7 @@ fastqc:
 
 # Trimmer config
 trim_galore:
-  threads: 8
+  threads: 12
   args: "--no_report_file "
 cutadapt:
   threads: 4
@@ -22,7 +22,7 @@ fastp:
 bowtie2:
   args: "--very-fast"
   extra: ""
-  threads: 4
+  threads: 12
 bowtie2-build:
   args: ""
   threads: 12
@@ -45,14 +45,14 @@ STAR:
 samtools-index:
   threads: 4
 MarkDuplicates:
-  args: "--REMOVE_SEQUENCING_DUPLICATES true"
+  args: ""
 markdup:
   args: ""
-  threads: 4
+  threads: 12
 
 # Peak calling config
 macs3:
-  args: "--nomodel -g hs -q 0.01"
+  args: ""
 
 computeMatrix:
   args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
