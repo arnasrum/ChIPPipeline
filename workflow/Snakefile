@@ -20,6 +20,9 @@ include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/peak_calling.smk"
 include: "rules/data_analysis.smk"
+ruleorder: samtools_markdup > picard_MarkDuplicates > samtools_index
+ruleorder: concatenate_runs_PE > concatenate_runs_SE
+localrules: referenceGenome
 
 macs_input = get_macs_input(config["json_path"])
 def get_deeptools_input():
