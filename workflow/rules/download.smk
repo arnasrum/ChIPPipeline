@@ -75,7 +75,6 @@ rule concatenate_runs_SE:
         RESOURCES + "/reads/{gsm}_{file_suffix}.fastq"
     wildcard_constraints:
         gsm = r"GSM[0-9]*",
-        file_suffix = r"^.*(?<!_1|_2)$"
     params:
         read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.gsm]["runs"], False)
     log:
@@ -117,8 +116,6 @@ rule symlink_SE:
         LOGS + "/link/{file_name}.log"
     resources:
         tmpdir=TEMP
-    wildcard_constraints: 
-        file_name = r"^.*(?<!_1|_2)$"
     shell:
         """
         exec > {log} 2>&1
