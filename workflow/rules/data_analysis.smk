@@ -167,6 +167,8 @@ rule findMotifsGenome:
         outdir = RESULTS + "/homer",
         genome = config['genome'],
         size = 200
+    threads:
+        12
     log:
         LOGS + "/homer/{sample}_findMotifs.log"
     resources:
@@ -175,6 +177,6 @@ rule findMotifsGenome:
         '''
         exec > {log} 2>&1
         mkdir -p {params.outdir}
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl ./{input} {params.genome} {params.outdir}/{wildcards.sample} -size {params.size}
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl ./{input} -p {threads} {params.genome} {params.outdir}/{wildcards.sample} -size {params.size}
         '''
 
