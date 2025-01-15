@@ -36,7 +36,7 @@ rule trim_galore:
         BENCHMARKS + "/trim_galore/{sample}.txt"
     resources:
         tmpdir=TEMP,
-        cpu_per_task=int(config["trim_galore"]["threads"]),
+        cpus_per_task=int(config["trim_galore"]["threads"]),
         mem_per_cpu=2096
     shell:
         """
@@ -73,7 +73,7 @@ rule cutadapt:
         BENCHMARKS + "/cutadapt/{sample}.txt"
     resources:
         tmpdir=TEMP,
-        cpu_per_task=int(config["cutadapt"]["threads"]),
+        cpus_per_task=int(config["cutadapt"]["threads"]),
         mem_per_cpu=2096
     shell:
         '''
@@ -106,7 +106,7 @@ rule fastp:
         LOGS + "/fastp/{sample}.log"
     resources:
         tmpdir=TEMP,
-        cpu_per_task=int(config["fastp"]["threads"]),
+        cpus_per_task=int(config["fastp"]["threads"]),
         mem_per_cpu=2096
     shell:
         '''
