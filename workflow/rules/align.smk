@@ -85,10 +85,9 @@ rule bowtie2:
             inputOptions=''; i=1
             for file in {input.reads}; do inputOptions+="-$i $file "; i=$((i+1)); done
         else
-            inputOptions='-q -1 {input.reads}'
+            inputOptions='-U {input.reads}'
         fi
-        echo $inputOptions
-        bowtie2 -k1 --threads {threads} -x {params.index_path} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
+        bowtie2 -q --threads {threads} -x {params.index_path} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
         '''
 
 rule buildBWAIndex:
