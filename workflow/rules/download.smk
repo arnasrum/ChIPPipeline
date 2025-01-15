@@ -13,6 +13,7 @@ BENCHMARKS: str = config['benchmarks_path']
 
 ruleorder: symlink_PE > concatenate_runs_PE
 ruleorder: symlink_SE > concatenate_runs_SE
+ruleorder: concatenate_runs_PE > concatenate_runs_SE  
 localrules: referenceGenome, symlink_SE, symlink_PE
 
 rule fastq_dump_SE:
