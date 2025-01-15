@@ -15,11 +15,11 @@ rule fastqc:
         int(config["fastqc"]["threads"])
     resources:
         tmpdir=config["temp_path"],
-        mem="1024MB"
+        mem_mb=1024
     shell:
         """
         exec > {log} 2>&1
-        fastqc -t {threads} -o {params.outputPath} --memory {resources.mem} {input} 
+        fastqc -t {threads} -o {params.outputPath} --memory {resources.mem_mb} {input} 
         """
 
 
