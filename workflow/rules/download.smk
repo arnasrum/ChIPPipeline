@@ -34,8 +34,7 @@ rule fastq_dump_SE:
     shell:
         '''
         exec > {log} 2>&1
-        prefetch -O {resources.tmpdir} {wildcards.srr}
-        fastq-dump -O {params.path} {resources.tmpdir}/{wildcards.srr}
+        fastq-dump -O {params.path} {wildcards.srr}
         '''
 
 rule fastq_dump_PE:
@@ -58,9 +57,7 @@ rule fastq_dump_PE:
     shell:
         '''
         exec > {log} 2>&1
-        prefetch -O {resources.tmpdir} {wildcards.srr}
-        fasterq-dump -t {resources.tmpdir} -e {threads} -O {params.path} --split-files {resources.tmpdir}/{wildcards.srr}
-        rm -r {resources.tmpdir}/{wildcards.srr}
+        fasterq-dump -t {resources.tmpdir} -e {threads} -O {params.path} --split-files {wildcards.srr}
         '''
 
 def join_read_files(runs: list, paired_end: bool):
