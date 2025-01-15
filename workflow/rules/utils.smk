@@ -4,6 +4,9 @@ LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 
+ruleorder: PicardBuildBamIndex > samtools_index
+localrules: PicardBuildBamIndex
+
 rule unzip:
     input:
         "{file}.gz"
@@ -21,7 +24,7 @@ rule samtools_index:
     input:
         "{sample}.bam"
     output:
-        "{sample}.bam.bai"
+        "{sample}.bai"
     threads:
         int(config["samtools-index"]["threads"])
     log:
@@ -33,8 +36,27 @@ rule samtools_index:
     shell:
         """
         exec > {log} 2>&1
-        samtools sort -@ {threads} {input} | samtools index -@ {threads} - -o {output}
+        samtools index -@ {threads} - -o {output}
         """
+
+
+rule PicardBuildBamIndex:
+    input:
+        "{sample}.bam"
+    output:
+        "{sample}.bai"
+    log:
+        LOGS + "/BuildBamIndex/{sample}.log"
+    conda:
+        "../envs/utils.yml"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        picard BuildBamIndex -I {input} -O {output}
+        """
+
 
 rule picardCreateGenomeSequenceDictionary:
     input:
@@ -76,7 +98,7 @@ rule picard_MarkDuplicates:
         picard MarkDuplicates -ASO coordinate -I {output.sorted} -O {output.marked} -M {output.metrics} {params.args}
         """
     
-    
+'''  
 rule samtools_markdup:
     input:
         f"results/{config['aligner']}/{{sample}}.bam"
@@ -94,15 +116,13 @@ rule samtools_markdup:
     shell:
         """
         mkdir -p results/samtools-markdup
-        samtools collate -@ {threads} -o {output.collate} {input} 
+        samtools collate -u -o {output.collate} {input} 
         samtools fixmate -@ {threads} -m {output.collate} {output.fixmate}
         samtools sort -@ {threads} -o {output.sort} {output.fixmate}
-        samtools markdup -@ {threads} {output.sort} {output.marked}
+        samtools markdup -@ {threads} -O BAM {output.sort} {output.marked} 
         """
-    
-    
-
 '''
+
 rule samtools_markdup:
     input:
         RESULTS + "/" + config['aligner'] + "/{sample}.bam"
@@ -115,17 +135,16 @@ rule samtools_markdup:
         path = f"{RESULTS}/samtools-markdup"
     threads:
         int(config["markdup"]["threads"])
-    log:
-        LOGS + "/samtools-markdup/{sample}.log"
+    #log:
+        #LOGS + "/samtools-markdup/{sample}.log"
     benchmark:
         BENCHMARKS + "/samtools-markdup/{sample}.txt"
     resources:
         tmpdir=TEMP
     shell:
         """
-        exec > {log} 2>&1
+        #exec > log 2>&1
         mkdir -p {params.path} 
         rm -rf {resources.tmpdir}/{wildcards.sample}_collate &&  rm -rf {resources.tmpdir}/{wildcards.sample}_sort && rm -rf {resources.tmpdir}/{wildcards.sample}_markdup
-        samtools collate -T {resources.tmpdir}/{wildcards.sample}_collate -@ {threads} -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -T {resources.tmpdir}/{wildcards.sample}_sort -@ {threads} -u - | samtools markdup {params.args} -T {resources.tmpdir}/{wildcards.sample}_markdup -@ {threads} - {output}
+        samtools collate -T {resources.tmpdir}/{wildcards.sample}_collate -O -u {input} | samtools fixmate -@ {threads} -m -u - - | samtools sort -T {resources.tmpdir}/{wildcards.sample}_sort -@ {threads} -u - | samtools markdup {params.args} -T {resources.tmpdir}/{wildcards.sample}_markdup -@ {threads} - {output}
         """
-'''

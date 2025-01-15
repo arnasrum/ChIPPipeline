@@ -11,7 +11,7 @@ macs_input = get_macs_input(config["json_path"])
 rule deeptools_bamCoverage:
     input:
         bam = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam",
-        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam.bai",
+        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bai",
     output:
         RESULTS + "/deeptools-bamCoverage/{sample}.bw"
     conda:
@@ -20,10 +20,12 @@ rule deeptools_bamCoverage:
         LOGS + "/bamCoverage/{sample}.log"
     resources:
         tmpdir=TEMP
+    threads:
+        12
     shell:
         """
         exec > {log} 2>&1
-        bamCoverage -b {input.bam} -o {output}
+        bamCoverage -p {threads} -b {input.bam} -o {output}
         """
 
 def get_consensus_peak_input(sample: str) -> list[str]:
@@ -177,6 +179,6 @@ rule findMotifsGenome:
         '''
         exec > {log} 2>&1
         mkdir -p {params.outdir}
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl ./{input} -p {threads} {params.genome} {params.outdir}/{wildcards.sample} -size {params.size}
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.sample} -size {params.size} -p {threads} 
         '''
 
