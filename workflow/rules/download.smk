@@ -68,7 +68,7 @@ def join_read_files(runs: list, paired_end: bool):
 
 rule concatenate_runs_SE:
     input:
-        lambda wildcards: expand(TEMP + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
+        lambda wildcards: expand(RESOURCES + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
     output:
         RESOURCES + "/reads/{gsm}_{file_suffix}.fastq"
     wildcard_constraints:
@@ -87,7 +87,7 @@ rule concatenate_runs_SE:
 
 rule concatenate_runs_PE:
     input:
-        lambda wildcards: expand(TEMP + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.sample.split("_")[0]]["runs"], read=["_1", "_2"])
+        lambda wildcards: expand(RESOURCES + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.sample.split("_")[0]]["runs"], read=["_1", "_2"])
     output:
         read1 = RESOURCES + "/reads/{sample}_1.fastq",
         read2 = RESOURCES + "/reads/{sample}_2.fastq"
