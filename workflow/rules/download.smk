@@ -18,7 +18,7 @@ localrules: referenceGenome, symlink_SE, symlink_PE
 
 rule fastq_dump_SE:
     output:
-        temp(TEMP + "/reads/{srr}.fastq")
+        temp(RESOURCES + "/reads/{srr}.fastq")
     params:
         path = f"{RESOURCES}/reads"
     conda:
@@ -39,8 +39,8 @@ rule fastq_dump_SE:
 
 rule fastq_dump_PE:
     output:
-        temp(TEMP + "/reads/{srr}_1.fastq"),
-        temp(TEMP + "/reads/{srr}_2.fastq")
+        temp(RESOURCES + "/reads/{srr}_1.fastq"),
+        temp(RESOURCES + "/reads/{srr}_2.fastq")
     wildcard_constraints:
         srr = r"SRR[0-9]*"
     params:
