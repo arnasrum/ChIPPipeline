@@ -5,7 +5,6 @@ BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 
 ruleorder: PicardBuildBamIndex > samtools_index
-localrules: PicardBuildBamIndex
 
 rule unzip:
     input:
@@ -66,7 +65,9 @@ rule picardCreateGenomeSequenceDictionary:
     conda:
         "../envs/utils.yml"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task=1,
+        mem_mb=4000
     shell:
         "picard CreateSequenceDictionary -R {input} -O {output}"
 
