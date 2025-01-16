@@ -17,11 +17,16 @@ def get_trim_input(sample: str) -> list[str]:
     return input
 
 read_extention = ["_1", "_2"] if sfs.is_paired_end() else [""]
-rule trim_galore:
+
+ruleorder: trim_galore_PE > trim_galore_SE
+
+rule trim_galore_PE:
     input:
-        lambda wildcards: get_trim_input(wildcards.sample)
+        RESOURCES + "/reads/{sample}_1.fastq",
+        RESOURCES + "/reads/{sample}_2.fastq",
     output:
-        temp(expand(RESULTS + "/trim_galore/{sample}{read}.fastq", read=read_extention, allow_missing=True))
+        out1 = RESULTS + "/trim_galore/{sample}_1.fastq",
+        out2 = RESULTS + "/trim_galore/{sample}_2.fastq"
     conda:
         "../envs/trim.yml"
     params:
@@ -41,18 +46,37 @@ rule trim_galore:
     shell:
         """
         exec > {log} 2>&1
-        shopt -s nocasematch
-        if [[ {params.paired_end} =~ true ]]; then
-            read -a output_array <<< "{output}"
-            out1="${{output_array[0]}}"
-            out2="${{output_array[1]}}"
-            trim_galore --paired -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
-            mv {params.output_dir}/{wildcards.sample}_val_1.fq $out1
-            mv {params.output_dir}/{wildcards.sample}_val_2.fq $out2
-        else
-            trim_galore -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
-            mv {params.output_dir}/{wildcards.sample}_trimmed.fq {output} 
-        fi
+        trim_galore --paired -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
+        mv {params.output_dir}/{wildcards.sample}_val_1.fq {output.out1} 
+        mv {params.output_dir}/{wildcards.sample}_val_2.fq {output.out2} 
+        """
+
+rule trim_galore_SE:
+    input:
+        RESULTS + "/trim_galore/{sample}.fastq",
+    output:
+        RESULTS + "/trim_galore/{sample}.fastq"
+    conda:
+        "../envs/trim.yml"
+    params:
+        args = config["trim_galore"]["args"],
+        output_dir = RESULTS + "/trim_galore",
+        paired_end = config["paired_end"]
+    threads:
+        int(config["trim_galore"]["threads"])
+    log:
+        LOGS + "/trim_galore/{sample}.log"
+    benchmark:
+        BENCHMARKS + "/trim_galore/{sample}.txt"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=int(config["trim_galore"]["threads"]),
+        mem_per_cpu=2096
+    shell:
+        """
+        exec > {log} 2>&1
+        trim_galore -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
+        mv {params.output_dir}/{wildcards.sample}_trimmed.fq {output} 
         """
 
 rule cutadapt:
