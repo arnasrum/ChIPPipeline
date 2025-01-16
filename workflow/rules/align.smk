@@ -87,7 +87,7 @@ rule bowtie2:
         else
             inputOptions='-U {input.reads}'
         fi
-        bowtie2 -q --threads {threads} -x {params.index_path} $inputOptions {params.args} {params.extra} | samtools view -b -o {output}
+        bowtie2 -q --threads {threads} -x {params.index_path} $inputOptions {params.args} {params.extra} | samtools sort -@ {threads} -o {output} -
         '''
 
 rule buildBWAIndex:
@@ -141,7 +141,7 @@ rule bwa:
     shell:
         """
         exec > {log} 2>&1
-        bwa mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools view -b - > {output}
+        bwa mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools sort -@ {threads} -o {output} -
         """
 
 rule buildBWA2Index:
@@ -195,7 +195,7 @@ rule bwa_mem2:
     shell:
         """
         exec > {log} 2>&1
-        bwa-mem2 mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools view -b - > {output}
+        bwa-mem2 mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools sort -@ {threads} -o {output} -
         """
 
 rule buildStarIndex:
@@ -248,5 +248,5 @@ rule STAR:
         """
         exec > {log} 2>&1
         rm -rf {resources.tmpdir}/STAR-{wildcards.sample}
-        STAR --outTmpDir {resources.tmpdir}/STAR-{wildcards.sample} --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools view -b -o {output}
+        STAR --outTmpDir {resources.tmpdir}/STAR-{wildcards.sample} --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools sort -@ {threads} -o {output} -
         """
