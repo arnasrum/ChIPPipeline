@@ -92,7 +92,8 @@ rule concatenate_runs_PE:
         read1 = RESOURCES + "/reads/{sample}_1.fastq",
         read2 = RESOURCES + "/reads/{sample}_2.fastq"
     params:
-        read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"], True)
+        read1_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"], True)[0],
+        read2_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"],True)[1]
     log:
         LOGS + "/concatenate/{sample}.log"
     resources:
@@ -100,8 +101,8 @@ rule concatenate_runs_PE:
     shell:
         """
         exec > {log} 2>&1
-        cat {params.read_files} > {output.read1} 
-        cat {params.read_files} > {output.read2} 
+        cat {params.read1_files} > {output.read1} 
+        cat {params.read2_files} > {output.read2} 
         """
 
 
