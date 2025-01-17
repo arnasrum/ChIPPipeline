@@ -1,6 +1,5 @@
 import json
 
-
 def get_macs_input(json_path) -> dict[str: dict]:
     with open(json_path) as file:
         samples = json.load(file)
@@ -34,11 +33,30 @@ def get_macs_input(json_path) -> dict[str: dict]:
         macs_input[file].pop(replicate)
     return macs_input
 
+def get_all_input(config):
+    macs_input = get_macs_input(config["json_path"])
+    input_files = []
+    path = config["results_path"]
+    for key, value in macs_input.items():
+        for replicate in value:
+            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_heatmap.png")
+            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_profile.png")
+            input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
+            if str(config["paired_end"]).lower() == "true":
+                for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
+                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_1_fastqc.html", )
+                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_2_fastqc.html")
+            else:
+                for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
+                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_fastqc.html")
+
+    input_files += [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html",macs_input.keys())]
+    return input_files
+
 def symlink_input(json_path: str, file_name: str) -> None:
     with open(json_path) as file:
         samples = json.load(file)["provided"]
     return next((item for item in samples.values() if item["file_name"] == file_name), None)
-
 
 def __flatten_dict(old_dict: dict) -> dict:
     new_dict = {}

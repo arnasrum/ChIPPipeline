@@ -31,5 +31,10 @@ def set_module_options(config: dict) -> None:
             case _:
                 raise NotImplementedError(f"{flags[i]} flag is not supported")
 
+def set_output_paths(config):
+    if config["prefix"] != "" and config["prefix"][-1] != "/": config["prefix"] += "/"
+    for config_option in ["json_path", "benchmarks_path", "results_path", "resources_path", "temp_path", "logs_path"]:
+        config[config_option] = config["prefix"] + config[config_option]
+
 def __set_config_option(config:dict, option: str, value: str) -> None:
     config[option] = value.rstrip().lstrip()

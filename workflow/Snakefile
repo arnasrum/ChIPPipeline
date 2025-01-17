@@ -1,16 +1,14 @@
 import sys
 sys.path.append("workflow/scripts")
 from sample_file_scripts import SampleFileScripts
-from set_module_options import set_module_options
-from input_scripts import get_macs_input
+from set_config_options import set_module_options, set_output_paths
+from input_scripts import get_all_input
 
 configfile: "config/config.yml"
 set_module_options(config)
-if config["prefix"] != "" and config["prefix"][-1] != "/": config["prefix"] += "/"
-for key in ["json_path", "benchmarks_path", "results_path", "resources_path", "temp_path", "logs_path"]:
-    config[key] = config["prefix"] + config[key]
+set_output_paths(config)
 sfs = SampleFileScripts(config)
-sfs.make_sample_info(config["json_path"])
+sfs.make_sample_info()
 
 
 include: "rules/utils.smk"
@@ -20,30 +18,14 @@ include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/peak_calling.smk"
 include: "rules/data_analysis.smk"
-ruleorder: concatenate_runs_PE > concatenate_runs_SE  
-localrules: referenceGenome
 
-macs_input = get_macs_input(config["json_path"])
-def get_deeptools_input():
-    input_files = []
-    path = config["results_path"]
-    for key, value in macs_input.items():
-        for replicate in value:
-            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_heatmap.png")
-            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_profile.png")
-            input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
-            if sfs.is_paired_end():
-                for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
-                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_1_fastqc.html", )
-                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_2_fastqc.html")
-            else:
-                for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
-                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_fastqc.html")
 
-    return input_files
 
 rule all:
     input:
-        [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html",macs_input.keys())],
-        get_deeptools_input()
+        get_all_input(config)
     default_target: True
+    params:
+        temp_path = config["temp_path"]
+    shell:
+        "rm -rf {params.temp_path}"

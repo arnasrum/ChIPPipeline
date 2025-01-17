@@ -19,7 +19,7 @@ class SampleFileScripts:
         self.paired_end = config["paired_end"]
         self.json_path = config["json_path"]
 
-    def make_sample_info(self, json_path) -> dict[str:dict]:
+    def make_sample_info(self) -> dict[str:dict]:
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
@@ -61,7 +61,7 @@ class SampleFileScripts:
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
 
-        json_dir = "/".join(json_path.split("/")[:-1]) + "/"
+        json_dir = "/".join(self.json_path.split("/")[:-1]) + "/"
         if not os.path.exists(json_dir): os.makedirs(json_dir)
         with open(self.json_path, "w") as outfile:
             outfile.write(json.dumps(sample_info, indent=4))
