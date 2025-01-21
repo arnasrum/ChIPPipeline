@@ -1,8 +1,3 @@
-RESULTS = config['results_path']
-RESOURCES = config['resources_path']
-LOGS = config['logs_path']
-BENCHMARKS = config['benchmarks_path']
-TEMP = config['temp_path']
 
 ruleorder: PicardBuildBamIndex > samtools_index
 

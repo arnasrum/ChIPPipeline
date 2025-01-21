@@ -1,15 +1,4 @@
-import sys
-sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts
-from input_scripts import symlink_input
 
-sfs = SampleFileScripts(config)
-file_info = SampleFileScripts.get_file_info(config["json_path"])
-
-RESOURCES: str = config['resources_path']
-LOGS: str = config['logs_path']
-TEMP: str = config['temp_path']
-BENCHMARKS: str = config['benchmarks_path']
 
 ruleorder: symlink_PE > concatenate_runs_PE
 ruleorder: symlink_SE > concatenate_runs_SE

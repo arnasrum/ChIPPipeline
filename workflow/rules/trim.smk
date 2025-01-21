@@ -1,22 +1,4 @@
-import sys
-sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts
-sfs = SampleFileScripts(config)
 
-RESULTS: str = config['results_path']
-RESOURCES: str = config['resources_path']
-LOGS: str = config['logs_path']
-TEMP: str = config['temp_path']
-BENCHMARKS: str = config['benchmarks_path']
-
-def get_trim_input(sample: str) -> list[str]:
-    if sfs.is_paired_end():
-        input = [RESOURCES + f"/reads/{sample}_1.fastq", RESOURCES + f"/reads/{sample}_2.fastq"]
-    else:
-        input = [RESOURCES + f"/reads/{sample}.fastq"]
-    return input
-
-read_extention = ["_1", "_2"] if sfs.is_paired_end() else [""]
 
 ruleorder: trim_galore_PE > trim_galore_SE
 

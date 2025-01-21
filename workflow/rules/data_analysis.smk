@@ -1,13 +1,3 @@
-import sys
-sys.path.append("workflow/scripts")
-from input_scripts import get_macs_input
-
-RESULTS: str = config['results_path']
-LOGS: str = config['logs_path']
-BENCHMARKS: str = config['benchmarks_path']
-TEMP: str = config['temp_path']
-
-macs_input = get_macs_input(config["json_path"])
 rule deeptools_bamCoverage:
     input:
         bam = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam",
@@ -28,13 +18,7 @@ rule deeptools_bamCoverage:
         bamCoverage -p {threads} -b {input.bam} -o {output}
         """
 
-def get_consensus_peak_input(sample: str) -> list[str]:
-    peak_types = [*map(lambda replicate: macs_input[sample][replicate]["peak_type"],macs_input[sample])]
-    if peak_types.count(
-        peak_types[0]) != len(peak_types): raise ValueError(f"Peak types for {sample} do not match")
-    macs_extension = "_peaks.narrowPeak" if peak_types[0] == "narrow" else "_peaks.broadPeak"
-    return [*map(lambda replicate: f"{RESULTS}/{config['peak_caller']}/{sample}_rep{replicate}{macs_extension}",
-        macs_input[sample].keys())]
+
 
 rule bedtools_consensus_peak:
     input:

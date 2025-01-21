@@ -1,16 +1,6 @@
-import sys
-sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts
-from set_config_options import set_module_options, set_output_paths
-from input_scripts import get_all_input
-
 configfile: "config/config.yml"
-set_module_options(config)
-set_output_paths(config)
-sfs = SampleFileScripts(config)
-sfs.make_sample_info()
 
-
+include: "rules/shared.smk"
 include: "rules/utils.smk"
 include: "rules/fastqc.smk"
 include: "rules/download.smk"
@@ -18,7 +8,6 @@ include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/peak_calling.smk"
 include: "rules/data_analysis.smk"
-
 
 
 rule all:

@@ -1,30 +1,3 @@
-import sys
-sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts
-
-sfs = SampleFileScripts(config)
-
-RESULTS: str = config['results_path']
-RESOURCES: str = config['resources_path']
-LOGS: str = config['logs_path']
-BENCHMARKS: str = config['benchmarks_path']
-TEMP: str = config['temp_path']
-
-
-def alignment_input(sample: str) -> list[str]:
-    file_info = SampleFileScripts.get_file_info(config["json_path"])
-    if sfs.is_paired_end():
-        if sample in [*map(lambda accession: file_info['public'][accession]['file_name'], file_info["public"].keys())]:
-            reads = [f"{RESULTS}/{config['trimmer']}/{sample}_1.fastq", f"{RESULTS}/{config['trimmer']}/{sample}_2.fastq"]
-        else:
-            reads = [f"{RESULTS}/{config['trimmer']}/{file_info['provided'][sample]['file_name']}_1.fastq",
-                     f"{RESULTS}/{config['trimmer']}/{file_info['provided'][sample]['file_name']}_2.fastq"]
-    else:
-        if sample in [*map(lambda accession: file_info['public'][accession]['file_name'],file_info["public"].keys())]:
-            reads = [f"{RESULTS}/{config['trimmer']}/{sample}.fastq"]
-        else:
-            reads = [f"{RESULTS}/{config['trimmer']}/{file_info['provided'][sample]['file_name']}.fastq"]
-    return reads
 
 rule buildBowtie2Index:
     input:

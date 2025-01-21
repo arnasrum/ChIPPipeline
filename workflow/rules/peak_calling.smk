@@ -2,11 +2,6 @@ import sys
 sys.path.append("workflow/scripts")
 from input_scripts import get_macs_input
 
-RESULTS: str = config['results_path']
-LOGS: str = config['logs_path']
-TEMP: str = config['temp_path']
-BENCHMARKS: str = config['benchmarks_path']
-
 def extract_files(sample, replicate, type) -> list[str]:
     return [*map(lambda file: f"{RESULTS}/{config['duplicate_processor']}/" + file + ".bam", get_macs_input(config['json_path'])[sample][replicate][type])]
 rule macs3_narrow_peak:
