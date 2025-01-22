@@ -35,7 +35,7 @@ rule trim_galore_PE:
 
 rule trim_galore_SE:
     input:
-        RESULTS + "/trim_galore/{sample}.fastq",
+        RESOURCES + "/reads/{sample}.fastq",
     output:
         RESULTS + "/trim_galore/{sample}.fastq"
     conda:

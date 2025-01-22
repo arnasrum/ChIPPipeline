@@ -2,7 +2,7 @@ import sys
 sys.path.append("workflow/scripts")
 from sample_file_scripts import SampleFileScripts
 from set_config_options import set_module_options, set_output_paths
-from input_scripts import get_all_input, get_macs_input
+from input_scripts import get_all_input, get_macs_input, symlink_input
 
 
 set_module_options(config)
@@ -10,7 +10,6 @@ set_output_paths(config)
 sfs = SampleFileScripts(config)
 file_info = sfs.make_sample_info()
 
-test = "hallo"
 RESULTS = config['results_path']
 RESOURCES = config['resources_path']
 LOGS = config['logs_path']
