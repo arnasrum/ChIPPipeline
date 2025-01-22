@@ -1,18 +1,24 @@
-#FROM condaforge/miniforge3:latest
-FROM snakemake/snakemake:v8.26.0
+FROM ubuntu:20.04
 
+# Set environment variables
+ENV LANG=C.UTF-8=LC_ALL=C.UTF-8
+ENV PATH=/opt/conda/bin:$PATH
 
-#RUN apt-get -y update && apt-get -y install python3 && apt-get -y install gcc
-#RUN pip3 install snakemake==8.26.0 #&& pip3 install pandas
-RUN conda config --set channel_priority strict && conda config --add channels defaults
+# Install necessary system packages
+RUN apt-get update --fix-missing && apt-get install -y \
+    wget \
+    bzip2 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /pipeline
-COPY ./workflow ./workflow
-COPY ./config ./config
-COPY ./profiles ./profiles
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py311_23.10.0-1-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && /bin/bash /tmp/miniconda.sh -b -p /opt/conda \
+    && rm /tmp/miniconda.sh \
+    && /opt/conda/bin/conda clean --all -y \
+    && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
 
-#RUN pip install snakemake-executor-plugin-slurm
-#RUN pip install snakemake-executor-plugin-cluster-generic
-RUN mkdir /input && mkdir /cluster
+RUN conda install -y conda=23.10.0 snakemake=8.20.1 -c conda-forge -c bioconda  \
+    && conda clean -a 
 
-ENTRYPOINT [ "snakemake", "--sdm", "conda" ]
+ENTRYPOINT ["snakemake", "--use-conda", "--conda-frontend", "conda"]
+
