@@ -44,11 +44,13 @@ def get_all_input(config):
             input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
             if str(config["paired_end"]).lower() == "true":
                 for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
-                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_1_fastqc.html", )
-                    input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_2_fastqc.html")
+                    for tool in [config["trimmer"], "raw"]:
+                        input_files.append(f"{path}/fastqc/{tool}/{file}_1_fastqc.html", )
+                        input_files.append(f"{path}/fastqc/{tool}/{file}_2_fastqc.html")
             else:
                 for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
                     input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_fastqc.html")
+                    input_files.append(f"{path}/fastqc/raw/{file}_fastqc.html")
 
     input_files += [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html",macs_input.keys())]
     return input_files
@@ -63,3 +65,5 @@ def __flatten_dict(old_dict: dict) -> dict:
     for key, value in old_dict.items():
         new_dict = new_dict | value
     return new_dict
+
+
