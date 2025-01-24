@@ -10,6 +10,7 @@ include: "rules/peak_calling.smk"
 include: "rules/data_analysis.smk"
 
 
+container: "docker://arnasrum/chippipeline:workflow"
 rule all:
     input:
         get_all_input(config)
