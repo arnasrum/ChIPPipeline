@@ -48,3 +48,6 @@ def get_consensus_peak_input(sample: str) -> list[str]:
     macs_extension = "_peaks.narrowPeak" if peak_types[0] == "narrow" else "_peaks.broadPeak"
     return [*map(lambda replicate: f"{RESULTS}/{config['peak_caller']}/{sample}_rep{replicate}{macs_extension}",
         macs_input[sample].keys())]
+
+def extract_files(sample, replicate, type) -> list[str]:
+    return [*map(lambda file: f"{RESULTS}/{config['duplicate_processor']}/" + file + ".bam", get_macs_input(config['json_path'])[sample][replicate][type])]

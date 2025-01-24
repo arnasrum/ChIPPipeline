@@ -1,9 +1,4 @@
-import sys
-sys.path.append("workflow/scripts")
-from input_scripts import get_macs_input
 
-def extract_files(sample, replicate, type) -> list[str]:
-    return [*map(lambda file: f"{RESULTS}/{config['duplicate_processor']}/" + file + ".bam", get_macs_input(config['json_path'])[sample][replicate][type])]
 rule macs3_narrow_peak:
     input:
         control = lambda wildcards: extract_files(wildcards.sample, wildcards.replicate, "control"),
@@ -67,8 +62,3 @@ rule macs3_broad_peak:
         macs3 callpeak --broad {params.args} --tempdir {resources.tmpdir} -c {input.control} -t {input.treatment} --outdir {params.outdir} --name {wildcards.sample}_rep{wildcards.replicate} $inputOptions
         python3 workflow/scripts/rename_peaks.py {params.outdir}/{wildcards.sample}_rep{wildcards.replicate}_peaks.broadPeak
         """
-
-
-
-
-
