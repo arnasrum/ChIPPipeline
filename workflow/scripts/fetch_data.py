@@ -16,12 +16,12 @@ def get_sra_accessions(geo_accessions: set[str]) -> dict[str:str]:
     if len(geo_accessions) == 0: return dict()
     enterez_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term="
     enterez_url += "+OR+".join(geo_accessions)
-    print(enterez_url)
+    #print(enterez_url)
     response: Response = __poll_request(enterez_url)
     xml_response: ElementTree.Element = ElementTree.fromstring(response.content)
     id_list = list(filter(lambda item: int(item) > 299999999, [sample_id.text for sample_id in xml_response[3]]))
     enterez_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gds&id=" + ",".join(id_list)
-    print(enterez_url)
+    #print(enterez_url)
     #response = get(enterez_url, timeout=REQUEST_TIMEOUT)
     response = __poll_request(enterez_url)
     response_text: str = response.content.decode().lstrip("\n").rstrip("\n")
@@ -43,7 +43,7 @@ def get_meta_data(sra_accessions: list[str]) -> dict[str: dict]:
     if len(sra_accessions) == 0:
         return dict()
     enterez_url: str = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=sra&id={','.join(sra_accessions)}"
-    print(enterez_url)
+    #print(enterez_url)
     response = __poll_request(enterez_url)
     root: ElementTree.Element = ElementTree.fromstring(response.content)
     meta_data: dict[str: dict] = {}

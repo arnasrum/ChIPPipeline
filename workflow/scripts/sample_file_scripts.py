@@ -19,11 +19,23 @@ class SampleFileScripts:
         self.paired_end = config["paired_end"]
         self.json_path = config["json_path"]
 
+    def __verify_sample_sheet(self):
+        with open(self.sample_sheet, "r") as file:
+            sample_sheet = pd.read_csv(file, keep_default_na=False)
+        for index, row in sample_sheet.iterrows():
+            if not row["type"] in ["treatment", "control"]:
+                raise Exception(f"Row {index} in \"type\" column contains invalid value. {row['type']}")
+            if not row["peak_type"] in ["narrow", "broad", ""]:
+                raise Exception(f"Row {index} in \"peak_type\" column contains invalid value. {row['type']}")
+            if not isinstance(row["replicate"], int):
+                raise Exception(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be an integer.")
+
     def make_sample_info(self) -> dict[str:dict]:
+        self.__verify_sample_sheet()
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
-        print(f"sample_sheet: {self.sample_sheet}")
+        #print(f"sample_sheet: {self.sample_sheet}")
         with open(self.sample_sheet, "r") as file:
             sample_sheet = pd.read_csv(file, keep_default_na=False)
         for index, row in sample_sheet.iterrows():
@@ -76,7 +88,6 @@ class SampleFileScripts:
         sample_sheet = pd.read_csv(samples_csv, keep_default_na=False); samples_csv.close()
         samples_json = json.load(json_file); json_file.close()
         samples_json = SampleFileScripts.__flatten_dict(samples_json)
-        print(samples_json)
         if len(sample_sheet) != len(samples_json["public"]) + len(samples_json["provided"]): return False
         for index, row in sample_sheet.iterrows():
             if row["accession"] in samples_json["public"]:
@@ -112,8 +123,5 @@ if __name__ == "__main__":
     config = yaml.load(file, Loader=yaml.FullLoader)
     file.close()
     sfs = SampleFileScripts(config)
-    sfs.make_sample_info("")
+    sfs.make_sample_info()
     symlink_input(config["json_path"], "test")
-
-
-
