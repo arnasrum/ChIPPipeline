@@ -28,6 +28,8 @@ def set_module_options(config: dict) -> None:
                 __set_config_option(config, "genome", argument)
             case "--genome":
                 __set_config_option(config, "genome", argument)
+            case "-d":
+                __set_config_option(config, "duplicate_processor", argument)
             case _:
                 raise NotImplementedError(f"{flags[i]} flag is not supported")
 
