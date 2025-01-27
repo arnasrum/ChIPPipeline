@@ -55,4 +55,4 @@ def extract_files(sample, replicate, type) -> list[str]:
 def reference_genome_input():
     if os.path.isfile(config["genome"]):
         return config["genome"]
-    return None
+    return ""
