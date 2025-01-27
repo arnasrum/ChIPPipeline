@@ -1,9 +1,10 @@
-
+import os.path
 
 ruleorder: symlink_PE > concatenate_runs_PE
 ruleorder: symlink_SE > concatenate_runs_SE
-ruleorder: concatenate_runs_PE > concatenate_runs_SE  
-localrules: referenceGenome, symlink_SE, symlink_PE
+ruleorder: concatenate_runs_PE > concatenate_runs_SE
+ruleorder: symlink_reference_genome > download_reference_genome
+localrules: download_reference_genome, symlink_reference_genome, symlink_SE, symlink_PE
 
 rule fastq_dump_SE:
     output:
@@ -128,7 +129,27 @@ rule symlink_PE:
         """
 
 
-rule referenceGenome:
+
+
+rule symlink_reference_genome:
+    input:
+        reference_genome_input()
+    output:
+        RESOURCES + "/genomes/{genome}.fa.gz"
+    log:
+        LOGS + "/ln/{genome}.log"
+    benchmark:
+        BENCHMARKS + "/ln/{genome}.benchmark.txt"
+    resources:
+        tmpdir=TEMP
+    shell:
+        '''
+        exec > {log} 2>&1
+        ln -sr {input} {output} 
+        '''
+
+
+rule download_reference_genome:
     output:
         RESOURCES + "/genomes/{genome}.fa.gz"
     conda:
