@@ -9,6 +9,8 @@ import yaml
 from fetch_data import get_meta_data, get_sra_accessions
 from input_scripts import symlink_input
 
+class InputException(Exception):
+    pass
 
 class SampleFileScripts:
     def __init__(self, config: dict):
@@ -24,11 +26,15 @@ class SampleFileScripts:
             sample_sheet = pd.read_csv(file, keep_default_na=False)
         for index, row in sample_sheet.iterrows():
             if not row["type"] in ["treatment", "control"]:
-                raise Exception(f"Row {index} in \"type\" column contains invalid value. {row['type']}")
+                raise InputException(f"Row {index} in \"type\" column contains invalid value. {row['type']}")
             if not row["peak_type"] in ["narrow", "broad", ""]:
-                raise Exception(f"Row {index} in \"peak_type\" column contains invalid value. {row['type']}")
+                if row["type"] == "treatment" and row["peak_type"] == "":
+                    raise InputException(f"Row {index} in \"peak_type\" treatment samples must have defined peak type.")
+                raise InputException(f"Row {index} in \"peak_type\" column contains invalid value. {row['type']}")
             if not isinstance(row["replicate"], int):
-                raise Exception(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be an integer.")
+                raise InputException(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be an integer.")
+            if not row["accession"]:
+                raise InputException(f"Row {index} in column \"accession\" contains invalid value.")
 
     def make_sample_info(self) -> dict[str:dict]:
         self.__verify_sample_sheet()
