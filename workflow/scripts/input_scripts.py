@@ -51,8 +51,7 @@ def get_all_input(config):
                 for file in  macs_input[key][replicate]["control"] + macs_input[key][replicate]["treatment"]:
                     input_files.append(f"{path}/fastqc/{config['trimmer']}/{file}_fastqc.html")
                     input_files.append(f"{path}/fastqc/raw/{file}_fastqc.html")
-
-    input_files += [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html",macs_input.keys())]
+    input_files += [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html", filter(lambda sample: macs_input[sample][next(iter(macs_input[sample].keys()))]["peak_type"] == "narrow", macs_input.keys()))]
     return input_files
 
 def symlink_input(json_path: str, file_name: str) -> None:
