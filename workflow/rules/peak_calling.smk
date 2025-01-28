@@ -1,8 +1,8 @@
 
 rule macs3_narrow_peak:
     input:
-        control = lambda wildcards: extract_files(wildcards.sample, wildcards.replicate, "control"),
-        treatment = lambda wildcards: extract_files(wildcards.sample, wildcards.replicate, "treatment"),
+        control = lambda wildcards: macs_input_func(wildcards.sample, wildcards.replicate, "control"),
+        treatment = lambda wildcards: macs_input_func(wildcards.sample, wildcards.replicate, "treatment"),
     output:
         multiext(RESULTS + "/macs3/{sample}_rep{replicate}", "_peaks.xls", "_summits.bed", "_peaks.narrowPeak")
     params:
@@ -33,8 +33,8 @@ rule macs3_narrow_peak:
 
 rule macs3_broad_peak:
     input:
-        control = lambda wildcards: extract_files(wildcards.sample, wildcards.replicate, "control"),
-        treatment = lambda wildcards: extract_files(wildcards.sample, wildcards.replicate, "treatment"),
+        control = lambda wildcards: macs_input_func(wildcards.sample, wildcards.replicate, "control"),
+        treatment = lambda wildcards: macs_input_func(wildcards.sample, wildcards.replicate, "treatment"),
     output:
         multiext(RESULTS + "/macs3/{sample}_rep{replicate}", "_peaks.xls", "_peaks.broadPeak", "_peaks.gappedPeak")
     params:

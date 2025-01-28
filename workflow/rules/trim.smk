@@ -4,8 +4,7 @@ ruleorder: trim_galore_PE > trim_galore_SE
 
 rule trim_galore_PE:
     input:
-        RESOURCES + "/reads/{sample}_1.fastq",
-        RESOURCES + "/reads/{sample}_2.fastq",
+        lambda wildcards: get_trim_input(wildcards.sample)
     output:
         out1 = RESULTS + "/trim_galore/{sample}_1.fastq",
         out2 = RESULTS + "/trim_galore/{sample}_2.fastq"
@@ -35,7 +34,7 @@ rule trim_galore_PE:
 
 rule trim_galore_SE:
     input:
-        RESOURCES + "/reads/{sample}.fastq",
+        lambda wildcards: get_trim_input(wildcards.sample)
     output:
         RESULTS + "/trim_galore/{sample}.fastq"
     conda:
@@ -65,7 +64,7 @@ rule cutadapt:
     input:
         lambda wildcards: get_trim_input(wildcards.sample)
     output:
-        temp(expand(RESULTS + "/cutadapt/{sample}{read}.fastq", read=read_extention, allow_missing=True))
+        temp(expand(RESULTS + "/cutadapt/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
     conda:
         "../envs/cutadapt.yml"
     params:
@@ -99,7 +98,7 @@ rule fastp:
     input:
         samples = lambda wildcards: get_trim_input(wildcards.sample)
     output:
-        temp(expand(RESULTS + "/fastp/{sample}{read}.fastq", read=read_extention, allow_missing=True))
+        temp(expand(RESULTS + "/fastp/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
     conda:
         "../envs/trim.yml"
     params:
