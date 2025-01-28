@@ -2,8 +2,6 @@ import sys
 sys.path.append("workflow/scripts")
 from pipeline_configuration import PipelineConfiguration
 from set_config_options import set_module_options, set_output_paths
-from input_scripts import get_macs_input, symlink_input, flatten_dict
-
 
 set_module_options(config)
 set_output_paths(config)
@@ -15,30 +13,14 @@ RESOURCES = config['resources_path']
 LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
-macs_input = get_macs_input(config["json_path"])
+fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
 
 
-read_extention = ["_1", "_2"] if sfs.is_paired_end() else [""]
 def get_trim_input(sample: str) -> list[str]:
-    if sfs.is_paired_end():
-        input = [RESOURCES + f"/reads/{sample}_1.fastq", RESOURCES + f"/reads/{sample}_2.fastq"]
-    else:
-        input = [RESOURCES + f"/reads/{sample}.fastq"]
-    return input
+    return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
-def alignment_input(sample: str) -> list[str]:
-    if sfs.is_paired_end():
-        if sample in [*map(lambda accession: file_info['public'][accession]['file_name'], file_info["public"].keys())]:
-            reads = [f"{RESULTS}/{config['trimmer']}/{sample}_1.fastq", f"{RESULTS}/{config['trimmer']}/{sample}_2.fastq"]
-        else:
-            reads = [f"{RESULTS}/{config['trimmer']}/{file_info['provided'][sample]['file_name']}_1.fastq",
-                     f"{RESULTS}/{config['trimmer']}/{file_info['provided'][sample]['file_name']}_2.fastq"]
-    else:
-        if sample in [*map(lambda accession: file_info['public'][accession]['file_name'],file_info["public"].keys())]:
-            reads = [f"{RESULTS}/{config['trimmer']}/{sample}.fastq"]
-        else:
-            reads = [f"{RESULTS}/{config['trimmer']}/{file_info['provided'][sample]['file_name']}.fastq"]
-    return reads
+def alignment_input(file_name: str) -> list[str]:
+    return [f"{RESULTS}/{config["trimmer"]}/{file_name}{extension}" for extension in fastq_file_extensions]
 
 def get_consensus_peak_input(sample: str) -> list[str]:
     peak_types = [*map(lambda replicate: macs_input[sample][replicate]["peak_type"],macs_input[sample])]
@@ -48,7 +30,7 @@ def get_consensus_peak_input(sample: str) -> list[str]:
     return [*map(lambda replicate: f"{RESULTS}/{config['peak_caller']}/{sample}_rep{replicate}{macs_extension}",
         macs_input[sample].keys())]
 
-def extract_files(sample, replicate, type) -> list[str]:
+def macs_input_func(sample, replicate, type) -> list[str]:
     return [*map(lambda file: f"{RESULTS}/{config['duplicate_processor']}/" + file + ".bam", get_macs_input(config['json_path'])[sample][replicate][type])]
 
 def reference_genome_input():
@@ -83,6 +65,68 @@ def get_all_input(config):
 
     # Gets narrow peak samples
     input_files += get_fastqc_output()
-    input_files += [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html",
+    input_files += [*map(lambda sample: f"{RESULTS}/homer/{sample}/homerResults.html",
                          filter(lambda sample: macs_input[sample][next(iter(macs_input[sample].keys()))]["peak_type"] == "narrow", macs_input.keys()))]
     return input_files
+
+
+def symlink_input(json_path: str, file_name: str) -> None:
+    with open(json_path) as file:
+        samples = sfs.sample_info["provided"]
+    return next((item for item in samples.values() if item["file_name"] == file_name), None)
+
+def flatten_dict(old_dict: dict) -> dict:
+    new_dict = {}
+    for key, value in old_dict.items():
+        new_dict = new_dict | value
+    return new_dict
+
+def get_macs_input() -> dict[str: dict]:
+    """
+    Groups input samples into replicates and treatment/control for sample and mark.
+    Two unique samples with same type, sample, replicate and mark, get pooled together.
+    """
+    samples = sfs.sample_info
+    macs_input = {}
+    control_files = []
+
+    # Process all sample entries
+    for key, entry in flatten_dict(samples).items():
+        replicate = str(entry["replicate"])
+        sample_type = entry["type"]
+        sample_mark = entry["mark"]
+        sample_file = entry["file_name"]
+        sample_name = entry["sample"]
+
+        if sample_type == "treatment":
+            file_key = f"{sample_mark}_{sample_name}"
+            macs_input.setdefault(file_key,{}).setdefault(replicate,{
+                "treatment": [],
+                "control": [],
+                "peak_type": entry['peak_type']
+            })
+            macs_input[file_key][replicate]["treatment"].append(sample_file)
+
+        elif sample_type == "control":
+            control_files.append((sample_name, replicate, sample_file))
+
+        else:
+            raise Exception(f"Entry type unrecognized for {sample_file}")
+
+    # Associate control files with their respective treatments
+    for sample_name, replicate, file_name in control_files:
+        for file_key in filter(lambda k: sample_name in k,macs_input.keys()):
+            macs_input[file_key][replicate]["control"].append(file_name)
+
+    # Remove any replicates with missing treatment or control
+    for file_key, replicates in macs_input.items():
+        invalid_replicates = [
+            replicate for replicate, data in replicates.items()
+            if not data["treatment"] or not data["control"]
+        ]
+        for replicate in invalid_replicates:
+            del replicates[replicate]
+
+    return macs_input
+
+macs_input = get_macs_input()

@@ -7,7 +7,6 @@ import re
 import yaml
 
 from fetch_data import get_meta_data, get_sra_accessions
-from input_scripts import symlink_input
 
 class InputException(Exception):
     pass
