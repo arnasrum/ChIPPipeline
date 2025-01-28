@@ -26,9 +26,9 @@ rule fastqc_before_trimming:
     input:
         RESOURCES + "/reads/{sample}.fastq",
     output:
-        multiext(config['results_path'] + "/fastqc/raw/{sample}_fastqc.", "zip", "html")
+        multiext(config['results_path'] + "/fastqc/unprocessed/{sample}_fastqc.", "zip", "html")
     params:
-        outputPath = lambda wildcards: f"{config['results_path']}/fastqc/raw"
+        outputPath = lambda wildcards: f"{config['results_path']}/fastqc/unprocessed"
     conda:
         "../envs/fastqc.yml"
     log:

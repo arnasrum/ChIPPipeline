@@ -12,8 +12,9 @@ from input_scripts import symlink_input
 class InputException(Exception):
     pass
 
-class SampleFileScripts:
+class PipelineConfiguration:
     def __init__(self, config: dict):
+        self.sample_info = None
         if config["sample_sheet"] is None or config["sample_sheet"] == '':
             self.sample_sheet = "config/samples.csv"
         else:
@@ -35,6 +36,12 @@ class SampleFileScripts:
                 raise InputException(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be an integer.")
             if not row["accession"]:
                 raise InputException(f"Row {index} in column \"accession\" contains invalid value.")
+            if row["file_path"]:
+                for file in row["file_path"].split(";"):
+                    if not os.path.isfile(file):
+                        raise InputException(f"Provided file: {file}, in row {index}, does not exist.")
+            if row["file_path"] and self.is_paired_end() and len(row["file_path"].split(";")) == 1:
+                raise InputException(f"Running pipeline in paired end mode, but only one read provided for row {index} in sample sheet.")
 
     def make_sample_info(self) -> dict[str:dict]:
         self.__verify_sample_sheet()
@@ -83,6 +90,7 @@ class SampleFileScripts:
         if not os.path.exists(json_dir): os.makedirs(json_dir)
         with open(self.json_path, "w") as outfile:
             outfile.write(json.dumps(sample_info, indent=4))
+        self.sample_info = sample_info
         return sample_info
 
     def is_paired_end(self) -> bool:
@@ -93,7 +101,7 @@ class SampleFileScripts:
         json_file = open(self.json_path)
         sample_sheet = pd.read_csv(samples_csv, keep_default_na=False); samples_csv.close()
         samples_json = json.load(json_file); json_file.close()
-        samples_json = SampleFileScripts.__flatten_dict(samples_json)
+        samples_json = PipelineConfiguration.__flatten_dict(samples_json)
         if len(sample_sheet) != len(samples_json["public"]) + len(samples_json["provided"]): return False
         for index, row in sample_sheet.iterrows():
             if row["accession"] in samples_json["public"]:
@@ -110,7 +118,9 @@ class SampleFileScripts:
             return False
         return True
 
-    @staticmethod
+    def get_all_file_names(self) -> list[str]:
+        return [*map(lambda sample_info: sample_info["file_name"], PipelineConfiguration.__flatten_dict(self.sample_info).values())]
+
     def get_file_info(json_path):
         with open(json_path, "r") as file:
             json_data = json.load(file)
@@ -128,6 +138,6 @@ if __name__ == "__main__":
     file = open("config/config.yml")
     config = yaml.load(file, Loader=yaml.FullLoader)
     file.close()
-    sfs = SampleFileScripts(config)
+    sfs = PipelineConfiguration(config)
     sfs.make_sample_info()
     symlink_input(config["json_path"], "test")

@@ -1,13 +1,13 @@
 import sys
 sys.path.append("workflow/scripts")
-from sample_file_scripts import SampleFileScripts
+from pipeline_configuration import PipelineConfiguration
 from set_config_options import set_module_options, set_output_paths
-from input_scripts import get_all_input, get_macs_input, symlink_input
+from input_scripts import get_macs_input, symlink_input, flatten_dict
 
 
 set_module_options(config)
 set_output_paths(config)
-sfs = SampleFileScripts(config)
+sfs = PipelineConfiguration(config)
 file_info = sfs.make_sample_info()
 
 RESULTS = config['results_path']
@@ -27,7 +27,6 @@ def get_trim_input(sample: str) -> list[str]:
     return input
 
 def alignment_input(sample: str) -> list[str]:
-    file_info = SampleFileScripts.get_file_info(config["json_path"])
     if sfs.is_paired_end():
         if sample in [*map(lambda accession: file_info['public'][accession]['file_name'], file_info["public"].keys())]:
             reads = [f"{RESULTS}/{config['trimmer']}/{sample}_1.fastq", f"{RESULTS}/{config['trimmer']}/{sample}_2.fastq"]
@@ -56,3 +55,34 @@ def reference_genome_input():
     if os.path.isfile(config["genome"]):
         return config["genome"]
     return ""
+
+def get_fastqc_output() -> list[str]:
+    file_names = sfs.get_all_file_names()
+    file_paths_unprocessed = [f"{RESULTS}/fastqc/unprocessed/{file_name}" for file_name in file_names]
+    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}" for file_name in file_names]
+
+    single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
+    paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
+    extensions = paired_end_extensions if sfs.is_paired_end() else single_end_extensions
+
+    output_files = [f"{path}{extension}"
+                    for path in file_paths_unprocessed + file_paths_trimmed
+                    for extension in extensions
+    ]
+    return output_files
+
+
+def get_all_input(config):
+    input_files = []
+    path = config["results_path"]
+    for key, value in macs_input.items():
+        for replicate in value:
+            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_heatmap.png")
+            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_profile.png")
+            input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
+
+    # Gets narrow peak samples
+    input_files += get_fastqc_output()
+    input_files += [*map(lambda sample: f"{config['results_path']}/homer/{sample}/homerResults.html",
+                         filter(lambda sample: macs_input[sample][next(iter(macs_input[sample].keys()))]["peak_type"] == "narrow", macs_input.keys()))]
+    return input_files
