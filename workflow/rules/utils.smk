@@ -10,9 +10,10 @@ rule unzip:
         file = r"^([\/A-Za-z0-9])*.(fastq|fq|fa|fasta)$"
     resources:
         tmpdir=TEMP
+    params:
+        args = config["gzip"]["args"]
     shell:
-        "gzip -dk {input} -f"
-
+        "gzip {params.args} -dkf {input}"
 
 rule samtools_index:
     input:
@@ -106,20 +107,19 @@ rule samtools_markdup:
         path = f"{RESULTS}/samtools-markdup"
     threads:
         int(config["markdup"]["threads"])
-    #log:
-        #LOGS + "/samtools-markdup/{sample}.log"
+    log:
+        LOGS + "/samtools-markdup/{sample}.log"
     benchmark:
         BENCHMARKS + "/samtools-markdup/{sample}.txt"
     resources:
         tmpdir=TEMP
     shell:
         """
-        #exec > log 2>&1
+        exec > {log} 2>&1
         mkdir -p {params.path} 
-        rm -rf {resources.tmpdir}/{wildcards.sample}_collate &&  rm -rf {resources.tmpdir}/{wildcards.sample}_sort \
-            && rm -rf {resources.tmpdir}/{wildcards.sample}_markdup
-        samtools collate -T {resources.tmpdir}/{wildcards.sample}_collate -O -u {input} \
+        uuid=$(uuidgen)
+        samtools collate -T {resources.tmpdir}/{{uuid}}_collate -O -u {input} \
             | samtools fixmate -@ {threads} -m -u - - \
-            | samtools sort -T {resources.tmpdir}/{wildcards.sample}_sort -@ {threads} -u - \
-            | samtools markdup {params.args} -T {resources.tmpdir}/{wildcards.sample}_markdup -@ {threads} - {output}
+            | samtools sort -T {resources.tmpdir}/{{uuid}}_sort -@ {threads} -u - \
+            | samtools markdup {params.args} -T {resources.tmpdir}/{{uuid}}_markdup -@ {threads} - {output}
         """
