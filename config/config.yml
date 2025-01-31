@@ -9,8 +9,8 @@ fastqc:
 
 # Trimmer config
 trim_galore:
-  threads: 12
-  args: "--no_report_file "
+  threads: 6
+  args: ""
 cutadapt:
   threads: 4
   args: ""
@@ -22,14 +22,14 @@ fastp:
 bowtie2:
   args: "--very-fast"
   extra: ""
-  threads: 12
+  threads: 6
 bowtie2-build:
   args: ""
   threads: 12
 bwa-mem:
   args: "-v 1 -Y"
   extra: ""
-  threads: 4
+  threads: 6
 bwa-mem2:
   args: "-v 1 -Y"
   extra: ""
@@ -42,6 +42,8 @@ STAR:
   threads: 4
 
 # Utils config
+gzip:
+  args: ""
 samtools-index:
   threads: 4
 MarkDuplicates:

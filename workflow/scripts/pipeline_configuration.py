@@ -20,6 +20,7 @@ class PipelineConfiguration:
             self.sample_sheet = config["sample_sheet"]
         self.paired_end = config["paired_end"]
         self.json_path = config["json_path"]
+        self.config = config
 
     def __verify_sample_sheet(self):
         with open(self.sample_sheet, "r") as file:
@@ -120,17 +121,16 @@ class PipelineConfiguration:
     def get_all_file_names(self) -> list[str]:
         return [*map(lambda sample_info: sample_info["file_name"], PipelineConfiguration.__flatten_dict(self.sample_info).values())]
 
-    def get_file_info(json_path):
-        with open(json_path, "r") as file:
-            json_data = json.load(file)
-        return json_data
-
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:
         new_dict = {}
         for key, value in old_dict.items():
             new_dict = new_dict | value
         return new_dict
+
+    def get_genome_code(self):
+        return self.config["genome"].split("/")[-1].split(".")[0]
+
 
 
 if __name__ == "__main__":
@@ -139,4 +139,3 @@ if __name__ == "__main__":
     file.close()
     sfs = PipelineConfiguration(config)
     sfs.make_sample_info()
-    symlink_input(config["json_path"], "test")

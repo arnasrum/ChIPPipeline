@@ -31,7 +31,7 @@ def get_consensus_peak_input(sample: str) -> list[str]:
         macs_input[sample].keys())]
 
 def macs_input_func(sample, replicate, type) -> list[str]:
-    return [*map(lambda file: f"{RESULTS}/{config['duplicate_processor']}/" + file + ".bam", get_macs_input(config['json_path'])[sample][replicate][type])]
+    return [*map(lambda file: f"{RESULTS}/{config['duplicate_processor']}/" + file + ".bam", get_macs_input()[sample][replicate][type])]
 
 def reference_genome_input():
     if os.path.isfile(config["genome"]):

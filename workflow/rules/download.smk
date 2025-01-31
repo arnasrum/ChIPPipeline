@@ -128,14 +128,13 @@ rule symlink_PE:
         ln -s -r {input.read2} {output.read2} 
         """
 
-
-
-
 rule symlink_reference_genome:
     input:
         reference_genome_input()
     output:
         RESOURCES + "/genomes/{genome}.fa.gz"
+    params:
+        gzip_args = config["gzip"]["args"]
     log:
         LOGS + "/ln/{genome}.log"
     benchmark:
@@ -145,7 +144,13 @@ rule symlink_reference_genome:
     shell:
         '''
         exec > {log} 2>&1
-        ln -sr {input} {output} 
+        if [[ {input} == *.gz ]]; then
+            echo "The string ends with .gz, skipping compression."
+            ln -sr {input} {output} 
+        else
+            echo "The string does not end with .gz, compressing genome."
+            gzip {params.gzip_args} -kfc {input} > {output}
+        fi 
         '''
 
 
