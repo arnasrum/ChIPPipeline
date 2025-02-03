@@ -62,8 +62,6 @@ rule picardCreateGenomeSequenceDictionary:
         "../envs/utils.yml"
     resources:
         tmpdir=TEMP,
-        cpus_per_task=1,
-        mem_mb=4000
     shell:
         "picard CreateSequenceDictionary -R {input} -O {output}"
 
@@ -85,7 +83,7 @@ rule picard_MarkDuplicates:
     log:
         LOGS + "/picard-MarkDuplicates/{sample}.log"
     benchmark:
-        BENCHMARKS + "/picard-MarkDuplicates/{sample}.log"
+        repeat(BENCHMARKS + "/picard-MarkDuplicates/{sample}.log", config["benchmark_repeat"])
     resources:
         tmpdir=TEMP
     shell:
@@ -110,7 +108,7 @@ rule samtools_markdup:
     log:
         LOGS + "/samtools-markdup/{sample}.log"
     benchmark:
-        BENCHMARKS + "/samtools-markdup/{sample}.txt"
+        repeat(BENCHMARKS + "/samtools-markdup/{sample}.txt", config["benchmark_repeat"])
     resources:
         tmpdir=TEMP
     shell:

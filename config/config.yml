@@ -5,31 +5,31 @@ fasterq-dump:
 fastqc:
   args: ""
   extra: ""
-  threads: 4
+  threads: 12
 
 # Trimmer config
 trim_galore:
-  threads: 6
+  threads: 12
   args: ""
 cutadapt:
-  threads: 4
+  threads: 12
   args: ""
 fastp:
-  threads: 4
+  threads: 12
   args: ""
 
 # Aligner config
 bowtie2:
-  args: "--very-fast"
+  args: ""
   extra: ""
-  threads: 6
+  threads: 12
 bowtie2-build:
   args: ""
   threads: 12
 bwa-mem:
   args: "-v 1 -Y"
   extra: ""
-  threads: 6
+  threads: 12
 bwa-mem2:
   args: "-v 1 -Y"
   extra: ""
@@ -39,7 +39,7 @@ bwa-index:
 STAR:
   args: ""
   extra: ""
-  threads: 4
+  threads: 12
 
 # Utils config
 gzip:
@@ -69,6 +69,7 @@ resources_path: "resources"
 logs_path: "logs"
 benchmarks_path: "benchmarks"
 temp_path: "temp"
+benchmark_repeat: 3
 
 # String to overwrite which tools are to be ran
 modules: ""

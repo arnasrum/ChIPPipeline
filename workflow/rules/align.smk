@@ -20,7 +20,6 @@ rule buildBowtie2Index:
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config["bowtie2-build"]["threads"]),
-        mem_mb=20000
     shell:
         '''
         exec > {log} 2>&1
@@ -46,10 +45,9 @@ rule bowtie2:
     log:
         LOGS + "/bowtie2/{sample}.log"
     benchmark:
-        BENCHMARKS + "/bowtie2/{sample}.txt"
+        repeat(BENCHMARKS + "/bowtie2/{sample}.txt", config["benchmark_repeat"])
     resources:
         tmpdir=TEMP,
-        mem_per_cpu=2096,
         cpus_per_task=int(config["bowtie2"]["threads"])
     shell:
         '''
@@ -81,7 +79,6 @@ rule buildBWAIndex:
         f"{BENCHMARKS}/bwa-index/{genome}.txt"
     resources:
         tmpdir=TEMP,
-        mem_mb=16000
     shell:
         """
         exec > {log} 2>&1
@@ -107,10 +104,9 @@ rule bwa_mem:
     log:
         LOGS + "/bwa-mem/{sample}.log"
     benchmark:
-        BENCHMARKS + "/bwa-mem/{sample}.txt"
+        repeat(BENCHMARKS + "/bwa-mem/{sample}.txt", config["benchmark_repeat"])
     resources:
         tmpdir=TEMP,
-        mem_per_cpu=2096,
         cpus_per_task=int(config["bwa-mem"]["threads"])
     shell:
         """
@@ -135,7 +131,6 @@ rule buildBWA2Index:
         f"{BENCHMARKS}/bwa2-index/{genome}.txt"
     resources:
         tmpdir=TEMP,
-        mem_mb=20000,
     shell:
         """
         exec > {log} 2>&1
@@ -161,11 +156,10 @@ rule bwa_mem2:
     log:
         LOGS + "/bwa-mem2/{sample}.log"
     benchmark:
-        BENCHMARKS + "/bwa-mem2/{sample}.txt"
+        repeat(BENCHMARKS + "/bwa-mem2/{sample}.txt", config["benchmark_repeat"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config['bwa-mem2']['threads']),
-        mem_per_cpu=2096
     shell:
         """
         exec > {log} 2>&1
@@ -215,7 +209,7 @@ rule STAR:
     log:
         LOGS + "/STAR/{sample}.log"
     benchmark:
-        BENCHMARKS + "/STAR/{sample}.txt"
+        repeat(BENCHMARKS + "/STAR/{sample}.txt", config["benchmark_repeat"])
     resources:
         tmpdir=TEMP
     shell:
