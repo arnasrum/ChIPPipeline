@@ -129,4 +129,12 @@ def get_macs_input() -> dict[str: dict]:
 
     return macs_input
 
+def get_compute_matrix_input(name: str, replicate: str) -> dict[str:list[str]]:
+    macs_extension = ["_peaks.narrowPeak"] if macs_input[name][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
+    beds = [*map(lambda ext: f"{RESULTS}/{config['peak_caller']}/{name}_rep{replicate}{ext}", macs_extension)]
+    bigwigs = [*map(lambda sample: f"{RESULTS}/deeptools-bamCoverage/{sample}.bw", macs_input[name][replicate]["treatment"])]
+    return {"bigwigs": bigwigs, "beds": beds}
+
+
+
 macs_input = get_macs_input()

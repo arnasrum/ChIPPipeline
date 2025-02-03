@@ -40,13 +40,6 @@ rule bedtools_consensus_peak:
         bedtools intersect -a {input.a} -b {input.b} -wa > {output}
         '''
 
-
-def get_compute_matrix_input(name: str, replicate: str) -> dict[str:list[str]]:
-    macs_extension = ["_peaks.narrowPeak"] if macs_input[name][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
-    beds = [*map(lambda ext: f"{RESULTS}/{config['peak_caller']}/{name}_rep{replicate}{ext}", macs_extension)]
-    bigwigs = [*map(lambda sample: f"{RESULTS}/deeptools-bamCoverage/{sample}.bw", macs_input[name][replicate]["treatment"])]
-    return {"bigwigs": bigwigs, "beds": beds}
-
 rule deeptools_computeMatrix:
     input:
         beds = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["beds"],
