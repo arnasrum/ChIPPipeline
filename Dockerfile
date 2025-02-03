@@ -5,5 +5,5 @@ RUN conda install -y conda=23.10.0 snakemake=8.20.5 -c conda-forge -c bioconda  
     && pip install snakemake-executor-plugin-slurm \
     && pip install snakemake-executor-plugin-cluster-generic
 
-#ENTRYPOINT ["snakemake", "--use-conda", "--conda-frontend", "conda"]
+ENTRYPOINT ["snakemake", "--sdm", "conda", "--conda-frontend", "conda"]
 
