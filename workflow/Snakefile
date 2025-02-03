@@ -1,5 +1,7 @@
 configfile: "config/config.yml"
 
+conda: "envs/main.yml"
+
 include: "rules/shared.smk"
 include: "rules/utils.smk"
 include: "rules/fastqc.smk"
