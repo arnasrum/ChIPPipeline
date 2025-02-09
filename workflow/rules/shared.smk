@@ -7,6 +7,7 @@ set_module_options(config)
 set_output_paths(config)
 sfs = PipelineConfiguration(config)
 file_info = sfs.make_sample_info()
+genome = sfs.get_genome_code()
 
 RESULTS = config['results_path']
 RESOURCES = config['resources_path']
@@ -65,8 +66,8 @@ def get_all_input(config):
 
     # Gets narrow peak samples
     input_files += get_fastqc_output()
-    input_files += [*map(lambda sample: f"{RESULTS}/homer/{sample}/homerResults.html",
-                         filter(lambda sample: macs_input[sample][next(iter(macs_input[sample].keys()))]["peak_type"] == "narrow", macs_input.keys()))]
+    input_files += [f"{RESULTS}/homer/{sample}/homerResults.html" for sample in
+                         filter(lambda sample: macs_input[sample][next(iter(macs_input[sample].keys()))]["peak_type"] == "narrow", macs_input.keys())]
     return input_files
 
 
@@ -130,9 +131,11 @@ def get_macs_input() -> dict[str: dict]:
     return macs_input
 
 def get_compute_matrix_input(name: str, replicate: str) -> dict[str:list[str]]:
-    macs_extension = ["_peaks.narrowPeak"] if macs_input[name][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
-    beds = [*map(lambda ext: f"{RESULTS}/{config['peak_caller']}/{name}_rep{replicate}{ext}", macs_extension)]
-    bigwigs = [*map(lambda sample: f"{RESULTS}/deeptools-bamCoverage/{sample}.bw", macs_input[name][replicate]["treatment"])]
+    #macs_extension = ["_peaks.narrowPeak"] if macs_input[name][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
+    #beds = [*map(lambda ext: f"{RESULTS}/{config['peak_caller']}/{name}_rep{replicate}{ext}", macs_extension)]
+    beds = [f"{RESULTS}/{config['peak_caller']}/{name}_rep{replicate}_peaks.narrowPeak"]
+    #bigwigs = [*map(lambda sample: f"{RESULTS}/deeptools-bamCoverage/{sample}.bw", macs_input[name][replicate]["treatment"])]
+    bigwigs = [f"{RESULTS}/deeptools-bamCoverage/{sample}.bw" for sample in macs_input[name][replicate]["treatment"]]
     return {"bigwigs": bigwigs, "beds": beds}
 
 

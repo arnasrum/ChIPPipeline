@@ -1,6 +1,5 @@
-genome = sfs.get_genome_code()
 
-rule buildBowtie2Index:
+rule build_bowtie2_index:
     input:
         f"{RESOURCES}/genomes/{genome}.fa.gz"
     output:
@@ -45,7 +44,7 @@ rule bowtie2:
     log:
         LOGS + "/bowtie2/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bowtie2/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/bowtie2/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config["bowtie2"]["threads"])
@@ -62,7 +61,7 @@ rule bowtie2:
         bowtie2 -q --threads {threads} -x {params.index_path} $inputOptions {params.args} {params.extra} | samtools sort -@ {threads} -o {output} -
         '''
 
-rule buildBWAIndex:
+rule build_bwa_index:
     input:
         f"{RESOURCES}/genomes/{genome}.fa.gz"
     output: 
@@ -104,7 +103,7 @@ rule bwa_mem:
     log:
         LOGS + "/bwa-mem/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bwa-mem/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/bwa-mem/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config["bwa-mem"]["threads"])
@@ -114,11 +113,11 @@ rule bwa_mem:
         bwa mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools sort -@ {threads} -o {output} -
         """
 
-rule buildBWA2Index:
+rule build_bwa2_index:
     input:
         f"{RESOURCES}/genomes/{genome}.fa.gz"
     output:
-        multiext(f"{RESULTS}/bwa2-index/{genome}.", "amb", "ann", "pac")
+        multiext(f"{RESULTS}/bwa2-index/{genome}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
     conda:
         "../envs/align.yml"
     params:
@@ -141,7 +140,7 @@ rule buildBWA2Index:
 rule bwa_mem2:
     input:
         reads = lambda wildcards: alignment_input(wildcards.sample),
-        genomeIndex = multiext(f"{RESULTS}/bwa2-index/{genome}.", "amb", "ann", "pac", "0123", "bwt.2bit.64")
+        genomeIndex = multiext(f"{RESULTS}/bwa2-index/{genome}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
     output:
         temp(RESULTS + "/bwa-mem2/{sample}.bam")
     conda:
@@ -156,7 +155,7 @@ rule bwa_mem2:
     log:
         LOGS + "/bwa-mem2/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bwa-mem2/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/bwa-mem2/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config['bwa-mem2']['threads']),
@@ -166,7 +165,7 @@ rule bwa_mem2:
         bwa-mem2 mem -t {threads} {params.args} {params.extra} {params.index_path} {input.reads} | samtools sort -@ {threads} -o {output} -
         """
 
-rule buildStarIndex:
+rule build_STAR_index:
     input:
         f"{RESOURCES}/genomes/{genome}.fa"
     output:
@@ -205,15 +204,17 @@ rule STAR:
     params:
         args = config["STAR"]["args"],
         extra = config["STAR"]["extra"],
-        index_path = f"{RESULTS}/star-index"
+        index_path = f"{RESULTS}/star-index",
+        output_path = f"{RESULTS}/STAR"
     log:
         LOGS + "/STAR/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/STAR/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/STAR/{sample}.txt", config["benchmark_repeat_align"])
     resources:
         tmpdir=TEMP
     shell:
         """
         exec > {log} 2>&1
-        STAR --outTmpDir "{resources.tmpdir}/STAR-${{uiidgen}}" --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools sort -@ {threads} -o {output} -
+        uuid=$(python3 -c "import uuid; print(uuid.uuid4())")
+        STAR --outTmpDir "{resources.tmpdir}/STAR-${{uuid}}" --outFileNamePrefix {params.output_path}/{wildcards.sample}_ --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} {params.extra} --outStd SAM | samtools sort -@ {threads} -o {output} -
         """
