@@ -67,7 +67,7 @@ def __poll_request(url: str) -> Response:
         if failed_request_count >= NUM_FAILED_REQUESTS_ALLOWED:
             raise Exception("NCBI seems to be down at this time")
         response: Response = get(url, timeout=REQUEST_TIMEOUT)
-        if response.status_code == 200 and len(response.content) > 299:
+        if response.status_code == 200:
             break
         if 400 <= response.status_code < 500 or response.status_code == 204:
             raise Exception("Something went wrong while fetching GEO data, please check the accessions")
