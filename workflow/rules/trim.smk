@@ -19,7 +19,7 @@ rule trim_galore_PE:
     log:
         LOGS + "/trim_galore/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config["trim_galore"]["threads"]),
@@ -47,7 +47,7 @@ rule trim_galore_SE:
     log:
         LOGS + "/trim_galore/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config["trim_galore"]["threads"]),
@@ -73,7 +73,7 @@ rule cutadapt:
     log:
         LOGS + "/cutadapt/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/cutadapt/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/cutadapt/{sample}.txt", config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=int(config["cutadapt"]["threads"]),
@@ -110,7 +110,7 @@ rule fastp:
         tmpdir=TEMP,
         cpus_per_task=int(config["fastp"]["threads"]),
     benchmark:
-        repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat_trim"])
     shell:
         '''
         exec > {log} 2>&1

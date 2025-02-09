@@ -2,16 +2,23 @@
 
 apptainer pull container docker://arnasrum/chippipeline
 
+declare -a trimmers=("trim_galore" "cutadapt" "fastp")
+declare -a aligners=("bowtie2" "bwa_mem" "bwa_mem2" "STAR")
+
+
 # Trimmers
-./container -c all --jobs 1 --all-temp --until trim_galore_PE -C modules="-t trim_galore" prefix="benchmark_trim"
-./container -c all --jobs 1 --all-temp --until cutadapt -C modules="-t cutadapt" prefix="benchmark_trim"
-./container -c all --jobs 1 --all-temp --until fastp -C modules="-t fastp" prefix="benchmark_trim"
+
+for trimmer in "${trimmers[@]}"
+do
+  ./container -c all --jobs 1 --all-temp --until "$trimmer" -C trimmer="$trimmer" prefix="benchmark_trim" benchmark_repeat_trim=3
+done
+./container -c all --jobs 1 --all-temp --until trim_galore_PE -C modules="-t trim_galore" prefix="benchmark_trim" benchmark_repeat_trim=3
 
 # Aligners
-./container -c all --jobs 1 --all-temp --until bowtie2 -C modules="-a bowtie2" prefix="benchmark_align"
-./container -c all --jobs 1 --all-temp --until bwa_mem -C modules="-a bwa-mem" prefix="benchmark_align"
-./container -c all --jobs 1 --all-temp --until bwa_mem2 -C modules="-a bwa-mem2" prefix="benchmark_align"
-./container -c all --jobs 1 --all-temp --until STAR -C modules="-a STAR" prefix="benchmark_align"
+for aligner in "${aligners[@]}"
+do
+  ./container -c all --jobs 1 --all-temp --until "$aligner" -C aligner="$aligner" prefix="benchmark_align" benchmark_repeat_align=3
+done
 
-./container -c all --jobs 1 --all-temp --until picard_MarkDuplicates -C duplicate_processor="picard-MarkDuplicates" prefix="benchmark_duplicate"
-./container -c all --jobs 1 --all-temp --until samtools_markdup -C duplicate_processor="samtools-markdup" prefix="benchmark_duplicate"
+./container -c all --jobs 1 --all-temp --until picard_MarkDuplicates -C duplicate_processor="picard-MarkDuplicates" prefix="benchmark_duplicate" benchmark_repeat_duplicate=3
+./container -c all --jobs 1 --all-temp --until samtools_markdup -C duplicate_processor="samtools-markdup" prefix="benchmark_duplicate" benchmark_repeat_duplicate=3
