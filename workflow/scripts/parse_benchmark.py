@@ -1,16 +1,18 @@
 import csv
+import os
+import argparse
 import matplotlib.pyplot as plt
 from collections import defaultdict
-import argparse
 from os import listdir
 
 def sample_tool_map(paths):
-    samples = defaultdict(set)
+    samples = defaultdict(list)
     for path in paths:
         for file in listdir(path):
             tool = path.split("/")[-1]
-            samples[file].add((tool, get_median(path + "/" + file)))
-    print(samples)
+            samples[file].append((tool, get_median(path + "/" + file)))
+    for file in samples:
+        samples[file] = sorted(samples[file], key=lambda item: item[0])
     return samples
 
 def get_median(path):
@@ -33,6 +35,7 @@ def calculate_median(values):
 def plot(data):
     # Extract data for plotting
     for filename, methods in data.items():
+        filename = filename.rstrip(".txt")
         labels = []
         values = []
 
@@ -50,8 +53,9 @@ def plot(data):
         plt.xticks(rotation=45)  # Rotate x-axis labels for readability
         plt.tight_layout()  # Adjust layout to fit labels
         # Optionally save each plot as an image file
-        # plt.savefig(f"{filename}_histogram.png")
-        plt.show()
+        os.makedirs("plots", exist_ok=True)
+        plt.savefig(f"plots/{filename}_histogram.png")
+        #plt.show()
 
 
 def make_paths(directory, tools):
@@ -69,6 +73,5 @@ if __name__ == "__main__":
     paths = args.directory[0]
     for path in args.directory[0]:
         tool_paths = make_paths(path, args.t)
-
         samples = sample_tool_map(tool_paths)
         plot(samples)
