@@ -119,7 +119,28 @@ class PipelineConfiguration:
         return True
 
     def get_all_file_names(self) -> list[str]:
-        return [*map(lambda sample_info: sample_info["file_name"], PipelineConfiguration.__flatten_dict(self.sample_info).values())]
+        #return [*map(lambda sample_info: sample_info["file_name"], PipelineConfiguration.__flatten_dict(self.sample_info).values())]
+        return [sample_info["file_name"] for sample_info in PipelineConfiguration.__flatten_dict(self.sample_info).values()]
+
+
+    def __group_all_control_files(self) -> dict[dict[list[str]]]:
+        control_files = {}
+        for key, entry in self.__flatten_dict(self.sample_info).items():
+            if entry['type'] != "control": continue
+            if not entry['sample'] in control_files:
+                control_files[entry['sample']] = {}
+            if not entry['replicate'] in control_files[entry['sample']]:
+                control_files[entry['sample']][entry['replicate']] = []
+            control_files[entry['sample']][entry['replicate']].append(entry['file_name'])
+        return control_files
+
+    def get_control_files(self, treatment_file: str):
+        treatment_entry = next(filter(lambda entry: entry["file_name"] == treatment_file, self.__flatten_dict(self.sample_info).values()))
+        if treatment_entry == None:
+            raise Exception(f"File: {treatment_file}; does not exists in sample info")
+        control_files = self.__group_all_control_files()[treatment_entry["sample"]][treatment_entry["replicate"]]
+        print(treatment_entry["file_name"])
+        print(control_files)
 
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:
@@ -139,3 +160,5 @@ if __name__ == "__main__":
     file.close()
     sfs = PipelineConfiguration(config)
     sfs.make_sample_info()
+    #sfs.group_samples()
+    sfs.get_control_files("GSM1871972_H3K4me3_8cell_treatment_rep1")
