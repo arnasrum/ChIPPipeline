@@ -7,7 +7,7 @@ rule unzip:
     output:
         "{file}"
     wildcard_constraints:
-        file = r"^([\/A-Za-z0-9])*.(fastq|fq|fa|fasta)$"
+        file = r"^(.*).(fastq|fq|fa|fasta)$"
     resources:
         tmpdir=TEMP
     params:
@@ -83,7 +83,7 @@ rule picard_MarkDuplicates:
     log:
         LOGS + "/picard-MarkDuplicates/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/picard-MarkDuplicates/{sample}.log", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/picard-MarkDuplicates/{sample}.log", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP
     shell:
@@ -108,14 +108,14 @@ rule samtools_markdup:
     log:
         LOGS + "/samtools-markdup/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/samtools-markdup/{sample}.txt", config["benchmark_repeat"])
+        repeat(BENCHMARKS + "/samtools-markdup/{sample}.txt", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP
     shell:
         """
         exec > {log} 2>&1
         mkdir -p {params.path} 
-        uuid=$(uuidgen)
+        uuid=$(python3 -c "import uuid; print(uuid.uuid4())")
         samtools collate -T {resources.tmpdir}/{{uuid}}_collate -O -u {input} \
             | samtools fixmate -@ {threads} -m -u - - \
             | samtools sort -T {resources.tmpdir}/{{uuid}}_sort -@ {threads} -u - \
