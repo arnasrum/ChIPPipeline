@@ -18,34 +18,12 @@ rule deeptools_bamCoverage:
         bamCoverage -p {threads} -b {input.bam} -o {output}
         """
 
-
-
-rule bedtools_consensus_peak:
-    input:
-        a = lambda wildcards: get_consensus_peak_input(wildcards.sample)[0],
-        b = lambda wildcards: get_consensus_peak_input(wildcards.sample)[1:]
-    output:
-        RESULTS + "/bedtools/{sample}.consensusPeak"
-    conda:
-        "../envs/data_analysis.yml"
-    log:
-        LOGS + "/bedtools-intersect/{sample}.log"
-    benchmark:
-        BENCHMARKS + "/bedtools-intersect/{sample}.txt"
-    resources:
-        tmpdir=TEMP
-    shell:
-        '''
-        exec > {log} 2>&1
-        bedtools intersect -a {input.a} -b {input.b} -wa > {output}
-        '''
-
 rule deeptools_computeMatrix:
     input:
-        beds = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["beds"],
-        bigwigs = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["bigwigs"]
+        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak"],
+        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
-        RESULTS + "/deeptools/{sample}_rep{replicate}_matrix.gz"
+        RESULTS + "/deeptools/{sample}_matrix.gz"
     wildcard_constraints:
         replicate = r"[0-9]"
     conda:
@@ -93,17 +71,17 @@ rule deeptools_plotProfile:
 
 rule plot_genome_track:
     input:
-        beds = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["beds"],
-        bigwigs = lambda wildcards: get_compute_matrix_input(wildcards.sample, wildcards.replicate)["bigwigs"]
+        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak"],
+        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
-        tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_rep{replicate}_tracks.ini"),
-        plot = RESULTS + "/pyGenomeTracks/{sample}_rep{replicate}.png"
+        tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_tracks.ini"),
+        plot = RESULTS + "/pyGenomeTracks/{sample}.png"
     params:
         region = config["plot_regions"],
     conda:
         "../envs/data_analysis.yml"
     log:
-        LOGS + "/pyGenomeTracks/{sample}_rep{replicate}.log"
+        LOGS + "/pyGenomeTracks/{sample}.log"
     resources:
         tmpdir=TEMP
     shell:
@@ -113,16 +91,36 @@ rule plot_genome_track:
         pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot}
         '''
 
-rule annotate_peaks:
+rule bedtools_consensus_peak:
     input:
-        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak" if len(get_consensus_peak_input(wildcards.sample)) > 1 else get_consensus_peak_input(wildcards.sample)
+        a = lambda wildcards: get_consensus_peak_input(wildcards.sample)[0],
+        b = lambda wildcards: get_consensus_peak_input(wildcards.sample)[1:]
+    output:
+        RESULTS + "/bedtools/{sample}.consensusPeak"
+    conda:
+        "../envs/data_analysis.yml"
+    log:
+        LOGS + "/bedtools-intersect/{sample}.log"
+    benchmark:
+        BENCHMARKS + "/bedtools-intersect/{sample}.txt"
+    resources:
+        tmpdir=TEMP
+    shell:
+        '''
+        exec > {log} 2>&1
+        bedtools intersect -a {input.a} -b {input.b} -wa > {output}
+        '''
+
+rule homer_annotate_peaks:
+    input:
+        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak"
     output:
         RESULTS + "/homer/{sample}_annotate.txt"
     conda:
         "../envs/data_analysis.yml"
     params:
         outdir = RESULTS + "/homer",
-        genome = config['genome']
+        genome = genome
     log:
         LOGS + "/homer/{sample}_annotate.log"
     resources:
@@ -135,7 +133,7 @@ rule annotate_peaks:
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input} {params.genome} > {output}
         '''
 
-rule findMotifsGenome:
+rule homer_findMotifsGenome:
     input:
         RESULTS + "/homer/{sample}_annotate.txt"
     output:
