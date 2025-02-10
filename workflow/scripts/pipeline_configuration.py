@@ -119,12 +119,11 @@ class PipelineConfiguration:
         return True
 
     def get_all_file_names(self) -> list[str]:
-        #return [*map(lambda sample_info: sample_info["file_name"], PipelineConfiguration.__flatten_dict(self.sample_info).values())]
         return [sample_info["file_name"] for sample_info in PipelineConfiguration.__flatten_dict(self.sample_info).values()]
 
 
-    def __group_all_control_files(self) -> dict[dict[list[str]]]:
-        control_files = {}
+    def __group_control_files(self) -> dict[str, dict[str, list[str]]]:
+        control_files: dict[str, dict[str, list[str]]] = {}
         for key, entry in self.__flatten_dict(self.sample_info).items():
             if entry['type'] != "control": continue
             if not entry['sample'] in control_files:
@@ -136,11 +135,34 @@ class PipelineConfiguration:
 
     def get_control_files(self, treatment_file: str):
         treatment_entry = next(filter(lambda entry: entry["file_name"] == treatment_file, self.__flatten_dict(self.sample_info).values()))
-        if treatment_entry == None:
+        if treatment_entry is None:
             raise Exception(f"File: {treatment_file}; does not exists in sample info")
-        control_files = self.__group_all_control_files()[treatment_entry["sample"]][treatment_entry["replicate"]]
-        print(treatment_entry["file_name"])
-        print(control_files)
+        control_files = self.__group_control_files()[treatment_entry["sample"]][treatment_entry["replicate"]]
+        return control_files
+
+    def group_treatment_files(self) -> dict[str, dict[str, list[str]]]:
+        treatment_samples: dict[str, dict[str, list[str]]] = {}
+        for key, entry in self.__flatten_dict(self.sample_info).items():
+            if entry['type'] != "treatment": continue
+            group = f"{entry['mark']}_{entry['sample']}"
+            if not group in treatment_samples:
+                treatment_samples[group] = {}
+            if not entry['replicate'] in treatment_samples[group]:
+                treatment_samples[group][entry['replicate']] = []
+            treatment_samples[group][entry['replicate']].append(entry['file_name'])
+        return treatment_samples
+
+    def get_treatment_files(self, return_entries = False) -> list[str]:
+        if return_entries:
+            return [*filter(lambda entry: entry["type"] == "treatment", self.__flatten_dict(self.sample_info).values())]
+        else:
+            return [entry['file_name'] for entry in filter(lambda entry: entry["type"] == "treatment", self.__flatten_dict(self.sample_info).values())]
+
+    def get_genome_code(self):
+        return self.config["genome"].split("/")[-1].split(".")[0]
+
+    def get_sample_entry_by_file_name(self, file_name: str) -> dict:
+        return next(filter(lambda entry: entry["file_name"] == file_name, self.__flatten_dict(self.sample_info).values()))
 
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:
@@ -148,10 +170,6 @@ class PipelineConfiguration:
         for key, value in old_dict.items():
             new_dict = new_dict | value
         return new_dict
-
-    def get_genome_code(self):
-        return self.config["genome"].split("/")[-1].split(".")[0]
-
 
 
 if __name__ == "__main__":

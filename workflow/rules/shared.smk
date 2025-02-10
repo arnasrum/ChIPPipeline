@@ -1,4 +1,5 @@
 import sys
+import re
 sys.path.append("workflow/scripts")
 from pipeline_configuration import PipelineConfiguration
 from set_config_options import set_module_options, set_output_paths
@@ -8,6 +9,7 @@ set_output_paths(config)
 sfs = PipelineConfiguration(config)
 file_info = sfs.make_sample_info()
 genome = sfs.get_genome_code()
+treatment_groups = sfs.group_treatment_files()
 
 RESULTS = config['results_path']
 RESOURCES = config['resources_path']
@@ -16,23 +18,29 @@ BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
 
-
 def get_trim_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
 def alignment_input(file_name: str) -> list[str]:
     return [f"{RESULTS}/{config["trimmer"]}/{file_name}{extension}" for extension in fastq_file_extensions]
 
-def get_consensus_peak_input(sample: str) -> list[str]:
-    peak_types = [*map(lambda replicate: macs_input[sample][replicate]["peak_type"],macs_input[sample])]
-    if peak_types.count(
-        peak_types[0]) != len(peak_types): raise ValueError(f"Peak types for {sample} do not match")
-    macs_extension = "_peaks.narrowPeak" if peak_types[0] == "narrow" else "_peaks.broadPeak"
-    return [*map(lambda replicate: f"{RESULTS}/{config['peak_caller']}/{sample}_rep{replicate}{macs_extension}",
-        macs_input[sample].keys())]
+def get_consensus_peak_input(treatment_group: str) -> list[str]:
+    treatment_files = []
+    for files in treatment_groups[treatment_group].values():
+        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}_peaks.narrowPeak" for file in files]
+    if len(treatment_files) == 1:
+        treatment_files.append(treatment_files[0])
+    return treatment_files
 
-def macs_input_func(sample, replicate, type) -> list[str]:
-    return [*map(lambda file: f"{RESULTS}/{config['duplicate_processor']}/" + file + ".bam", get_macs_input()[sample][replicate][type])]
+def macs_input(sample: str) -> dict[str, list[str]]:
+    groups = [treatment_groups[pool][replicate]
+        for pool in treatment_groups
+        for replicate in treatment_groups[pool]
+    ]
+    treatment_group = next(filter(lambda group: sample in group, groups))
+    path = f"{RESULTS}/{config['duplicate_processor']}"
+    return {"control": [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)],
+            "treatment": [f"{path}/{file}.bam" for file in treatment_group]}
 
 def reference_genome_input():
     if os.path.isfile(config["genome"]):
@@ -54,20 +62,22 @@ def get_fastqc_output() -> list[str]:
     ]
     return output_files
 
-
 def get_all_input(config):
     input_files = []
     path = config["results_path"]
-    for key, value in macs_input.items():
-        for replicate in value:
-            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_heatmap.png")
-            input_files.append(f"{path}/deeptools/{key}_rep{replicate}_profile.png")
-            input_files.append(f"{path}/pyGenomeTracks/{key}_rep{replicate}.png")
-
-    # Gets narrow peak samples
     input_files += get_fastqc_output()
-    input_files += [f"{RESULTS}/homer/{sample}/homerResults.html" for sample in
-                         filter(lambda sample: macs_input[sample][next(iter(macs_input[sample].keys()))]["peak_type"] == "narrow", macs_input.keys())]
+    for treatment_file in sfs.get_treatment_files():
+        input_files += [f"{path}/pyGenomeTracks/{treatment_file}.png"]
+        input_files.append(f"{path}/deeptools/{treatment_file}_heatmap.png")
+        input_files.append(f"{path}/deeptools/{treatment_file}_profile.png")
+    for group, replicates in treatment_groups.items():
+        allow_append = all(
+            sfs.get_sample_entry_by_file_name(sample)["peak_type"] == "narrow"
+            for replicate in replicates
+            for sample in replicates[replicate]
+        )
+        if allow_append:
+            input_files.append(f"{RESULTS}/homer/{group}/homerResults.html")
     return input_files
 
 
@@ -81,63 +91,3 @@ def flatten_dict(old_dict: dict) -> dict:
     for key, value in old_dict.items():
         new_dict = new_dict | value
     return new_dict
-
-def get_macs_input() -> dict[str: dict]:
-    """
-    Groups input samples into replicates and treatment/control for sample and mark.
-    Two unique samples with same type, sample, replicate and mark, get pooled together.
-    """
-    samples = sfs.sample_info
-    macs_input = {}
-    control_files = []
-
-    # Process all sample entries
-    for key, entry in flatten_dict(samples).items():
-        replicate = str(entry["replicate"])
-        sample_type = entry["type"]
-        sample_mark = entry["mark"]
-        sample_file = entry["file_name"]
-        sample_name = entry["sample"]
-
-        if sample_type == "treatment":
-            file_key = f"{sample_mark}_{sample_name}"
-            macs_input.setdefault(file_key,{}).setdefault(replicate,{
-                "treatment": [],
-                "control": [],
-                "peak_type": entry['peak_type']
-            })
-            macs_input[file_key][replicate]["treatment"].append(sample_file)
-
-        elif sample_type == "control":
-            control_files.append((sample_name, replicate, sample_file))
-
-        else:
-            raise Exception(f"Entry type unrecognized for {sample_file}")
-
-    # Associate control files with their respective treatments
-    for sample_name, replicate, file_name in control_files:
-        for file_key in filter(lambda k: sample_name in k,macs_input.keys()):
-            macs_input[file_key][replicate]["control"].append(file_name)
-
-    # Remove any replicates with missing treatment or control
-    for file_key, replicates in macs_input.items():
-        invalid_replicates = [
-            replicate for replicate, data in replicates.items()
-            if not data["treatment"] or not data["control"]
-        ]
-        for replicate in invalid_replicates:
-            del replicates[replicate]
-
-    return macs_input
-
-def get_compute_matrix_input(name: str, replicate: str) -> dict[str:list[str]]:
-    #macs_extension = ["_peaks.narrowPeak"] if macs_input[name][replicate]["peak_type"] == "narrow" else ["_peaks.broadPeak"]
-    #beds = [*map(lambda ext: f"{RESULTS}/{config['peak_caller']}/{name}_rep{replicate}{ext}", macs_extension)]
-    beds = [f"{RESULTS}/{config['peak_caller']}/{name}_rep{replicate}_peaks.narrowPeak"]
-    #bigwigs = [*map(lambda sample: f"{RESULTS}/deeptools-bamCoverage/{sample}.bw", macs_input[name][replicate]["treatment"])]
-    bigwigs = [f"{RESULTS}/deeptools-bamCoverage/{sample}.bw" for sample in macs_input[name][replicate]["treatment"]]
-    return {"bigwigs": bigwigs, "beds": beds}
-
-
-
-macs_input = get_macs_input()
