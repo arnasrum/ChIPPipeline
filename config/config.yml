@@ -56,12 +56,15 @@ markdup:
 macs3:
   args: ""
 
+# Deeptools computeMatrix args used for plot_heat_map and plot_profile
 computeMatrix:
   args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
 
 
 
 # Workflow config
+
+# Path to write generated files to
 prefix: ""
 json_path: "samples.json"
 results_path: "results"
@@ -69,21 +72,29 @@ resources_path: "resources"
 logs_path: "logs"
 benchmarks_path: "benchmarks"
 temp_path: "temp"
+
+# Times chosen trimmer is repeated for chosen trimmer
 benchmark_repeat_trim: 1
+# Times chosen aligner is repeated for chosen aligner
 benchmark_repeat_align: 1
+# Times chosen duplicate marker is repeated for chosen duplicate processor
 benchmark_repeat_duplicate: 1
 
 # String to overwrite which tools are to be ran
 modules: ""
+# Choose trimmer
 trimmer: "trim_galore"
+# Choose alginer
 aligner: "bowtie2"
+# Choose tool to process duplicates
 duplicate_processor: "samtools-markdup"
 peak_caller: "macs3"
 
 # Genome to be used to peak call and align
 genome: "mm39"
 
-plot_regions: "chr1:10,000,000-11,000,000"
+# Plotting region for peaks plotted by pyGenomeTracks
+plot_regions: "chr1:10,000,000-15,000,000"
 
 # Defined reads in sample sheet are paired end
 paired_end: True
