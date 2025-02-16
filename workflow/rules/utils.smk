@@ -70,9 +70,9 @@ rule picard_MarkDuplicates:
         aligned = RESULTS + "/" + config['aligner'] + "/{sample}.bam",
         aligned_index = RESULTS + "/" + config['aligner'] + "/{sample}.bam.bai",
     output:
-        sorted = temp(RESULTS + "/picard-MarkDuplicates/{sample}_sorted.bam"),
-        marked = RESULTS + "/picard-MarkDuplicates/{sample}.bam",
-        metrics = RESULTS + "/picard-MarkDuplicates/{sample}.metrics.txt"
+        sorted = temp(RESULTS + "/MarkDuplicates/{sample}_sorted.bam"),
+        marked = RESULTS + "/MarkDuplicates/{sample}.bam",
+        metrics = RESULTS + "/MarkMuplicates/{sample}.metrics.txt"
     params:
         paired_end = config['paired_end'],
         genome = config['genome'],
@@ -81,34 +81,34 @@ rule picard_MarkDuplicates:
     conda:
         "../envs/utils.yml"
     log:
-        LOGS + "/picard-MarkDuplicates/{sample}.log"
+        LOGS + "/MarkDuplicates/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/picard-MarkDuplicates/{sample}.log", config["benchmark_repeat_duplicate"])
+        repeat(BENCHMARKS + "/MarkDuplicates/{sample}.log", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP
     shell:
         """
         exec > {log} 2>&1
-        picard SortSam -I {input.aligned} -O {output.sorted} --SO coordinate
-        picard MarkDuplicates -ASO coordinate -I {output.sorted} -O {output.marked} -M {output.metrics} {params.args}
+        picard SortSam --TMP_DIR {resources.tmpdir} -I {input.aligned} -O {output.sorted} --SO coordinate
+        picard MarkDuplicates -ASO coordinate --TMP_DIR {resources.tmpdir} -I {output.sorted} -O {output.marked} -M {output.metrics} {params.args}
         """
 
 rule samtools_markdup:
     input:
         RESULTS + "/" + config['aligner'] + "/{sample}.bam"
     output:
-        RESULTS + "/samtools-markdup/{sample}.bam",
+        RESULTS + "/markdup/{sample}.bam",
     conda:
         "../envs/utils.yml"
     params:
         args = config['markdup']['args'],
-        path = f"{RESULTS}/samtools-markdup"
+        path = f"{RESULTS}/markdup"
     threads:
         int(config["markdup"]["threads"])
     log:
-        LOGS + "/samtools-markdup/{sample}.log"
+        LOGS + "/markdup/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/samtools-markdup/{sample}.txt", config["benchmark_repeat_duplicate"])
+        repeat(BENCHMARKS + "/markdup/{sample}.txt", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP
     shell:
@@ -116,8 +116,8 @@ rule samtools_markdup:
         exec > {log} 2>&1
         mkdir -p {params.path} 
         uuid=$(python3 -c "import uuid; print(uuid.uuid4())")
-        samtools collate -T {resources.tmpdir}/{{uuid}}_collate -O -u {input} \
-            | samtools fixmate -@ {threads} -m -u - - \
-            | samtools sort -T {resources.tmpdir}/{{uuid}}_sort -@ {threads} -u - \
-            | samtools markdup {params.args} -T {resources.tmpdir}/{{uuid}}_markdup -@ {threads} - {output}
+        samtools collate -O -T {resources.tmpdir}/${{uuid}}_collate {input} \
+            | samtools fixmate -@ {threads} -m - - \
+            | samtools sort -T {resources.tmpdir}/${{uuid}}_sort -@ {threads} - -u \
+            | samtools markdup {params.args} -T {resources.tmpdir}/${{uuid}}_markdup -@ {threads} - {output}
         """
