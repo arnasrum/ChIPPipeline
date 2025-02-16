@@ -1,8 +1,5 @@
-import sys
-import re
-sys.path.append("workflow/scripts")
-from pipeline_configuration import PipelineConfiguration
-from set_config_options import set_module_options, set_output_paths
+from scripts.pipeline_configuration import PipelineConfiguration
+from scripts.set_config_options import set_module_options, set_output_paths
 
 set_module_options(config)
 set_output_paths(config)
@@ -18,7 +15,7 @@ BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
 
-def get_trim_input(sample: str) -> list[str]:
+def trimmer_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
 def alignment_input(file_name: str) -> list[str]:
@@ -27,7 +24,7 @@ def alignment_input(file_name: str) -> list[str]:
 def get_consensus_peak_input(treatment_group: str) -> list[str]:
     treatment_files = []
     for files in treatment_groups[treatment_group].values():
-        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}_peaks.narrowPeak" for file in files]
+        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}.bed" for file in files]
     if len(treatment_files) == 1:
         treatment_files.append(treatment_files[0])
     return treatment_files
@@ -39,6 +36,8 @@ def macs_input(sample: str) -> dict[str, list[str]]:
     ]
     treatment_group = next(filter(lambda group: sample in group, groups))
     path = f"{RESULTS}/{config['duplicate_processor']}"
+    #print("control", [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)])
+    #print("treatment", [f"{path}/{file}.bam" for file in treatment_group])
     return {"control": [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)],
             "treatment": [f"{path}/{file}.bam" for file in treatment_group]}
 
@@ -79,6 +78,10 @@ def get_all_input(config):
         if allow_append:
             input_files.append(f"{RESULTS}/homer/{group}/homerResults.html")
     return input_files
+
+def get_macs_input(config):
+    return [f"{RESULTS}/macs3/{treatment_file}.bed" for treatment_file in sfs.get_treatment_files()]
+
 
 
 def symlink_input(json_path: str, file_name: str) -> None:

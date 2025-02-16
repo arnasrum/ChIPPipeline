@@ -20,7 +20,7 @@ rule deeptools_bamCoverage:
 
 rule deeptools_computeMatrix:
     input:
-        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak"],
+        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
         bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         RESULTS + "/deeptools/{sample}_matrix.gz"
@@ -71,7 +71,7 @@ rule deeptools_plotProfile:
 
 rule plot_genome_track:
     input:
-        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak"],
+        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
         bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_tracks.ini"),
@@ -91,7 +91,7 @@ rule plot_genome_track:
         pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot}
         '''
 
-rule bedtools_consensus_peak:
+rule bedtools_intersect:
     input:
         a = lambda wildcards: get_consensus_peak_input(wildcards.sample)[0],
         b = lambda wildcards: get_consensus_peak_input(wildcards.sample)[1:]
