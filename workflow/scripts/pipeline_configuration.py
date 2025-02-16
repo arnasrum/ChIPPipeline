@@ -1,12 +1,11 @@
-
-import pandas as pd
-import pathlib
-import json
 import os
 import re
+import json
 import yaml
+import pathlib
+import pandas as pd
 
-from fetch_data import get_meta_data, get_sra_accessions
+from scripts.fetch_data import get_meta_data, get_sra_accessions
 
 class InputException(Exception):
     pass
@@ -133,11 +132,13 @@ class PipelineConfiguration:
             control_files[entry['sample']][entry['replicate']].append(entry['file_name'])
         return control_files
 
-    def get_control_files(self, treatment_file: str):
+    def get_control_files(self, treatment_file: str) -> list[str]:
         treatment_entry = next(filter(lambda entry: entry["file_name"] == treatment_file, self.__flatten_dict(self.sample_info).values()))
         if treatment_entry is None:
             raise Exception(f"File: {treatment_file}; does not exists in sample info")
-        control_files = self.__group_control_files()[treatment_entry["sample"]][treatment_entry["replicate"]]
+        sample = treatment_entry["sample"]
+        replicate = treatment_entry["replicate"]
+        control_files = self.__group_control_files().get(sample, {}).get(replicate, [])
         return control_files
 
     def group_treatment_files(self) -> dict[str, dict[str, list[str]]]:
