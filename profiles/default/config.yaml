@@ -1,5 +1,5 @@
 # non-slurm profile defaults
-restart-times: 1
+restart-times: 0
 latency-wait: 60
 use-conda: True
 keep-going: True
