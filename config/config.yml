@@ -55,6 +55,8 @@ markdup:
 # Peak calling config
 macs3:
   args: ""
+pyGenomeTracks:
+  args: ""
 
 # Deeptools computeMatrix args used for plot_heat_map and plot_profile
 computeMatrix:
@@ -87,7 +89,7 @@ trimmer: "trim_galore"
 # Choose alginer
 aligner: "bowtie2"
 # Choose tool to process duplicates
-duplicate_processor: "samtools-markdup"
+duplicate_processor: "markdup"
 peak_caller: "macs3"
 
 # Genome to be used to peak call and align

@@ -72,7 +72,7 @@ rule picard_MarkDuplicates:
     output:
         sorted = temp(RESULTS + "/MarkDuplicates/{sample}_sorted.bam"),
         marked = RESULTS + "/MarkDuplicates/{sample}.bam",
-        metrics = RESULTS + "/MarkMuplicates/{sample}.metrics.txt"
+        metrics = RESULTS + "/MarkDuplicates/{sample}.metrics.txt"
     params:
         paired_end = config['paired_end'],
         genome = config['genome'],
