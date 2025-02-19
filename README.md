@@ -2,7 +2,7 @@
 
 Snakemake reproducible and extensible chromatin immunoprecipitation sequencing data analysis pipeline.
 
-<img alt="pipeline flowchart" src="docs/images/flow.png">
+<img alt="pipeline flowchart" src="docs/images/flow.png" width="450" height="550">
 
 
 # Usage
@@ -31,7 +31,7 @@ Using Singularity and Apptainer it is possible run the pipeline without installi
 
 Run:
 
-`apptainer pull container_name docker://arnasrun/chippipeline`
+`apptainer pull container_name docker://arnasrum/chippipeline`
 
 Snakemake together conda is available for use in the container.
 
