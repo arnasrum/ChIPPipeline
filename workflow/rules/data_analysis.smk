@@ -159,3 +159,15 @@ rule homer_findMotifsGenome:
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.sample} -size {params.size} -p {threads} 
         '''
 
+rule plot_annotated_peaks:
+    input:
+        RESULTS + "/homer/{sample}_annotate.txt"
+    output:
+        distribution_plot = RESULTS + "/plots/{sample}_distribution.png",
+        gene_distribution_plot =  RESULTS + "/plots/{sample}_genes.png"
+    params:
+        threshold_fraction = 0.01
+    conda:
+        "../envs/data_analysis.yml"
+    script:
+        "../scripts/plot_annotated_peaks.py"

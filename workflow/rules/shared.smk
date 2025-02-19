@@ -77,6 +77,7 @@ def get_all_input(config):
         )
         if allow_append:
             input_files.append(f"{RESULTS}/homer/{group}/homerResults.html")
+            input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
 
 def get_macs_input(config):

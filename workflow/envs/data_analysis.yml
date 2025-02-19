@@ -8,3 +8,4 @@ dependencies:
   - bedtools=2.31.1
   - pygenometracks=3.9-0
   - homer=4.11
+  - seaborn=0.13.2
