@@ -1,31 +1,67 @@
 import argparse
+from collections import defaultdict
+import re
 
-def update_titles(tracks_file, new_title_map):
+def update_options(tracks_file: str):
     with open(tracks_file) as file:
-        lines = file.readlines()
-    replace_lines = {}
-    for i, line in enumerate(lines):
-        if line == "\n" or line.startswith("#"):
+        lines = file.read()
+    pattern = r"^\[.*\]$"
+    option_map = defaultdict(list)
+    sections = re.findall(pattern, lines, re.MULTILINE)
+    section = ""
+    lines_list = lines.split("\n")
+    for i, line in enumerate(lines_list):
+        if line.startswith("#") or line.strip() == "":
             continue
-        if line.startswith("title ="):
-            file_type = ""
-            line_iter = iter(lines[i:])
-            y = 0
-            while not file_type.startswith("file_type"):
-                file_type = next(line_iter).rstrip("\n")
-                y += 1
-            file_type = file_type.lstrip("file_type = ")
-            replace_lines[i] = f"title = {new_title_map[file_type]}\n"
-            if file_type == "bed":
-                replace_lines[i + y] = "file_type = narrow_peak\n"
-    for num in replace_lines:
-        lines[num] = replace_lines[num]
-    with open(tracks_file, "w") as file:
-        file.writelines(lines)
+        if line in sections:
+            section = (i, line)
+        else:
+            if section:
+                option_map[section].append(line)
+            else:
+                raise Exception("Something went wrong parsing the tracks file")
 
-if __name__ == "__main__":
+    old_new_map = {"bed": {"title": "Peaks"}, "bigwig": {"title": "Bam Coverage", "max_value": "5"}}
+    replace_options(option_map, old_new_map)
+    new_lines = "\n[x-axis]"
+    for section in option_map:
+        new_lines += f"\n{section[1]}"
+        for option in option_map[section]:
+            new_lines += f"\n{option}"
+    with open(tracks_file, "w") as file:
+        file.write(new_lines)
+
+def replace_options(option_map: dict[(int, str), list[str]], old_new_map: dict[str, dict[str, str]]) -> None:
+    """
+    Replaces generated options by make_tracks_file to make more readable figures.
+    (Currently, hardcoded)
+    """
+    for section in option_map:
+        options = option_map[section]
+        try:
+            file_type = next(filter(lambda option: "file_type" in option, options))
+            title = next(filter(lambda option: "title" in option, options))
+        except StopIteration:
+            continue
+        if file_type.split(" = ")[1] == "bed":
+            label_option = next(filter(lambda option: "label" in option, options))
+            options = [option.replace(label_option, f"show_labels = false") for option in options]
+            options = [option.replace(title, f"title = {old_new_map['bed']['title']}") for option in options]
+            options = [option.replace(file_type, f"file_type = narrow_peak") for option in options]
+        if file_type.split(" = ")[1] == "bigwig":
+            options = [option.replace(title, f"title = {old_new_map['bigwig']['title']}") for option in options]
+            try:
+                max_value = next(filter(lambda option: "max_value" in option, options))
+                options = [option.replace(max_value, f"max_value = {old_new_map['bigwig']['max_value']}") for option in options]
+            except StopIteration:
+                options.append(f"max_value = {old_new_map['bigwig']['max_value']}")
+        option_map[section] = options
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("infile", help="Input file")
     args = parser.parse_args()
-    new_title_map = {"bed": "bed", "bigwig": "bigwig"}
-    update_titles(args.infile, new_title_map)
+    update_options(args.infile)
+
+if __name__ == "__main__":
+    main()
