@@ -48,6 +48,7 @@ def replace_options(option_map: dict[(int, str), list[str]], old_new_map: dict[s
             options = [option.replace(label_option, f"show_labels = false") for option in options]
             options = [option.replace(title, f"title = {old_new_map['bed']['title']}") for option in options]
             options = [option.replace(file_type, f"file_type = narrow_peak") for option in options]
+            options = replace_option(options, "color = red")
         if file_type.split(" = ")[1] == "bigwig":
             options = [option.replace(title, f"title = {old_new_map['bigwig']['title']}") for option in options]
             try:
@@ -56,6 +57,15 @@ def replace_options(option_map: dict[(int, str), list[str]], old_new_map: dict[s
             except StopIteration:
                 options.append(f"max_value = {old_new_map['bigwig']['max_value']}")
         option_map[section] = options
+
+def replace_option(options, new_line):
+    try:
+        new_option = new_line.split(" = ")[0]
+        old_option = next(filter(lambda option: new_option in option, options))
+        options = [option.replace(old_option, f"{new_line}") for option in options]
+    except StopIteration:
+        options.append(new_line)
+    return options
 
 def main():
     parser = argparse.ArgumentParser()
