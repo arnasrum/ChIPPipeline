@@ -122,7 +122,7 @@ through the CLI with `-C` or `--config` flags, or by editing the [config](config
 
 Overwrite the default configuration by running:
 
-    `snakemake -c <num> <rule> --config modules="--flag1 <value1> --flag2 <value2>"`
+`snakemake -c <num> <rule> --config modules="--flag1 <value1> --flag2 <value2>"`
 
 ## Flags
 
