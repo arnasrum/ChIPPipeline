@@ -2,39 +2,106 @@ fasterq-dump:
   downloadPath: "resources/reads"
   args: ""
 
+fastqc:
+  args: ""
+  extra: ""
+  threads: 12
 
 # Trimmer config
-trimgalore:
+trim_galore:
+  threads: 12
   args: ""
 cutadapt:
+  threads: 12
   args: ""
 fastp:
+  threads: 12
   args: ""
-trimmer: "trim_galore"
 
+# Aligner config
 bowtie2:
   args: ""
-  extra: ""
+  extra: "--very-sensitive"
+  threads: 12
 bowtie2-build:
   args: ""
-bwa:
-  args: ""
+  threads: 12
+bwa-mem:
+  args: "-v 1 -Y"
   extra: ""
+  threads: 12
+bwa-mem2:
+  args: "-v 1 -Y"
+  extra: ""
+  threads: 12
 bwa-index:
   args: ""
 STAR:
-  extra: ""
-  threads: 8
   args: ""
-aligner: "bowtie2"
-bowtie2_options: ""
-paired_end: true 
-providedFileExtension: "fastq"
+  extra: ""
+  threads: 12
 
+# Utils config
+gzip:
+  args: ""
+samtools-index:
+  threads: 4
+MarkDuplicates:
+  args: ""
+markdup:
+  args: ""
+  threads: 12
+
+# Peak calling config
+macs3:
+  args: ""
+pyGenomeTracks:
+  args: ""
+
+# Deeptools computeMatrix args used for plot_heat_map and plot_profile
+computeMatrix:
+  args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
+
+
+
+# Workflow config
+
+# Path to write generated files to
+prefix: ""
+json_path: "samples.json"
+results_path: "results"
+resources_path: "resources"
+logs_path: "logs"
+benchmarks_path: "benchmarks"
+temp_path: "temp"
+
+# Times chosen trimmer is repeated for chosen trimmer
+benchmark_repeat_trim: 1
+# Times chosen aligner is repeated for chosen aligner
+benchmark_repeat_align: 1
+# Times chosen duplicate marker is repeated for chosen duplicate processor
+benchmark_repeat_duplicate: 1
+
+# String to overwrite which tools are to be ran
+modules: ""
+# Choose trimmer
+trimmer: "trim_galore"
+# Choose alginer
+aligner: "bowtie2"
+# Choose tool to process duplicates
+duplicate_processor: "markdup"
+peak_caller: "macs3"
+
+# Genome to be used to peak call and align
 genome: "mm39"
 
-path_to_reads: ""
+# Plotting region for peaks plotted by pyGenomeTracks
+plot_regions: "chr1:10,000,000-15,000,000"
 
-samtools: "-f 4"
+# Defined reads in sample sheet are paired end
+paired_end: True
 
-modules: ""
+# Path to sample sheet
+sample_sheet: "config/samples.csv"
+
+

@@ -1,0 +1,8 @@
+executor: slurm
+default-resources:
+  slurm_account: "Insert account here"
+  slurm_partition: "Insert partition here"
+  mem: 16G
+  runtime: 120
+  cpus_per_task: 4
+latency-wait: 60

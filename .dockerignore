@@ -1,4 +1,7 @@
 .snakemake
+.tests
+.idea
+.git
 benchmarks
 resources
 results

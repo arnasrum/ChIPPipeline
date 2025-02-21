@@ -1,3 +1,1 @@
-sample,type,replicate1,replicate2
-8cell,chip,GSM1871972,GSM1871973
-8cell,chip,privateData/test1,privateData/test2
+mark,sample,type,replicate,peak_type,accession,file_path

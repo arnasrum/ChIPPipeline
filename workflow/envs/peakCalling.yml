@@ -1,7 +1,0 @@
-name peakCalling:
-channels:
-  - defaults
-  - bioconda
-  - conda-forge
-dependencies:
-  - macs2==2.2.9.1

@@ -1,76 +1,172 @@
-import sys
-import pandas as pd
-import numpy as np
-from sampleFileScripts import makeSampleInfo 
-sys.path.append("workflow/scripts")
+import os.path
 
-fileInfo = makeSampleInfo()
+ruleorder: symlink_PE > concatenate_runs_PE
+ruleorder: symlink_SE > concatenate_runs_SE
+ruleorder: concatenate_runs_PE > concatenate_runs_SE
+ruleorder: symlink_reference_genome > download_reference_genome
+localrules: download_reference_genome, symlink_reference_genome, symlink_SE, symlink_PE
 
-for srr in [run for value in fileInfo["public"].values() for run in value["runs"]]:
-    rule:
-        name:
-            f"download_{srr}"
-        output:
-            temp(f"resources/reads/{srr}_1.fastq"),
-            temp(f"resources/reads/{srr}_2.fastq")
-        params:
-            srr = srr
-        shell:
-            '''
-            fasterq-dump --temp temp -O resources/reads -p {params.srr}
-            '''
-
-
-for gsm, values in fileInfo["public"].items():
-    rule:
-        name:
-            f"download_{gsm}"
-        input:
-            expand("resources/reads/{run}_{readNum}.fastq", run=values["runs"], readNum=[1, 2])
-        output:
-            f"resources/reads/{values["cleanFileName"]}_1.fastq",
-            f"resources/reads/{values["cleanFileName"]}_2.fastq"
-        params:
-            outdir = "resources/reads",
-            read1Files = " ".join(list(map(lambda run: f"resources/reads/{run}_1.fastq", values["runs"]))),
-            read2Files = " ".join(list(map(lambda run: f"resources/reads/{run}_2.fastq", values["runs"]))),
-            outputName = values["cleanFileName"] 
-        shell:
-            """
-            cat {params.read1Files} > {params.outdir}/{params.outputName}_1.fastq
-            cat {params.read2Files} > {params.outdir}/{params.outputName}_2.fastq
-            """
-
-
-reads = ["1", "2"] if config["paired_end"] == "paired" else ["1"]
-for key, value in fileInfo["provided"].items():
-    rule:
-        name: f"link_{value["cleanFileName"]}"
-        input:
-            expand("{path}{fileName}_{num}{ext}", fileName=value["cleanFileName"], path=value["path"], num=reads, ext=value["fileExtension"]) 
-        output:
-            expand("resources/reads/{fileName}_{num}{ext}", fileName=value["cleanFileName"], num=reads, ext=value["fileExtension"]) 
-        params:
-            paired_end = config["paired_end"],
-            pathToOriginal = f"{value['path']}{value['cleanFileName']}",
-            fileExt = value["fileExtension"],
-            cleanFileName = value["cleanFileName"]
-        shell:
-            '''
-                if [[ {params.paired_end} ]]; then
-                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
-                    ln {params.pathToOriginal}_2{params.fileExt} resources/reads/{params.cleanFileName}_2{params.fileExt}
-                elif [[ {params.paired_end} ]]; then
-                    ln {params.pathToOriginal}_1{params.fileExt} resources/reads/{params.cleanFileName}_1{params.fileExt}
-                fi
-            '''
-
-rule referenceGenome:
+rule fastq_dump_SE:
     output:
-        "resources/genomes/{genome}.fa.gz"
+        temp(RESOURCES + "/reads/{srr}.fastq")
+    params:
+        path = f"{RESOURCES}/reads"
+    conda:
+        "../envs/download.yml"
+    wildcard_constraints:
+        srr = r"SRR[0-9]*"
+    log:
+        LOGS + "/fastq-dump/{srr}_SE.log"
     benchmark:
-        "benchmarks/rsync/{genome}.benchmark.txt"
+        BENCHMARKS + "/fastq-dump/{srr}_SE.log"
+    resources:
+        tmpdir=TEMP
     shell:
         '''
-        rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz resources/genomes/
+        exec > {log} 2>&1
+        fastq-dump -O {params.path} {wildcards.srr}
+        '''
+
+rule fastq_dump_PE:
+    output:
+        temp(RESOURCES + "/reads/{srr}_1.fastq"),
+        temp(RESOURCES + "/reads/{srr}_2.fastq")
+    wildcard_constraints:
+        srr = r"SRR[0-9]*"
+    params:
+        path = f"{RESOURCES}/reads"
+    conda:
+        "../envs/download.yml"
+    log:
+        LOGS + "/fastq-dump/{srr}_PE.log"
+    benchmark:
+        BENCHMARKS + "/fastq-dump/{srr}_PE.log"
+    resources:
+        tmpdir=TEMP
+    threads: 2
+    shell:
+        '''
+        exec > {log} 2>&1
+        fasterq-dump -t {resources.tmpdir} -e {threads} -O {params.path} --split-files {wildcards.srr}
+        '''
+
+def join_read_files(runs: list, paired_end: bool):
+    if paired_end:
+        return [" ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", runs))),
+                " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", runs)))]
+    return " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", runs))),
+
+rule concatenate_runs_SE:
+    input:
+        lambda wildcards: expand(RESOURCES + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
+    output:
+        RESOURCES + "/reads/{gsm}_{file_suffix}.fastq"
+    wildcard_constraints:
+        gsm = r"GSM[0-9]*",
+    params:
+        read_files = lambda wildcards: join_read_files(file_info["public"][wildcards.gsm]["runs"], False)
+    log:
+        LOGS + "/concatenate/{gsm}_{file_suffix}.log"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        cat {params.read_files} > {output} 
+        """
+
+rule concatenate_runs_PE:
+    input:
+        lambda wildcards: expand(RESOURCES + "/reads/{run}{read}.fastq", run=file_info["public"][wildcards.sample.split("_")[0]]["runs"], read=["_1", "_2"])
+    output:
+        read1 = RESOURCES + "/reads/{sample}_1.fastq",
+        read2 = RESOURCES + "/reads/{sample}_2.fastq"
+    params:
+        read1_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"], True)[0],
+        read2_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"],True)[1]
+    log:
+        LOGS + "/concatenate/{sample}.log"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        cat {params.read1_files} > {output.read1} 
+        cat {params.read2_files} > {output.read2} 
+        """
+
+
+rule symlink_SE:
+    input:
+        lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read1"]["path"]
+    output:
+        RESOURCES + "/reads/{file_name}.fastq"
+    log:
+        LOGS + "/link/{file_name}.log"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        ln -s -r {input} {output} 
+        """
+rule symlink_PE:
+    input:
+        read1 = lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read1"]["path"],
+        read2 = lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read2"]["path"]
+    output:
+        read1 = RESOURCES + "/reads/{file_name}_1.fastq",
+        read2 = RESOURCES+ "/reads/{file_name}_2.fastq"
+    log:
+        LOGS + "/link/{file_name}.log"
+    resources:
+        tmpdir=TEMP
+    shell:
+        """
+        exec > {log} 2>&1
+        ln -s -r {input.read1} {output.read1} 
+        ln -s -r {input.read2} {output.read2} 
+        """
+
+rule symlink_reference_genome:
+    input:
+        reference_genome_input()
+    output:
+        RESOURCES + "/genomes/{genome}.fa.gz"
+    params:
+        gzip_args = config["gzip"]["args"]
+    log:
+        LOGS + "/ln/{genome}.log"
+    benchmark:
+        BENCHMARKS + "/ln/{genome}.benchmark.txt"
+    resources:
+        tmpdir=TEMP
+    shell:
+        '''
+        exec > {log} 2>&1
+        if [[ {input} == *.gz ]]; then
+            echo "The string ends with .gz, skipping compression."
+            ln -sr {input} {output} 
+        else
+            echo "The string does not end with .gz, compressing genome."
+            gzip {params.gzip_args} -kfc {input} > {output}
+        fi 
+        '''
+
+
+rule download_reference_genome:
+    output:
+        RESOURCES + "/genomes/{genome}.fa.gz"
+    conda:
+        "../envs/download.yml"
+    log:
+        LOGS + "/rsync/{genome}.log"
+    benchmark:
+        BENCHMARKS + "/rsync/{genome}.benchmark.txt"
+    resources:
+        tmpdir=TEMP
+    shell:
+        '''
+        exec > {log} 2>&1
+        rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz {output}
         '''

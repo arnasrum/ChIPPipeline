@@ -1,9 +1,10 @@
-name align:
+name: align
 channels:
-  - defaults
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
   - bwa==0.7.18
+  - bwa-mem2==2.2.1
   - bowtie2==2.5.4
   - star==2.7.11b
+  - samtools==1.21

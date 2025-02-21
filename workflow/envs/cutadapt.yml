@@ -1,7 +1,6 @@
-name cutadapt:
+name: cutadapt
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
-  - python==3.12.5
   - cutadapt=4.9

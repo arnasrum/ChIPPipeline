@@ -1,59 +1,21 @@
-import sys
-sys.path.append("workflow/scripts")
-import os
-from sampleFileScripts import getAllSampleFilePaths, getFileNames
-from setModuleOptions import setModuleOptions
-
 configfile: "config/config.yml"
-setModuleOptions(config)
 
-module utils:
-    snakefile: "rules/utils.smk"
-    config: config
+conda: "envs/main.yml"
 
-module QA:
-    snakefile: "rules/fastqc.smk"
-    config: config
+include: "rules/shared.smk"
+include: "rules/utils.smk"
+include: "rules/fastqc.smk"
+include: "rules/download.smk"
+include: "rules/trim.smk"
+include: "rules/align.smk"
+include: "rules/peak_calling.smk"
+include: "rules/data_analysis.smk"
 
-module downloadWorkflow:
-    snakefile: "rules/download.smk"
-    config: config
-
-module trimWorkflow:
-    snakefile: "rules/trim.smk"
-    config: config
-
-module alignmentWorkflow:
-    snakefile: "rules/align.smk"
-    config: config
-
-module peakCallingWorkflow:
-    snakefile: "rules/peakCalling.smk"
-    config: config
-
-
-use rule * from utils
-use rule * from QA as qa_*
-use rule * from downloadWorkflow as download_*
-use rule * from trimWorkflow as trim_*
-use rule * from alignmentWorkflow as align_*
-use rule * from peakCallingWorkflow as peak_calling_*
-
-rule downloadSamples:
+rule all:
     input:
-        *getAllSampleFilePaths(config)
-
-trimmer = config["trimmer"]
-rule trim:
-    input:
-        [*map(lambda fileName: f"results/{trimmer}/{fileName}", getAllSampleFilePaths(config, includeDirectories=False))],
-        [*map(lambda fileName: f"results/fastqc/{trimmer}/{fileName[:-8]}_1_fastqc.html", getAllSampleFilePaths(config, includeDirectories=False))]
-
-aligner = config["aligner"]
-rule align:
-    input:
-        [*map(lambda fileName: f"results/{aligner}/{fileName[:-8]}.sam", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
-
-rule test:
-    input:
-        [*map(lambda fileName: f"results/macs2-filterdup/{fileName[:-8]}.bed", getAllSampleFilePaths(config, includeDirectories=False)[::2])]
+        get_all_input(config)
+    default_target: True
+    params:
+        temp_path = config["temp_path"]
+    shell:
+        "rm -rf {params.temp_path}"

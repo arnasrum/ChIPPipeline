@@ -1,0 +1,8 @@
+name: main
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - conda=23.10.0
+  - snakemake=8.20.1
+  - pandas

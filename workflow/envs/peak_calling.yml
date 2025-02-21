@@ -1,6 +1,7 @@
-name: fastqc
+name: peak_calling
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - fastqc=0.12.1 
+  - macs3=3.0.2
+

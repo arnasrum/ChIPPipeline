@@ -1,8 +1,7 @@
-name trim:
+name: trim
 channels:
-  - defaults
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
   #- cutadapt==4.9
   - fastqc==0.12.1

@@ -1,8 +1,0 @@
-name trimgalore:
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - cutadapt==4.9
-  - fastqc==0.12.1
-  - trim-galore=0.6.10

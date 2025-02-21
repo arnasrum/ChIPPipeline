@@ -1,7 +1,0 @@
-name ffq:
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - python==3.12.5
-  - ffq==0.3.1
