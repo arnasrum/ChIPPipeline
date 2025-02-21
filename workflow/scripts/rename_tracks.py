@@ -22,9 +22,12 @@ def update_options(tracks_file: str):
                 raise Exception("Something went wrong parsing the tracks file")
 
     old_new_map = {"bed": {"title": "Peaks"}, "bigwig": {"title": "Bam Coverage", "max_value": "5"}}
+    spacer_height = 0.5
     replace_options(option_map, old_new_map)
     new_lines = "\n[x-axis]"
     for section in option_map:
+        if section[1] == "[spacer]": continue # Skip generated spacers
+        new_lines += f"\n[spacer]\nheight = {spacer_height}"
         new_lines += f"\n{section[1]}"
         for option in option_map[section]:
             new_lines += f"\n{option}"
