@@ -78,20 +78,16 @@ rule plot_genome_track:
         plot = RESULTS + "/pyGenomeTracks/{sample}.png"
     params:
         region = config["plot_regions"],
-        args = config["pyGenomeTracks"]["args"]
+        args = config["pyGenomeTracks"]["args"],
+        bigwig_max = config["pyGenomeTracks"]["bigwig_max"]
     conda:
         "../envs/data_analysis.yml"
     log:
         LOGS + "/pyGenomeTracks/{sample}.log"
     resources:
         tmpdir=TEMP
-    shell:
-        ''' 
-        exec > {log} 2>&1
-        make_tracks_file -f {input.beds} {input.bigwigs} -o {output.tracks}
-        python3 workflow/scripts/rename_tracks.py {output.tracks}
-        pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot} {params.args}
-        '''
+    script:
+        '../scripts/pyGenomeTracks.py'
 
 rule bedtools_intersect:
     input:

@@ -2,7 +2,7 @@ import argparse
 from collections import defaultdict
 import re
 
-def update_options(tracks_file: str):
+def update_options(tracks_file: str, bigwig_max = 5):
     with open(tracks_file) as file:
         lines = file.read()
     pattern = r"^\[.*\]$"
@@ -21,7 +21,7 @@ def update_options(tracks_file: str):
             else:
                 raise Exception("Something went wrong parsing the tracks file")
 
-    old_new_map = {"bed": {"title": "Peaks"}, "bigwig": {"title": "Bam Coverage", "max_value": "5"}}
+    old_new_map = {"bed": {"title": "Peaks"}, "bigwig": {"title": "Bam Coverage", "max_value": bigwig_max}}
     spacer_height = 0.5
     replace_options(option_map, old_new_map)
     new_lines = "\n[x-axis]"
@@ -73,8 +73,13 @@ def replace_option(options, new_line):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("infile", help="Input file")
+    parser.add_argument("-x", help="Max value of bigwig")
     args = parser.parse_args()
-    update_options(args.infile)
+    if 'x' in args:
+        x = int(args.x)
+    else:
+        x = 5
+    update_options(args.infile, x)
 
 if __name__ == "__main__":
     main()

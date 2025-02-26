@@ -49,7 +49,7 @@ samtools-index:
 MarkDuplicates:
   args: ""
 markdup:
-  args: ""
+  args: "-s"
   threads: 12
 
 # Peak calling config
@@ -57,6 +57,7 @@ macs3:
   args: ""
 pyGenomeTracks:
   args: ""
+  bigwig_max: "6"
 
 # Deeptools computeMatrix args used for plot_heat_map and plot_profile
 computeMatrix:
@@ -93,10 +94,10 @@ duplicate_processor: "markdup"
 peak_caller: "macs3"
 
 # Genome to be used to peak call and align
-genome: "mm39"
+genome: "mm10"
 
 # Plotting region for peaks plotted by pyGenomeTracks
-plot_regions: "chr1:10,000,000-15,000,000"
+plot_regions: "chr1:14,000,000-15,000,000"
 
 # Defined reads in sample sheet are paired end
 paired_end: True
