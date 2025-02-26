@@ -4,7 +4,7 @@ rule macs3:
         treatment = lambda wildcards: macs_input(wildcards.sample)["treatment"],
     output:
         bed = RESULTS + "/macs3/{sample}.bed",
-        _ = multiext(RESULTS + "/macs3/{sample}", "_peaks.xls", "_summits.bed")
+        _ = multiext(RESULTS + "/macs3/{sample}", "_peaks.xls")
     params:
         args = config["macs3"]["args"],
         peak_type = lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"]
