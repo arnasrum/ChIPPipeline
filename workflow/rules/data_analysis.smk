@@ -71,14 +71,15 @@ rule deeptools_plotProfile:
 
 rule plot_genome_track:
     input:
-        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
-        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
+        bed = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
+        bigwig = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_tracks.ini"),
         plot = RESULTS + "/pyGenomeTracks/{sample}.png"
     params:
         region = config["plot_regions"],
         args = config["pyGenomeTracks"]["args"],
+        peak_type = lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
         bigwig_max = config["pyGenomeTracks"]["bigwig_max"]
     conda:
         "../envs/data_analysis.yml"
