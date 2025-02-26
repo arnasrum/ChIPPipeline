@@ -142,9 +142,9 @@ rule homer_findMotifsGenome:
     params:
         outdir = RESULTS + "/homer",
         genome = config['genome'],
-        size = 200
+        args = config["homer"]["args"]
     threads:
-        12
+        int(config["homer"]["threads"])
     log:
         LOGS + "/homer/{sample}_findMotifs.log"
     resources:
@@ -153,7 +153,7 @@ rule homer_findMotifsGenome:
         '''
         exec > {log} 2>&1
         mkdir -p {params.outdir}
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.sample} -size {params.size} -p {threads} 
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.sample} -p {threads} {params.args}
         '''
 
 rule plot_annotated_peaks:

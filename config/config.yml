@@ -63,6 +63,9 @@ pyGenomeTracks:
 computeMatrix:
   args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
 
+homer:
+  threads: 12
+  args: "-size 200"
 
 
 # Workflow config
