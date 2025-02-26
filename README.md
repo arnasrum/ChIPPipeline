@@ -46,7 +46,19 @@ or more explicitly
 N.B. remember to bind the working directory if it is outside the home directory.
 
 
+### Running on HPC
 
+Pull the container from Dockerhub using Apptainer/Singularity.
+
+Because compute nodes can have limited access to the internet, provide the samples and genome as local files.
+
+Install conda packages before submitting jobs to compute nodes by running:
+
+`apptainer exec <container_name> snakemake --use-conda --conda-create-envs-only`
+
+Then you can submit the pipeline to the workload manager, e.g. using Slurm
+
+`srun --nodes <num_nodes>... apptainer run <container_name> ...`
 
 ## Specify samples 
 
