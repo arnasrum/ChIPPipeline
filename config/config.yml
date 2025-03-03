@@ -57,7 +57,8 @@ macs3:
   args: ""
 pyGenomeTracks:
   args: ""
-  bigwig_max: "6"
+  bigwig_options: "max_value = 6"
+  bed_options: ""
 
 # Deeptools computeMatrix args used for plot_heat_map and plot_profile
 computeMatrix:

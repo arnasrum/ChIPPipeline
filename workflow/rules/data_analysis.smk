@@ -80,7 +80,8 @@ rule plot_genome_track:
         region = config["plot_regions"],
         args = config["pyGenomeTracks"]["args"],
         peak_type = lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
-        bigwig_max = config["pyGenomeTracks"]["bigwig_max"]
+        bigwig_options = config["pyGenomeTracks"]["bigwig_options"],
+        bed_options = config["pyGenomeTracks"]["bed_options"],
     conda:
         "../envs/data_analysis.yml"
     log:
