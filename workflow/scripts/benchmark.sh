@@ -20,5 +20,5 @@ do
   ./container -c all --jobs 1 --all-temp --until "$aligner" -C aligner="$aligner" prefix="benchmark_align" benchmark_repeat_align=3
 done
 
-./container -c all --jobs 1 --all-temp --until picard_MarkDuplicates -C duplicate_processor="picard-MarkDuplicates" prefix="benchmark_duplicate" benchmark_repeat_duplicate=3
-./container -c all --jobs 1 --all-temp --until samtools_markdup -C duplicate_processor="samtools-markdup" prefix="benchmark_duplicate" benchmark_repeat_duplicate=3
+./container -c all --jobs 1 --all-temp --until picard_MarkDuplicates -C duplicate_processor="MarkDuplicates" prefix="benchmark_duplicate" benchmark_repeat_duplicate=3
+./container -c all --jobs 1 --all-temp --until samtools_markdup -C duplicate_processor="markdup" prefix="benchmark_duplicate" benchmark_repeat_duplicate=3
