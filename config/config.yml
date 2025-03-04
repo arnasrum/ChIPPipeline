@@ -17,6 +17,10 @@ cutadapt:
 fastp:
   threads: 12
   args: ""
+trimmomatic:
+  threads: 12
+  args: ""
+  run_options: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
 
 # Aligner config
 bowtie2:
@@ -99,6 +103,8 @@ peak_caller: "macs3"
 
 # Genome to be used to peak call and align
 genome: "mm10"
+
+generate_fastqc_reports: True
 
 # Plotting region for peaks plotted by pyGenomeTracks
 plot_regions: "chr1:14,000,000-15,000,000"

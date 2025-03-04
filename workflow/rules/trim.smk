@@ -124,3 +124,26 @@ rule fastp:
             fastp -w {threads} -j {params.path}/{wildcards.sample}.json -h {params.path}/{wildcards.sample}.html -i {input} -o {output} {params.args}
         fi
         '''
+
+rule trimmomatic:
+    input:
+        samples = lambda wildcards: trimmer_input(wildcards.sample)
+    output:
+        temp(expand(RESULTS + "/trimmomatic/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
+    conda:
+        "../envs/trim.yml"
+    params:
+        args = config["trimmomatic"]["args"],
+        paired_end = config["paired_end"],
+        run_options = config["trimmomatic"]["run_options"]
+    threads:
+        int(config["trimmomatic"]["threads"])
+    log:
+        LOGS + "/fastp/{sample}.log"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=int(config["trimmomatic"]["threads"]),
+    benchmark:
+        repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat_trim"])
+    script:
+        "../scripts/trimmomatic.py"
