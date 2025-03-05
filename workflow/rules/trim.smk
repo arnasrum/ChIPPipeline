@@ -125,11 +125,12 @@ rule fastp:
         fi
         '''
 
+unpaired_extension = ["_unpaired", ""] if sfs.is_paired_end() else [""]
 rule trimmomatic:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        samples = temp(expand(RESULTS + "/trimmomatic/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True)),
+        samples = temp(expand(RESULTS + "/trimmomatic/{sample}{unpaired}{extension}", extension=fastq_file_extensions, unpaired=unpaired_extension, allow_missing=True)),
     conda:
         "../envs/trim.yml"
     params:
