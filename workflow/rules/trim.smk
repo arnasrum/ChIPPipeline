@@ -129,7 +129,7 @@ rule trimmomatic:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(expand(RESULTS + "/trimmomatic/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
+        samples = temp(expand(RESULTS + "/trimmomatic/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True)),
     conda:
         "../envs/trim.yml"
     params:
@@ -139,11 +139,11 @@ rule trimmomatic:
     threads:
         int(config["trimmomatic"]["threads"])
     log:
-        LOGS + "/fastp/{sample}.log"
+        log = LOGS + "/trimmomatic/{sample}.log",
+        summary= LOGS + "/trimmomatic/{sample}_summary.txt",
     resources:
         tmpdir=TEMP,
-        cpus_per_task=int(config["trimmomatic"]["threads"]),
     benchmark:
-        repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat_trim"])
+        repeat(BENCHMARKS + "/trimmomatic/{sample}.txt", config["benchmark_repeat_trim"])
     script:
         "../scripts/trimmomatic.py"
