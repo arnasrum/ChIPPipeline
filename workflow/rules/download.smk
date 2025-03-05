@@ -1,5 +1,3 @@
-import os.path
-
 ruleorder: symlink_PE > concatenate_runs_PE
 ruleorder: symlink_SE > concatenate_runs_SE
 ruleorder: concatenate_runs_PE > concatenate_runs_SE
@@ -98,7 +96,7 @@ rule concatenate_runs_PE:
 
 rule symlink_SE:
     input:
-        lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read1"]["path"]
+        lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"]
     output:
         RESOURCES + "/reads/{file_name}.fastq"
     log:
@@ -112,8 +110,8 @@ rule symlink_SE:
         """
 rule symlink_PE:
     input:
-        read1 = lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read1"]["path"],
-        read2 = lambda wildcards: symlink_input(config["json_path"], wildcards.file_name)["read2"]["path"]
+        read1 = lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
+        read2 = lambda wildcards: symlink_input(wildcards.file_name)["read2"]["path"]
     output:
         read1 = RESOURCES + "/reads/{file_name}_1.fastq",
         read2 = RESOURCES+ "/reads/{file_name}_2.fastq"

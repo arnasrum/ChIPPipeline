@@ -36,8 +36,6 @@ def macs_input(sample: str) -> dict[str, list[str]]:
     ]
     treatment_group = next(filter(lambda group: sample in group, groups))
     path = f"{RESULTS}/{config['duplicate_processor']}"
-    #print("control", [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)])
-    #print("treatment", [f"{path}/{file}.bam" for file in treatment_group])
     return {"control": [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)],
             "treatment": [f"{path}/{file}.bam" for file in treatment_group]}
 
@@ -64,9 +62,11 @@ def get_fastqc_output() -> list[str]:
 def get_all_input(config):
     input_files = []
     path = config["results_path"]
-    input_files += get_fastqc_output()
+    if str(config['generate_fastqc_reports']).lower() == "true":
+        input_files += get_fastqc_output()
     for treatment_file in sfs.get_treatment_files():
-        input_files += [f"{path}/pyGenomeTracks/{treatment_file}.png"]
+        if sfs.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "narrow":
+            input_files += [f"{path}/pyGenomeTracks/{treatment_file}.png"]
         input_files.append(f"{path}/deeptools/{treatment_file}_heatmap.png")
         input_files.append(f"{path}/deeptools/{treatment_file}_profile.png")
     for group, replicates in treatment_groups.items():
@@ -80,14 +80,8 @@ def get_all_input(config):
             input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
 
-def get_macs_input(config):
-    return [f"{RESULTS}/macs3/{treatment_file}.bed" for treatment_file in sfs.get_treatment_files()]
-
-
-
-def symlink_input(json_path: str, file_name: str) -> None:
-    with open(json_path) as file:
-        samples = sfs.sample_info["provided"]
+def symlink_input(file_name: str) -> None:
+    samples = sfs.sample_info["provided"]
     return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
 def flatten_dict(old_dict: dict) -> dict:
