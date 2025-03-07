@@ -18,20 +18,13 @@ RESOURCES = config['resources_path']
 LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
-fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
 
 aligners = {"bowtie2": Bowtie2(), "bwa-mem2": BwaMem2()}
 aligner = aligners[config["aligner"]]
 aligner_name = aligner.get_name()
+index_files = aligner.get_index_output(f"{RESULTS}/{aligner.get_name()}_index/", genome)
 
-
-def indexing_output():
-    genome = config['genome']
-    prefix = RESULTS + f"/{aligner.get_name()}_index/"
-    return aligner.get_index_output(prefix, genome)
-
-aligner_index = indexing_output()
-
+fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
 def trimmer_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
