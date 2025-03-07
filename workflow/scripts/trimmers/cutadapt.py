@@ -7,12 +7,13 @@ class Cutadapt(Trimmer):
             raise FileNotFoundError(f"Provided file; {read1}, does not exist")
         if read2 is not None and not os.path.isfile(read2) and False:
             raise FileNotFoundError(f"Provided file; {read2}, does not exist")
-        file_name = os.path.basename(read1.split("/")[-1])
-        read_extensions = [""]
+        file_name = os.path.basename(read1.split("/")[-1].split(".fastq")[0])
+        file_name = file_name.strip("_1")
+        file_name = file_name.strip("_2")
+        read_extensions = [".fastq"]
         if read2 is not None:
             file_name = os.path.commonprefix([file_name, os.path.basename(read2.split("/")[-1])])
             read_extensions = ["_1.fastq", "_2.fastq"]
-        file_name = file_name.strip("_1" "_2")
         command = "cutadapt"
         command += f" --cores {threads}"
         if args is not None:
