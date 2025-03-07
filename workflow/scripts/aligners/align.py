@@ -16,4 +16,6 @@ else:
 prefix = str(os.path.commonprefix(snakemake.input['index']).rstrip("."))
 read1 = snakemake.input['reads'][0]
 read2 = snakemake.input['reads'][1] if len(snakemake.input['reads']) == 2 else None
-shell(f"({aligner.align(prefix, read1, read2, snakemake.threads, snakemake.params.args)}) {log}")
+command = aligner.align(prefix, read1, read2, snakemake.threads, snakemake.params.args)
+command += f" | samtools sort -@ {snakemake.threads} -o {snakemake.output} -"
+shell(f"({command}) {log}")
