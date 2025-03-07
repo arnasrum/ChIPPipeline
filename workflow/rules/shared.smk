@@ -25,6 +25,12 @@ aligner = aligners[config["aligner"]]
 aligner_name = aligner.get_name()
 index_files = aligner.get_index_output(f"{RESULTS}/{aligner.get_name()}_index/", genome)
 
+
+def build_index_input():
+    if str(config["aligner"]).lower() == "star":
+        return f"{RESOURCES}/genomes/{genome}.fa"
+    return f"{RESOURCES}/genomes/{genome}.fa.gz"
+
 fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
 def trimmer_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
