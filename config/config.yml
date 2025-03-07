@@ -7,6 +7,8 @@ fastqc:
   threads: 12
 
 # Trimmer config
+trim_threads: 12
+
 trim_galore:
   threads: 12
   args: ""
@@ -30,21 +32,16 @@ align_args: ""
 
 bowtie2:
   args: "--very-sensitive"
-  threads: 12
 bowtie2-build:
   args: ""
-  threads: 12
 bwa-mem:
   args: "-v 1 -Y"
-  threads: 12
 bwa-mem2:
   args: "-v 1 -Y"
-  threads: 12
 bwa-index:
   args: ""
 STAR:
   args: ""
-  threads: 12
 
 # Utils config
 gzip:
