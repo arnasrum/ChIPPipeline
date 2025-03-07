@@ -3,13 +3,8 @@ import os
 
 class Cutadapt(Trimmer):
     def trim(self, output_path: str, read1: str, read2:str =None, threads:int=1, args:str=None) -> str:
-        if not os.path.isfile(read1) and False:
-            raise FileNotFoundError(f"Provided file; {read1}, does not exist")
-        if read2 is not None and not os.path.isfile(read2) and False:
-            raise FileNotFoundError(f"Provided file; {read2}, does not exist")
-        file_name = os.path.basename(read1.split("/")[-1].split(".fastq")[0])
-        file_name = file_name.strip("_1")
-        file_name = file_name.strip("_2")
+
+        file_name = Trimmer.get_file_name(read1, read2)
         read_extensions = [".fastq"]
         if read2 is not None:
             file_name = os.path.commonprefix([file_name, os.path.basename(read2.split("/")[-1])])
