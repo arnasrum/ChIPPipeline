@@ -1,6 +1,27 @@
-
-
 ruleorder: trim_galore_PE > trim_galore_SE
+
+rule trim:
+    input:
+        lambda wildcards: trimmer_input(wildcards.sample)
+    output:
+        [f"{RESULTS}/{config['trimmer']}/{{sample}}_1.fastq", f"{RESULTS}/{config['trimmer']}/{{sample}}_2.fastq"]
+         if sfs.is_paired_end() else
+        [f"{RESULTS}/{config['trimmer']}/{{sample}}.fastq"]
+    conda:
+        "../envs/trim.yml" if not config["trimmer"] == "cutadapt" else "../envs/cutadapt.yml"
+    params:
+        args=config[config['trimmer']]["args"],
+    threads:
+        int(config["trim_threads"])
+    log:
+        f"{LOGS}/{config['trimmer']}/{{sample}}.log"
+    benchmark:
+        repeat(f"{BENCHMARKS}/{config['trimmer']}/{{sample}}.txt",config["benchmark_repeat_trim"])
+    resources:
+        tmpdir=TEMP,
+    script:
+        "../scripts/trimmers/trim.py"
+
 
 rule trim_galore_PE:
     input:
@@ -90,61 +111,3 @@ rule cutadapt:
             cutadapt -j {threads} -o {output} {params.args} {input}
         fi
         '''
-
-rule fastp:
-    input:
-        samples = lambda wildcards: trimmer_input(wildcards.sample)
-    output:
-        temp(expand(RESULTS + "/fastp/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
-    conda:
-        "../envs/trim.yml"
-    params:
-        args = config["fastp"]["args"],
-        paired_end = config["paired_end"],
-        path = RESULTS + "/fastp"
-    threads:
-        int(config["fastp"]["threads"])
-    log:
-        LOGS + "/fastp/{sample}.log"
-    resources:
-        tmpdir=TEMP,
-        cpus_per_task=int(config["fastp"]["threads"]),
-    benchmark:
-        repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat_trim"])
-    shell:
-        '''
-        exec > {log} 2>&1
-        shopt -s nocasematch
-        if [[ {params.paired_end} =~ true ]]; then
-            read -a output_array <<< "{output}"
-            out1="${{output_array[0]}}"
-            out2="${{output_array[1]}}"
-            fastp -j {params.path}/{wildcards.sample}.json -h {params.path}/{wildcards.sample}.html -i {input.samples[0]} -I {input.samples[1]} -o $out1 -O $out2 {params.args}
-        else
-            fastp -w {threads} -j {params.path}/{wildcards.sample}.json -h {params.path}/{wildcards.sample}.html -i {input} -o {output} {params.args}
-        fi
-        '''
-
-unpaired_extension = ["_unpaired", ""] if sfs.is_paired_end() else [""]
-rule trimmomatic:
-    input:
-        samples = lambda wildcards: trimmer_input(wildcards.sample)
-    output:
-        samples = temp(expand(RESULTS + "/trimmomatic/{sample}{unpaired}{extension}", extension=fastq_file_extensions, unpaired=unpaired_extension, allow_missing=True)),
-    conda:
-        "../envs/trim.yml"
-    params:
-        args = config["trimmomatic"]["args"],
-        paired_end = config["paired_end"],
-        run_options = config["trimmomatic"]["run_options"]
-    threads:
-        int(config["trimmomatic"]["threads"])
-    log:
-        log = LOGS + "/trimmomatic/{sample}.log",
-        summary= LOGS + "/trimmomatic/{sample}_summary.txt",
-    resources:
-        tmpdir=TEMP,
-    benchmark:
-        repeat(BENCHMARKS + "/trimmomatic/{sample}.txt", config["benchmark_repeat_trim"])
-    script:
-        "../scripts/trimmomatic.py"
