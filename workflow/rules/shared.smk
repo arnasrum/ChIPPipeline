@@ -1,5 +1,9 @@
 from scripts.pipeline_configuration import PipelineConfiguration
 from scripts.set_config_options import set_module_options, set_output_paths
+import sys
+sys.path.append(".")
+from workflow.scripts.aligners.bowtie2 import Bowtie2
+from workflow.scripts.aligners.bwa_mem2 import BwaMem2
 
 set_module_options(config)
 set_output_paths(config)
@@ -8,12 +12,25 @@ file_info = sfs.make_sample_info()
 genome = sfs.get_genome_code()
 treatment_groups = sfs.group_treatment_files()
 
+
 RESULTS = config['results_path']
 RESOURCES = config['resources_path']
 LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
+
+aligners = {"bowtie2": Bowtie2(), "bwa-mem2": BwaMem2()}
+aligner = aligners[config["aligner"]]
+aligner_name = aligner.get_name()
+
+
+def indexing_output():
+    genome = config['genome']
+    prefix = RESULTS + f"/{aligner.get_name()}_index/"
+    return aligner.get_index_output(prefix, genome)
+
+aligner_index = indexing_output()
 
 def trimmer_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
