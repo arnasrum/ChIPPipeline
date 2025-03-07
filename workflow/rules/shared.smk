@@ -4,6 +4,7 @@ import sys
 sys.path.append(".")
 from workflow.scripts.aligners.bowtie2 import Bowtie2
 from workflow.scripts.aligners.bwa_mem2 import BwaMem2
+from workflow.scripts.aligners.star import STAR
 
 set_module_options(config)
 set_output_paths(config)
@@ -19,7 +20,7 @@ LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 
-aligners = {"bowtie2": Bowtie2(), "bwa-mem2": BwaMem2()}
+aligners = {"bowtie2": Bowtie2(), "bwa-mem2": BwaMem2(), "STAR": STAR()}
 aligner = aligners[config["aligner"]]
 aligner_name = aligner.get_name()
 index_files = aligner.get_index_output(f"{RESULTS}/{aligner.get_name()}_index/", genome)

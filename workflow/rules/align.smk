@@ -1,7 +1,13 @@
+ruleorder: STAR > align
+
+def build_index_input():
+    if str(config["aligner"]).lower() == "star":
+        return f"{RESOURCES}/genomes/{genome}.fa"
+    return f"{RESOURCES}/genomes/{genome}.fa.gz"
 
 rule build_index:
     input:
-        f"{RESOURCES}/genomes/{genome}.fa.gz"
+        build_index_input()
     output:
         index_files
     conda:
@@ -99,8 +105,8 @@ rule build_STAR_index:
         args = config["STAR"]["args"]
     conda:
         "../envs/align.yml"
-    #threads:
-        #config["STAR"]["threads"]
+    threads:
+        10
     log:
         f"{LOGS}/star-index/{genome}.log"
     benchmark:
