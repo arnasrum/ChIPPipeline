@@ -2,15 +2,17 @@ from snakemake.script import snakemake
 from snakemake import shell
 from fastp import Fastp
 from trimmomatic import Trimmomatic
+from workflow.scripts.trimmers.cutadapt import Cutadapt
 import os
 
 log = snakemake.log_fmt_shell(stdout=True, stderr=True)
-
 if str(snakemake.config['trimmer']).lower() == "fastp":
     trimmer = Fastp()
 elif str(snakemake.config['trimmer']).lower() == "trimmomatic":
     trimmer = Trimmomatic()
     trimmer.run_options = snakemake.config["trimmomatic"]["run_options"]
+elif str(snakemake.config['trimmer']).lower() == "cutadapt":
+    trimmer = Cutadapt()
 else:
     raise Exception(f"Trimmer {snakemake.config['trimmer']} not supported")
 
