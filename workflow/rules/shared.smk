@@ -63,15 +63,15 @@ def reference_genome_input():
 
 def get_fastqc_output() -> list[str]:
     file_names = sfs.get_all_file_names()
-    file_paths_unprocessed = [f"{RESULTS}/fastqc/unprocessed/{file_name}" for file_name in file_names]
-    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}" for file_name in file_names]
+    file_paths_raw = [f"{RESULTS}/fastqc/{config['trimmer']}/raw/{file_name}" for file_name in file_names]
+    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/trimmed/{file_name}" for file_name in file_names]
 
     single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
     paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
     extensions = paired_end_extensions if sfs.is_paired_end() else single_end_extensions
 
     output_files = [f"{path}{extension}"
-                    for path in file_paths_unprocessed + file_paths_trimmed
+                    for path in file_paths_raw + file_paths_trimmed
                     for extension in extensions
     ]
     return output_files
