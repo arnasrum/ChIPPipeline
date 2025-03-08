@@ -13,6 +13,7 @@ elif snakemake.config['aligner'] == "bwa-mem2":
     aligner = BwaMem2()
 elif str(snakemake.config['aligner']).lower() == "star":
     aligner = STAR()
+    aligner.output_prefix = os.path.dirname(snakemake.output[0])
 else:
     raise Exception(f"Unknown aligner {snakemake.config['aligner']}")
 

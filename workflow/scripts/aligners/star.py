@@ -3,6 +3,7 @@ from workflow.scripts.aligners.aligner import Aligner
 class STAR(Aligner):
 
     temp_dir = ""
+    output_prefix = ""
 
     def align(self, index, read1, read2=None, threads=1, args=None) -> str:
         command = "STAR --readFilesType Fastx"
@@ -18,6 +19,7 @@ class STAR(Aligner):
         command += f" --readFilesIn {read1}"
         if read2:
             command += f" {read2}"
+        command += f" --outFileNamePrefix {self.output_prefix}"
         command += " --outStd SAM"
         return command
     
