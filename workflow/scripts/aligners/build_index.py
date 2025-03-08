@@ -16,4 +16,4 @@ elif str(snakemake.config['aligner']).lower() == "star":
 else:
    raise Exception(f"Unknown aligner {snakemake.config['aligner']}")
 prefix = str(os.path.commonprefix(snakemake.output).rstrip("."))
-shell(f"({aligner.build_index(snakemake.input, prefix, snakemake.threads, snakemake.params.args)}) {log}")
+shell(f"({aligner.build_index(snakemake.input, prefix, snakemake.threads)}) {log}")

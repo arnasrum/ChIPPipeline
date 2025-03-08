@@ -1,78 +1,6 @@
-fasterq-dump:
-  downloadPath: "resources/reads"
-  args: ""
-
-fastqc:
-  args: ""
-  threads: 12
-
-# Trimmer config
-trim_threads: 12
-
-trim_galore:
-  threads: 12
-  args: ""
-cutadapt:
-  threads: 12
-  args: ""
-fastp:
-  threads: 12
-  args: ""
-trimmomatic:
-  threads: 12
-  args: ""
-  run_options: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
-
-# Aligner config
+# Workflow config
 indexing_threads: 12
 aligning_threads: 12
-
-index_args: ""
-align_args: ""
-
-bowtie2:
-  args: "--very-sensitive"
-bowtie2-build:
-  args: ""
-bwa-mem:
-  args: "-v 1 -Y"
-bwa-mem2:
-  args: "-v 1 -Y"
-bwa-index:
-  args: ""
-STAR:
-  args: ""
-
-# Utils config
-gzip:
-  args: ""
-samtools-index:
-  threads: 4
-MarkDuplicates:
-  args: ""
-markdup:
-  args: "-s"
-  threads: 12
-
-# Peak calling config
-macs3:
-  args: ""
-pyGenomeTracks:
-  args: ""
-  # Comma seperated options will be appended the track files
-  bigwig_options: "max_value = 6"
-  bed_options: ""
-
-# Deeptools computeMatrix args used for plot_heat_map and plot_profile
-computeMatrix:
-  args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
-
-homer:
-  threads: 12
-  args: "-size 200"
-
-
-# Workflow config
 
 # Path to write generated files to
 prefix: ""
@@ -115,3 +43,72 @@ paired_end: True
 sample_sheet: "config/samples.csv"
 
 
+
+fasterq-dump:
+  downloadPath: "resources/reads"
+  args: ""
+
+fastqc:
+  args: ""
+  threads: 12
+
+# Trimmer config
+trim_threads: 12
+
+trim_galore:
+  threads: 12
+  args: ""
+cutadapt:
+  threads: 12
+  args: ""
+fastp:
+  threads: 12
+  args: ""
+trimmomatic:
+  threads: 12
+  args: ""
+  run_options: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
+
+# Aligner config
+
+
+bowtie2:
+  args: "--very-sensitive"
+bowtie2-build:
+  args: ""
+bwa-mem:
+  args: "-v 1 -Y"
+bwa-mem2:
+  args: "-v 1 -Y"
+bwa-index:
+  args: ""
+star:
+  args: ""
+
+# Utils config
+gzip:
+  args: ""
+samtools-index:
+  threads: 4
+MarkDuplicates:
+  args: ""
+markdup:
+  args: "-s"
+  threads: 12
+
+# Peak calling config
+macs3:
+  args: ""
+pyGenomeTracks:
+  args: ""
+  # Comma seperated options will be appended the track files
+  bigwig_options: "max_value = 6"
+  bed_options: ""
+
+# Deeptools computeMatrix args used for plot_heat_map and plot_profile
+computeMatrix:
+  args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
+
+homer:
+  threads: 12
+  args: "-size 200"

@@ -5,8 +5,6 @@ rule build_index:
         [*get_index_files()]
     conda:
         "../envs/align.yml"
-    params:
-        args=config["index_args"],
     threads:
         int(config["indexing_threads"])
     log:
