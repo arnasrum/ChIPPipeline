@@ -21,7 +21,8 @@ class BwaMem2(Aligner):
         command = f"bwa-mem2 index {args} -p {output_prefix} {index}"
         return command
 
-    def get_index_output(self, prefix, genome) -> list[str]:
+    @staticmethod
+    def get_index_file_names(prefix, genome) -> list[str]:
         index_files = [f"{prefix.rstrip('/')}/{genome}.{ext}"
              for ext in ["amb", "ann", "pac", "bwt.2bit.64", "0123"]
         ]

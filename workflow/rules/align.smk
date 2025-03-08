@@ -2,7 +2,7 @@ rule build_index:
     input:
         build_index_input()
     output:
-        index_files
+        [*get_index_files()]
     conda:
         "../envs/align.yml"
     params:
@@ -10,9 +10,9 @@ rule build_index:
     threads:
         int(config["indexing_threads"])
     log:
-        f"{LOGS}/{aligner.get_name()}_index/{genome}.log"
+        f"{LOGS}/{aligner_name}_index/{genome}.log"
     benchmark:
-        f"{BENCHMARKS}/{aligner.get_name()}_index/{genome}.txt"
+        f"{BENCHMARKS}/{aligner_name}_index/{genome}.txt"
     resources:
         tmpdir=TEMP,
     script:
@@ -20,7 +20,7 @@ rule build_index:
 
 rule align:
     input:
-        index = index_files,
+        index = get_index_files(),
         reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
         f"{RESULTS}/{aligner_name}/{{sample}}.bam"

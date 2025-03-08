@@ -28,7 +28,8 @@ class STAR(Aligner):
         command = f"STAR --runMode genomeGenerate --runThreadN {threads} --genomeDir {output_prefix} --genomeFastaFiles {index} {args}"
         return command
 
-    def get_index_output(self, prefix, genome) -> list[str]:
+    @staticmethod
+    def get_index_file_names(prefix, genome) -> list[str]:
         index_files = [f"{prefix.rstrip('/')}/{genome}/{file}"
              for file in ["SA", "SAindex", "Genome"]
         ]

@@ -1,7 +1,7 @@
-from scripts.pipeline_configuration import PipelineConfiguration
-from scripts.set_config_options import set_module_options, set_output_paths
 import sys
 sys.path.append(".")
+from workflow.scripts.pipeline_configuration import PipelineConfiguration
+from workflow.scripts.set_config_options import set_module_options, set_output_paths
 from workflow.scripts.aligners.bowtie2 import Bowtie2
 from workflow.scripts.aligners.bwa_mem2 import BwaMem2
 from workflow.scripts.aligners.star import STAR
@@ -13,18 +13,26 @@ file_info = sfs.make_sample_info()
 genome = sfs.get_genome_code()
 treatment_groups = sfs.group_treatment_files()
 
-
 RESULTS = config['results_path']
 RESOURCES = config['resources_path']
 LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 
-aligners = {"bowtie2": Bowtie2(), "bwa-mem2": BwaMem2(), "STAR": STAR()}
-aligner = aligners[config["aligner"]]
-aligner_name = aligner.get_name()
-index_files = aligner.get_index_output(f"{RESULTS}/{aligner.get_name()}_index/", genome)
+aligner_name = config['aligner'].lower()
+index_prefix = f"{RESULTS}/{aligner_name}"
 
+def get_index_files():
+    match config['aligner'].lower():
+        case "bowtie2":
+            index_files = Bowtie2.get_index_file_names(index_prefix, genome)
+        case "bwa-mem2":
+            index_files = BwaMem2.get_index_file_names(index_prefix,genome)
+        case "star":
+            index_files = STAR.get_index_file_names(index_prefix,genome)
+        case _:
+            raise ValueError("Aligner not supported")
+    return index_files
 
 def build_index_input():
     if str(config["aligner"]).lower() == "star":
@@ -41,12 +49,12 @@ def alignment_input(file_name: str) -> list[str]:
 def get_consensus_peak_input(treatment_group: str) -> list[str]:
     treatment_files = []
     for files in treatment_groups[treatment_group].values():
-        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}.bed" for file in files]
+        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}_peaks.bed" for file in files]
     if len(treatment_files) == 1:
         treatment_files.append(treatment_files[0])
     return treatment_files
 
-def macs_input(sample: str) -> dict[str, list[str]]:
+def peak_calling_input(sample: str) -> dict[str, list[str]]:
     groups = [treatment_groups[pool][replicate]
         for pool in treatment_groups
         for replicate in treatment_groups[pool]
@@ -69,12 +77,16 @@ def get_fastqc_output() -> list[str]:
     single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
     paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
     extensions = paired_end_extensions if sfs.is_paired_end() else single_end_extensions
-
-    output_files = [f"{path}{extension}"
-                    for path in file_paths_raw + file_paths_trimmed
-                    for extension in extensions
+    output_files = [
+        f"{path}{extension}"
+        for path in file_paths_raw + file_paths_trimmed
+        for extension in extensions
     ]
     return output_files
+
+def symlink_input(file_name: str) -> None:
+    samples = sfs.sample_info["provided"]
+    return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
 def get_all_input(config):
     input_files = []
@@ -96,10 +108,6 @@ def get_all_input(config):
             input_files.append(f"{RESULTS}/homer/{group}/homerResults.html")
             input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
-
-def symlink_input(file_name: str) -> None:
-    samples = sfs.sample_info["provided"]
-    return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
 def flatten_dict(old_dict: dict) -> dict:
     new_dict = {}

@@ -8,8 +8,9 @@ class Aligner(ABC):
     @abstractmethod
     def build_index(self, index: str, output_prefix: str, threads=1, args=None) -> str:
         pass
+    @staticmethod
     @abstractmethod
-    def get_index_output(self, prefix: str, genome: str) -> list[str]:
+    def get_index_file_names(prefix: str, genome: str) -> list[str]:
         pass
     @abstractmethod
     def get_name(self) -> str:

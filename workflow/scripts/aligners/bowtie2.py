@@ -25,7 +25,8 @@ class Bowtie2(Aligner):
             command = f"bowtie2-build --threads {threads} {index} {output_prefix}"
         return command
 
-    def get_index_output(self, prefix, genome) -> list[str]:
+    @staticmethod
+    def get_index_files_names(prefix, genome) -> list[str]:
         index_files = [f"{prefix.rstrip('/')}/{genome}.{ext}"
              for ext in ["1.bt2", "2.bt2", "3.bt2", "4.bt2"]
         ]
