@@ -1,12 +1,12 @@
-rule macs3:
+rule peak_calling:
     input:
-        control = lambda wildcards: macs_input(wildcards.sample)["control"],
-        treatment = lambda wildcards: macs_input(wildcards.sample)["treatment"],
+        control = lambda wildcards: peak_calling_input(wildcards.sample)["control"],
+        treatment = lambda wildcards: peak_calling_input(wildcards.sample)["treatment"],
     output:
-        bed = RESULTS + "/macs3/{sample}.bed",
-        _ = multiext(RESULTS + "/macs3/{sample}", "_peaks.xls")
+        bed = f"{RESULTS}/{config['peak_caller']}/{{sample}}_peaks.bed",
+        #_ = multiext(RESULTS + "/macs3/{sample}", "_peaks.xls")
     params:
-        args = config["macs3"]["args"],
+        args = config[config['peak_caller']]["args"],
         peak_type = lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"]
     conda:
         "../envs/peak_calling.yml"
@@ -17,4 +17,4 @@ rule macs3:
     resources:
         tmpdir=TEMP
     script:
-        "../scripts/macs3.py"
+        "../scripts/peak_calling/call_peaks.py"
