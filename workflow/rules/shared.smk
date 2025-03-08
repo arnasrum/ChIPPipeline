@@ -31,7 +31,7 @@ def get_index_files():
         case "star":
             index_files = STAR.get_index_file_names(index_prefix,genome)
         case _:
-            raise ValueError("Aligner not supported")
+            raise ValueError(f"Aligner not supported, aligner provided: {config['aligner']}")
     return index_files
 
 def build_index_input():
