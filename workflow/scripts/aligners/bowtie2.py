@@ -26,7 +26,7 @@ class Bowtie2(Aligner):
         return command
 
     @staticmethod
-    def get_index_files_names(prefix, genome) -> list[str]:
+    def get_index_file_names(prefix, genome) -> list[str]:
         index_files = [f"{prefix.rstrip('/')}/{genome}.{ext}"
              for ext in ["1.bt2", "2.bt2", "3.bt2", "4.bt2"]
         ]
