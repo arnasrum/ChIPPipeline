@@ -19,7 +19,7 @@ rule samtools_index:
     input:
         "{sample}.bam"
     output:
-        "{sample}.bai"
+        "{sample}.bam.bai"
     threads:
         int(config["samtools-index"]["threads"])
     log:
@@ -38,7 +38,7 @@ rule PicardBuildBamIndex:
     input:
         "{sample}.bam"
     output:
-        "{sample}.bai"
+        "{sample}.bam.bai"
     log:
         LOGS + "/BuildBamIndex/{sample}.log"
     conda:

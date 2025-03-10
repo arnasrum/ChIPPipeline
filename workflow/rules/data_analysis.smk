@@ -1,7 +1,7 @@
 rule deeptools_bamCoverage:
     input:
         bam = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam",
-        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bai",
+        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam.bai",
     output:
         RESULTS + "/deeptools-bamCoverage/{sample}.bw"
     conda:
