@@ -17,5 +17,6 @@ rule trim:
         repeat(f"{BENCHMARKS}/{config['trimmer']}/{{sample}}.txt",config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads
     script:
         "../scripts/trimmers/trim.py"

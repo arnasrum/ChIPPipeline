@@ -40,7 +40,8 @@ rule samtools_markdup:
     benchmark:
         repeat(BENCHMARKS + "/markdup/{sample}.txt", config["benchmark_repeat_duplicate"])
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_thread=lambda wildcards, threads: threads
     shell:
         """
         exec > {log} 2>&1

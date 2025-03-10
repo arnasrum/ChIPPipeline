@@ -9,7 +9,8 @@ rule deeptools_bamCoverage:
     log:
         LOGS + "/bamCoverage/{sample}.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads
     threads:
         12
     shell:
@@ -35,7 +36,8 @@ rule deeptools_computeMatrix:
     threads:
         8
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads
     shell:
         """
         mkdir -p {params.outdir}
@@ -104,7 +106,7 @@ rule bedtools_intersect:
     benchmark:
         BENCHMARKS + "/bedtools-intersect/{sample}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
     shell:
         '''
         exec > {log} 2>&1
@@ -124,7 +126,8 @@ rule homer_annotate_peaks:
     log:
         LOGS + "/homer/{sample}_annotate.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task = lambda wildcards, threads: threads
     shell:
         '''
         exec > {log} 2>&1
@@ -133,7 +136,7 @@ rule homer_annotate_peaks:
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input} {params.genome} > {output}
         '''
 
-rule homer_findMotifsGenome:
+rule homer_find_motifs_genome:
     input:
         RESULTS + "/homer/{sample}_annotate.txt"
     output:
@@ -149,7 +152,8 @@ rule homer_findMotifsGenome:
     log:
         LOGS + "/homer/{sample}_findMotifs.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads
     shell:
         '''
         exec > {log} 2>&1
@@ -165,6 +169,8 @@ rule plot_annotated_peaks:
         gene_distribution_plot =  RESULTS + "/plots/{sample}_genes.png"
     params:
         threshold_fraction = 0.01
+    resources:
+        mem_mb=200,
     conda:
         "../envs/data_analysis.yml"
     script:

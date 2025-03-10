@@ -13,6 +13,7 @@ rule build_index:
         f"{BENCHMARKS}/{aligner_name}_index/{genome}.txt"
     resources:
         tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads,
     script:
         "../scripts/aligners/build_index.py"
 
@@ -34,5 +35,6 @@ rule align:
         f"{BENCHMARKS}/{aligner_name}/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads
     script:
         "../scripts/aligners/align.py"
