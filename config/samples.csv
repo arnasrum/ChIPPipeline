@@ -1,1 +1,3 @@
 mark,sample,type,replicate,peak_type,accession,file_path
+H3K4me3,8cell,treatment,1,broad,GSM1871972,
+,8cell,control,1,,GSM1871976,
