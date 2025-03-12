@@ -1,13 +1,13 @@
 
 ruleorder: PicardBuildBamIndex > samtools_index
 
-rule unzip:
+rule unzip_genome:
     input:
-        "{file}.gz"
+        RESOURCES + "/genomes/{genome}.gz"
     output:
-        "{file}"
+        RESOURCES + "/genomes/{genome}"
     wildcard_constraints:
-        file = r"^(.*).(fastq|fq|fa|fasta)$"
+        genome = r"^(.*).(fa|fasta)$"
     resources:
         tmpdir=TEMP
     params:
