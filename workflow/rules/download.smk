@@ -1,8 +1,8 @@
-ruleorder: symlink_PE > concatenate_runs_PE
-ruleorder: symlink_SE > concatenate_runs_SE
+ruleorder: symlink > concatenate_runs_PE
+ruleorder: symlink > concatenate_runs_SE
 ruleorder: concatenate_runs_PE > concatenate_runs_SE
 ruleorder: symlink_reference_genome > download_reference_genome
-localrules: download_reference_genome, symlink_reference_genome, symlink_SE, symlink_PE
+localrules: download_reference_genome, symlink_reference_genome
 
 rule fastq_dump_SE:
     output:
@@ -48,8 +48,6 @@ rule fastq_dump_PE:
         fasterq-dump -t {resources.tmpdir} -e {threads} -O {params.path} --split-files {wildcards.srr}
         '''
 
-
-
 rule concatenate_runs_SE:
     input:
         lambda wildcards: expand(RESOURCES + "/reads/{run}.fastq",run=file_info["public"][wildcards.gsm]["runs"])
@@ -77,7 +75,7 @@ rule concatenate_runs_PE:
         read2 = RESOURCES + "/reads/{sample}_2.fastq"
     params:
         read1_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"], True)[0],
-        read2_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"],True)[1]
+        read2_files = lambda wildcards: join_read_files(file_info["public"][wildcards.sample.split("_")[0]]["runs"], True)[1]
     log:
         LOGS + "/concatenate/{sample}.log"
     resources:
@@ -89,38 +87,20 @@ rule concatenate_runs_PE:
         cat {params.read2_files} > {output.read2} 
         """
 
-rule symlink_SE:
+rule symlink:
     input:
-        lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"]
+        lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
+        lambda wildcards: symlink_input(wildcards.file_name)["read2"]["path"] if sfs.is_paired_end() else ""
     output:
+        [f"{RESOURCES}/reads/{{file_name}}_1.fastq", f"{RESOURCES}/reads/{{file_name}}_2.fastq"]
+        if sfs.is_paired_end() else
         RESOURCES + "/reads/{file_name}.fastq"
     log:
-        LOGS + "/link/{file_name}.log"
+        LOGS + "/symlink/{file_name}.log"
     resources:
         tmpdir=TEMP
-    shell:
-        """
-        exec > {log} 2>&1
-        ln -sr {input} {output} 
-        """
-
-rule symlink_PE:
-    input:
-        read1 = lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
-        read2 = lambda wildcards: symlink_input(wildcards.file_name)["read2"]["path"]
-    output:
-        read1 = RESOURCES + "/reads/{file_name}_1.fastq",
-        read2 = RESOURCES+ "/reads/{file_name}_2.fastq"
-    log:
-        LOGS + "/link/{file_name}.log"
-    resources:
-        tmpdir=TEMP
-    shell:
-        """
-        exec > {log} 2>&1
-        ln -sr {input.read1} {output.read1} 
-        ln -sr {input.read2} {output.read2} 
-        """
+    script:
+        "../scripts/symlink.py"
 
 rule symlink_reference_genome:
     input:
