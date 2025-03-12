@@ -105,7 +105,6 @@ H3K4me3,8cell,treatment,2,narrow,GSM0000002,
 ,8cell,control,2,,GSM0000005,path/to/read1;path/to/read2
 H3K18ac,oocytes,treatment,1,narrow,file_name,path/to/read1;path/to/read2
 ```
-Note: if the samples are single-end reads only include one path 
 
 ## Editing Config 
 
