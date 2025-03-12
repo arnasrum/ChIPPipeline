@@ -34,7 +34,7 @@ rule deeptools_computeMatrix:
         args = config["computeMatrix"]["args"],
         outdir = f"{RESULTS}/deeptools"
     threads:
-        8
+        int(config["computeMatrix"]["threads"])
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards,threads: threads
@@ -113,9 +113,26 @@ rule bedtools_intersect:
         bedtools intersect -a {input.a} -b {input.b} -wa > {output}
         '''
 
+rule homer_setup:
+    output:
+        touch(f"{RESULTS}/homer/homer_setup.done")
+    conda:
+        "../envs/data_analysis.yml"
+    params:
+        genome=genome
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads
+    shell:
+        '''
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
+        '''
+
+
 rule homer_annotate_peaks:
     input:
-        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak"
+        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak",
+        f"{RESULTS}/homer/homer_setup.done"
     output:
         RESULTS + "/homer/{sample}_annotate.txt"
     conda:
