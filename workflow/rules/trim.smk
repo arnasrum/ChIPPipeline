@@ -3,7 +3,7 @@ rule trim:
         lambda wildcards: trimmer_input(wildcards.sample)
     output:
         [f"{RESULTS}/{config['trimmer']}/{{sample}}_1.fastq", f"{RESULTS}/{config['trimmer']}/{{sample}}_2.fastq"]
-         if sfs.is_paired_end() else
+        if sfs.is_paired_end() else
         [f"{RESULTS}/{config['trimmer']}/{{sample}}.fastq"]
     conda:
         "../envs/trim.yml" if not config["trimmer"] == "cutadapt" else "../envs/cutadapt.yml"
