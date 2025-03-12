@@ -25,6 +25,16 @@ Inside the git repository run:
 
 `snakemake -c <num_cores> -j <num_jobs> -C <config_options>`
 
+### HPC
+
+If Conda is available on your HPC, please install Snakemake and along with Snakemake [plugin](https://snakemake.github.io/snakemake-plugin-catalog/index.html) for your workload manager.
+
+Edit the provided slurm profile or use the provided profile as a template for other workload managers.
+
+Submit jobs by:
+
+`snakemake --profile profiles/slurm` 
+
 ## Apptainer/Singularity
 
 Using Singularity and Apptainer it is possible run the pipeline without installing Snakemake and conda locally.
