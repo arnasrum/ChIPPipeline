@@ -1,7 +1,7 @@
 rule fastqc:
     input:
         raw = RESOURCES + "/reads/{sample}.fastq",
-        trimmed = RESULTS + "/" + "{tool}/{sample}.fastq",
+        trimmed = RESULTS + "/{tool}/{sample}.fastq",
     output:
         raw = multiext(RESULTS + "/fastqc/{tool}/raw/{sample}_fastqc.", "zip", "html"),
         trimmed = multiext(RESULTS + "/fastqc/{tool}/trimmed/{sample}_fastqc.","zip","html")
@@ -19,8 +19,8 @@ rule fastqc:
     shell:
         """
         exec > {log} 2>&1
-        fastqc -t {threads} -o {params.outputPath}/raw --memory {resources.mem_mb} {input.raw} 
-        fastqc -t {threads} -o {params.outputPath}/trimmed --memory {resources.mem_mb} {input} 
+        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath}/raw --memory {resources.mem_mb} {input.raw} 
+        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath}/trimmed --memory {resources.mem_mb} {input} 
         """
 
 
