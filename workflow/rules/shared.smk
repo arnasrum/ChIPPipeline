@@ -88,6 +88,12 @@ def symlink_input(file_name: str) -> None:
     samples = sfs.sample_info["provided"]
     return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
+def join_read_files(runs: list, paired_end: bool):
+    if paired_end:
+        return [" ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", runs))),
+                " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", runs)))]
+    return " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", runs))),
+
 def get_all_input(config):
     input_files = []
     path = config["results_path"]

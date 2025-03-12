@@ -48,11 +48,7 @@ rule fastq_dump_PE:
         fasterq-dump -t {resources.tmpdir} -e {threads} -O {params.path} --split-files {wildcards.srr}
         '''
 
-def join_read_files(runs: list, paired_end: bool):
-    if paired_end:
-        return [" ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", runs))),
-                " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", runs)))]
-    return " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", runs))),
+
 
 rule concatenate_runs_SE:
     input:
@@ -93,7 +89,6 @@ rule concatenate_runs_PE:
         cat {params.read2_files} > {output.read2} 
         """
 
-
 rule symlink_SE:
     input:
         lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"]
@@ -106,8 +101,9 @@ rule symlink_SE:
     shell:
         """
         exec > {log} 2>&1
-        ln -s -r {input} {output} 
+        ln -sr {input} {output} 
         """
+
 rule symlink_PE:
     input:
         read1 = lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
@@ -122,8 +118,8 @@ rule symlink_PE:
     shell:
         """
         exec > {log} 2>&1
-        ln -s -r {input.read1} {output.read1} 
-        ln -s -r {input.read2} {output.read2} 
+        ln -sr {input.read1} {output.read1} 
+        ln -sr {input.read2} {output.read2} 
         """
 
 rule symlink_reference_genome:
@@ -150,7 +146,6 @@ rule symlink_reference_genome:
             gzip {params.gzip_args} -kfc {input} > {output}
         fi 
         '''
-
 
 rule download_reference_genome:
     output:
