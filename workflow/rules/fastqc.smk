@@ -15,7 +15,8 @@ rule fastqc:
         int(config["fastqc"]["threads"])
     resources:
         tmpdir=TEMP,
-        cpus_per_task=lambda wildcards, threads: threads
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb = int(config["fastqc"]["mem_mb"])
     shell:
         """
         exec > {log} 2>&1

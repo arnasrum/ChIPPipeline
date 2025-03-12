@@ -49,6 +49,7 @@ fasterq-dump:
 fastqc:
   args: ""
   threads: 12
+  mem_mb: 4000
 
 # Trimmer config
 trim_threads: 12
