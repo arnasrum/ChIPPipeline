@@ -13,7 +13,7 @@ rule picard_MarkDuplicates:
     log:
         LOGS + "/MarkDuplicates/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/MarkDuplicates/{sample}.log", config["benchmark_repeat_duplicate"])
+        repeat(BENCHMARKS + "/MarkDuplicates/{sample}.txt", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP
     shell:
