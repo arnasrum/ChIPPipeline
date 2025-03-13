@@ -4,8 +4,7 @@ import json
 import yaml
 import pathlib
 import pandas as pd
-
-from scripts.fetch_data import get_meta_data, get_sra_accessions
+from workflow.scripts.fetch_data import get_meta_data, get_sra_accessions
 
 class InputException(Exception):
     pass
@@ -20,6 +19,16 @@ class PipelineConfiguration:
         self.paired_end = config["paired_end"]
         self.json_path = config["json_path"]
         self.config = config
+
+    def __verify_config(self):
+        config = self.config
+        if config["genome"] == "" or config["genome"] is None:
+            raise InputException("Please specify a genome in the configuration file.")
+        # Verify boolean arguments
+        boolean_keys = ["paired_end", "generate_fastqc_reports"]
+        for key in boolean_keys:
+            if not str(config[key]).lower() == "true" or not str(config[key]).lower() == "false":
+                raise InputException(f"The configuration argument; {key}, must be true or false.")
 
     def __verify_sample_sheet(self):
         with open(self.sample_sheet, "r") as file:
@@ -44,6 +53,7 @@ class PipelineConfiguration:
 
     def make_sample_info(self) -> dict[str:dict]:
         self.__verify_sample_sheet()
+        self.__verify_config()
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
