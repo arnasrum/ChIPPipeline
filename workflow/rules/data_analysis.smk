@@ -113,29 +113,9 @@ rule bedtools_intersect:
         bedtools intersect -a {input.a} -b {input.b} -wa > {output}
         '''
 
-rule homer_setup:
-    output:
-        touch(f"{RESULTS}/homer/homer_{{genome}}_setup.done")
-    conda:
-        "../envs/data_analysis.yml"
-    params:
-        genome=genome
-    resources:
-        tmpdir=TEMP,
-        cpus_per_task=lambda wildcards, threads: threads
-    log:
-        LOGS + "/homer/homer_install_{genome}.log"
-    shell:
-        '''
-        exec > {log} 2>&1
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
-        '''
-
-
 rule homer_annotate_peaks:
     input:
         lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak",
-        f"{RESULTS}/homer/homer_{genome}_setup.done"
     output:
         RESULTS + "/homer/{sample}_annotate.txt"
     conda:
@@ -189,8 +169,6 @@ rule plot_annotated_peaks:
         gene_distribution_plot =  RESULTS + "/plots/{sample}_genes.png"
     params:
         threshold_fraction = 0.01
-    resources:
-        mem_mb=200,
     conda:
         "../envs/data_analysis.yml"
     script:
