@@ -2,12 +2,7 @@
 indexing_threads: 12
 aligning_threads: 12
 
-# Times chosen trimmer is repeated for chosen trimmer
-benchmark_repeat_trim: 1
-# Times chosen aligner is repeated for chosen aligner
-benchmark_repeat_align: 1
-# Times chosen duplicate marker is repeated for chosen duplicate processor
-benchmark_repeat_duplicate: 1
+
 
 # String to overwrite which tools are to be run
 modules: ""
@@ -34,13 +29,21 @@ paired_end: True
 sample_sheet: "config/samples.csv"
 
 # Path to write generated files to
-prefix: ""
+outdir: ""
 json_path: "samples.json"
 results_path: "results"
 resources_path: "resources"
 logs_path: "logs"
 benchmarks_path: "benchmarks"
 temp_path: "temp"
+
+# Times chosen trimmer is repeated for chosen trimmer
+benchmark_repeat_trim: 1
+# Times chosen aligner is repeated for chosen aligner
+benchmark_repeat_align: 1
+# Times chosen duplicate marker is repeated for chosen duplicate processor
+benchmark_repeat_duplicate: 1
+
 
 fasterq-dump:
   downloadPath: "resources/reads"
