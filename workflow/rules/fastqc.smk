@@ -1,7 +1,7 @@
 rule fastqc:
     input:
-        raw = RESOURCES + "/reads/{sample}.fastq",
-        trimmed = RESULTS + "/{tool}/{sample}.fastq",
+        raw = RESOURCES + "/reads/{sample}.fastq.gz",
+        trimmed = RESULTS + "/{tool}/{sample}.fastq.gz",
     output:
         raw = multiext(RESULTS + "/fastqc/{tool}/raw/{sample}_fastqc.", "zip", "html"),
         trimmed = multiext(RESULTS + "/fastqc/{tool}/trimmed/{sample}_fastqc.","zip","html")

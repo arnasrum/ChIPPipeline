@@ -2,9 +2,9 @@ rule trim:
     input:
         lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        [f"{RESULTS}/{config['trimmer']}/{{sample}}_1.fastq", f"{RESULTS}/{config['trimmer']}/{{sample}}_2.fastq"]
+        [f"{RESULTS}/{config['trimmer']}/{{sample}}_1.fastq.gz", f"{RESULTS}/{config['trimmer']}/{{sample}}_2.fastq.gz"]
         if sfs.is_paired_end() else
-        [f"{RESULTS}/{config['trimmer']}/{{sample}}.fastq"]
+        [f"{RESULTS}/{config['trimmer']}/{{sample}}.fastq.gz"]
     conda:
         "../envs/trim.yml" if not config["trimmer"] == "cutadapt" else "../envs/cutadapt.yml"
     params:

@@ -39,7 +39,7 @@ def build_index_input():
         return f"{RESOURCES}/genomes/{genome}.fa"
     return f"{RESOURCES}/genomes/{genome}.fa.gz"
 
-fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
+fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if sfs.is_paired_end() else [".fastq.gz"]
 def trimmer_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
@@ -87,6 +87,13 @@ def get_fastqc_output() -> list[str]:
 def symlink_input(file_name: str) -> None:
     samples = sfs.sample_info["provided"]
     return next((item for item in samples.values() if item["file_name"] == file_name), None)
+
+def concatenate_runs_input(runs, extensions):
+    return [
+        RESOURCES + f"/reads/{run}{extension}.fastq"
+        for extension in extensions
+        for run in runs
+    ]
 
 def join_read_files(runs: list, paired_end: bool):
     if paired_end:
