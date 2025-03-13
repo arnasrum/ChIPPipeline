@@ -2,6 +2,7 @@
 restart-times: 0
 latency-wait: 60
 use-conda: True
+conda-frontend: conda
 keep-going: True
 rerun-incomplete: True
 printshellcmds: False

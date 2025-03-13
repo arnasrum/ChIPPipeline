@@ -9,7 +9,7 @@ def make_tracks(tracks_file: str, bed: str, bigwig: str, options: dict[str, dict
                     "height": "2",
                     "color": "red",
                     "show_labels": "false",
-                    "fontsize": 10
+                    "font_size": 10
                 ,},
                 "bigwig": {
                     "file": bigwig,

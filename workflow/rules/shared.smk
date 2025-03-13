@@ -1,5 +1,10 @@
-from scripts.pipeline_configuration import PipelineConfiguration
-from scripts.set_config_options import set_module_options, set_output_paths
+import sys
+sys.path.append(".")
+from workflow.scripts.pipeline_configuration import PipelineConfiguration
+from workflow.scripts.set_config_options import set_module_options, set_output_paths
+from workflow.scripts.aligners.bowtie2 import Bowtie2
+from workflow.scripts.aligners.bwa_mem2 import BwaMem2
+from workflow.scripts.aligners.star import STAR
 
 set_module_options(config)
 set_output_paths(config)
@@ -13,8 +18,28 @@ RESOURCES = config['resources_path']
 LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
-fastq_file_extensions = ["_1.fastq", "_2.fastq"] if sfs.is_paired_end() else [".fastq"]
 
+aligner_name = config['aligner'].lower()
+index_prefix = f"{RESULTS}/{aligner_name}"
+
+def get_index_files():
+    match config['aligner'].lower():
+        case "bowtie2":
+            index_files = Bowtie2.get_index_file_names(index_prefix, genome)
+        case "bwa-mem2":
+            index_files = BwaMem2.get_index_file_names(index_prefix,genome)
+        case "star":
+            index_files = STAR.get_index_file_names(index_prefix,genome)
+        case _:
+            raise ValueError(f"Aligner not supported, aligner provided: {config['aligner']}")
+    return index_files
+
+def build_index_input():
+    if str(config["aligner"]).lower() == "star":
+        return f"{RESOURCES}/genomes/{genome}.fa"
+    return f"{RESOURCES}/genomes/{genome}.fa.gz"
+
+fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if sfs.is_paired_end() else [".fastq.gz"]
 def trimmer_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
@@ -24,12 +49,12 @@ def alignment_input(file_name: str) -> list[str]:
 def get_consensus_peak_input(treatment_group: str) -> list[str]:
     treatment_files = []
     for files in treatment_groups[treatment_group].values():
-        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}.bed" for file in files]
+        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}_peaks.bed" for file in files]
     if len(treatment_files) == 1:
         treatment_files.append(treatment_files[0])
     return treatment_files
 
-def macs_input(sample: str) -> dict[str, list[str]]:
+def peak_calling_input(sample: str) -> dict[str, list[str]]:
     groups = [treatment_groups[pool][replicate]
         for pool in treatment_groups
         for replicate in treatment_groups[pool]
@@ -46,18 +71,35 @@ def reference_genome_input():
 
 def get_fastqc_output() -> list[str]:
     file_names = sfs.get_all_file_names()
-    file_paths_unprocessed = [f"{RESULTS}/fastqc/unprocessed/{file_name}" for file_name in file_names]
-    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}" for file_name in file_names]
+    file_paths_raw = [f"{RESULTS}/fastqc/{config['trimmer']}/raw/{file_name}" for file_name in file_names]
+    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/trimmed/{file_name}" for file_name in file_names]
 
     single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
     paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
     extensions = paired_end_extensions if sfs.is_paired_end() else single_end_extensions
-
-    output_files = [f"{path}{extension}"
-                    for path in file_paths_unprocessed + file_paths_trimmed
-                    for extension in extensions
+    output_files = [
+        f"{path}{extension}"
+        for path in file_paths_raw + file_paths_trimmed
+        for extension in extensions
     ]
     return output_files
+
+def symlink_input(file_name: str) -> None:
+    samples = sfs.sample_info["provided"]
+    return next((item for item in samples.values() if item["file_name"] == file_name), None)
+
+def concatenate_runs_input(runs, extensions):
+    return [
+        RESOURCES + f"/reads/{run}{extension}.fastq"
+        for extension in extensions
+        for run in runs
+    ]
+
+def join_read_files(runs: list, paired_end: bool):
+    if paired_end:
+        return [" ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", runs))),
+                " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", runs)))]
+    return " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", runs))),
 
 def get_all_input(config):
     input_files = []
@@ -79,10 +121,6 @@ def get_all_input(config):
             input_files.append(f"{RESULTS}/homer/{group}/homerResults.html")
             input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
-
-def symlink_input(file_name: str) -> None:
-    samples = sfs.sample_info["provided"]
-    return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
 def flatten_dict(old_dict: dict) -> dict:
     new_dict = {}

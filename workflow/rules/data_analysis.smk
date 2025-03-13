@@ -1,7 +1,7 @@
 rule deeptools_bamCoverage:
     input:
         bam = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam",
-        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bai",
+        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam.bai",
     output:
         RESULTS + "/deeptools-bamCoverage/{sample}.bw"
     conda:
@@ -9,7 +9,8 @@ rule deeptools_bamCoverage:
     log:
         LOGS + "/bamCoverage/{sample}.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads
     threads:
         12
     shell:
@@ -20,7 +21,7 @@ rule deeptools_bamCoverage:
 
 rule deeptools_computeMatrix:
     input:
-        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
+        beds = lambda wildcards:f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.bed",
         bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         RESULTS + "/deeptools/{sample}_matrix.gz"
@@ -33,9 +34,10 @@ rule deeptools_computeMatrix:
         args = config["computeMatrix"]["args"],
         outdir = f"{RESULTS}/deeptools"
     threads:
-        8
+        int(config["computeMatrix"]["threads"])
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads
     shell:
         """
         mkdir -p {params.outdir}
@@ -71,7 +73,7 @@ rule deeptools_plotProfile:
 
 rule plot_genome_track:
     input:
-        bed = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
+        bed = lambda wildcards: [f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.bed"],
         bigwig = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_tracks.ini"),
@@ -104,7 +106,7 @@ rule bedtools_intersect:
     benchmark:
         BENCHMARKS + "/bedtools-intersect/{sample}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
     shell:
         '''
         exec > {log} 2>&1
@@ -113,7 +115,7 @@ rule bedtools_intersect:
 
 rule homer_annotate_peaks:
     input:
-        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak"
+        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak",
     output:
         RESULTS + "/homer/{sample}_annotate.txt"
     conda:
@@ -124,7 +126,8 @@ rule homer_annotate_peaks:
     log:
         LOGS + "/homer/{sample}_annotate.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task = lambda wildcards, threads: threads
     shell:
         '''
         exec > {log} 2>&1
@@ -133,7 +136,7 @@ rule homer_annotate_peaks:
         perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input} {params.genome} > {output}
         '''
 
-rule homer_findMotifsGenome:
+rule homer_find_motifs_genome:
     input:
         RESULTS + "/homer/{sample}_annotate.txt"
     output:
@@ -149,7 +152,8 @@ rule homer_findMotifsGenome:
     log:
         LOGS + "/homer/{sample}_findMotifs.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads
     shell:
         '''
         exec > {log} 2>&1

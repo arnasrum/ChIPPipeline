@@ -1,8 +1,24 @@
 executor: slurm
+latency-wait: 60
+conda-frontend: conda
+use-conda: True
+rerun-incomplete: True
+
 default-resources:
   slurm_account: "Insert account here"
   slurm_partition: "Insert partition here"
-  mem: 16G
   runtime: 120
-  cpus_per_task: 4
-latency-wait: 60
+  mem_mb: 512
+  cpus_per_task: 1
+
+set-resources:
+  trim:
+    mem_mb: 16000
+  fastqc:
+    mem_mb: 3000
+  build_index:
+    mem_mb: 64000
+  align:
+    mem_mb: 6000
+  samtools_markdup:
+    mem_mb: 8000
