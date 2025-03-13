@@ -62,13 +62,6 @@ Then you can submit the pipeline to the workload manager, e.g. using Slurm
 
 ## Specify samples 
 
-Define experiment samples by editing the [config/samples.csv](./config/samples.csv). 
-
-[config/samples.csv](./config/samples.csv) support both publicly available samples and local samples on the machine.
-
-For publicly available samples please provide their GEO accession in the [config/samples.csv](./config/samples.csv).
-
-For local samples please provide a path to the sample. 
 
 <table>
     <th>Column</th>
@@ -76,33 +69,33 @@ For local samples please provide a path to the sample.
     <th>Required</th>
     <tr>
         <td>Mark</td>
-        <td>For treatment files defines the transcription factor or histone mark.</td>
-        <td>Only for treatment samples</td>
+        <td>Identifier for transcription factor or histone mark for treatment file.</td>
+        <td>Yes, only for treatment samples. Leave blank for control samples.</td>
     </tr>
     <tr>
         <td>Sample</td>
-        <td>The sample the sequences were obtained from.</td>
-        <td>Yes</td>
+        <td>The biological sample or condition the sequences were derived from.</td>
+        <td>Yes, used for associating samples with corresponding sample origin.</td>
     </tr>
     <tr>
         <td>Type</td>
-        <td>Must be either treatment/control, defines if the sample will be used input or control.</td> 
+        <td>Specifies whether the sample is treatment or control.</td> 
         <td>Yes</td>
     </tr>
     <tr>
         <td>Peak_type</td>
         <td>Must be narrow/broad, decides if the peak caller will treat the sample as narrow or broad peaks.</td>
-        <td>Yes</td>
+        <td>Yes, for treatment files. Can be omitted for control files.</td>
     </tr>
     <tr>
         <td>Accession</td>
-        <td>GEO accession that will be used to download the sample. If file_path is defined the column will be used as a prefix for the file name.</td>
+        <td>GEO accession number for publicly available samples, used to download the sample from GEO if a local file path is not specified. If file_path is specified, this column serves as a prefix for the filename.</td>
         <td>Yes; if file_path is not defined.</td>
     </tr>    
     <tr>
         <td>File_path</td>
         <td>Paths to the reads sample reads. If paired_end is set to true, then two paths must be defined in the column by separating them with ";" character. Files without file_path specified will try </td>
-        <td>No</td>
+        <td>No, but necessary when using local files instead of downloaded GEO samples.</td>
     </tr>
 
 </table>
