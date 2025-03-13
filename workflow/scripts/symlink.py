@@ -16,5 +16,4 @@ if str(snakemake.config['paired_end']).lower() == "true":
     else:
         command += f"\nln -sr {snakemake.input[1]} {snakemake.output[1]}"
 
-command += f"echo 'Running: {command}'"
-shell(f"({command}) {log}")
+shell(f"(echo 'Running: {command}'\n{command}) {log}")
