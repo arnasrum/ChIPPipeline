@@ -101,7 +101,7 @@ For local samples please provide a path to the sample.
     </tr>    
     <tr>
         <td>File_path</td>
-        <td>Paths to the reads sample reads. If paired_end is set to true, then two paths must be defined in the column by separating them with ";" character</td>
+        <td>Paths to the reads sample reads. If paired_end is set to true, then two paths must be defined in the column by separating them with ";" character. Files without file_path specified will try </td>
         <td>No</td>
     </tr>
 
@@ -110,25 +110,7 @@ For local samples please provide a path to the sample.
 
 ## Editing Config 
 
-Changing the behavior of the pipeline or individual tools can be done either at runtime time by providing arguments 
-through the CLI with `-C` or `--config` flags, or by editing the [config](config/config.yaml) directly.
-
-### Options
-
-`paired_end`: true/false, all samples defined in the sample sheet must be same.
-
-`genome`: either genome code or path to genome file.
-
-`sample_sheet`: path to a csv sample sheet. If not defined "config/samples.csv" will be used as default.
-
-`prefix`: path for writing generated files to.
-
-`trimmer`: trim_galore/cutadapt/fastp, choose tool to use for trimming samples.
-
-`aligner`: bowtie2/bwa-mem/bwa-mem2/STAR, choose tool to use for genome alignment.
-
-`modules`: Allows the user to use shorthand flags choose tools. 
-
+Refer to the [configuration documentaion](docs/conf.md).
 
 ## Module Options
 
