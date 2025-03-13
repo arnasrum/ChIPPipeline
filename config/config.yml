@@ -4,6 +4,20 @@ aligning_threads: 12
 
 
 
+small_task:
+  mem_mb: 512
+  threads: 1
+  runtime: 15
+medium_task:
+  mem_mb: 10000
+  threads: 8
+  runtime: 30
+large_task:
+  mem_mb: 60000
+  threads: 20
+  runtime: 120
+
+
 # String to overwrite which tools are to be run
 modules: ""
 # Choose trimmer
