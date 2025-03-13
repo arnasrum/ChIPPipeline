@@ -27,7 +27,7 @@ class PipelineConfiguration:
         # Verify boolean arguments
         boolean_keys = ["paired_end", "generate_fastqc_reports"]
         for key in boolean_keys:
-            if not str(config[key]).lower() == "true" or not str(config[key]).lower() == "false":
+            if not (str(config[key]).lower() == "true" or str(config[key]).lower() == "false"):
                 raise InputException(f"The configuration argument; {key}, must be true or false.")
 
     def __verify_sample_sheet(self):
