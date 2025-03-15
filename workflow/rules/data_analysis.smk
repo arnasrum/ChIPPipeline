@@ -115,16 +115,16 @@ rule bedtools_intersect:
 
 rule homer_annotate_peaks:
     input:
-        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak",
+        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.group}.consensusPeak",
     output:
-        RESULTS + "/homer/{sample}_annotate.txt"
+        RESULTS + "/homer/{group}_annotate.txt"
     conda:
         "../envs/data_analysis.yml"
     params:
         outdir = RESULTS + "/homer",
-        genome = genome
+        genome = lambda wildcards: wildcards.group.split("_")[-1]
     log:
-        LOGS + "/homer/{sample}_annotate.log"
+        LOGS + "/homer/{group}_annotate.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task = lambda wildcards, threads: threads
