@@ -1,3 +1,4 @@
+import os.path
 import sys
 sys.path.append(".")
 from workflow.scripts.pipeline_configuration import PipelineConfiguration
@@ -10,7 +11,6 @@ set_module_options(config)
 set_output_paths(config)
 sfs = PipelineConfiguration(config)
 file_info = sfs.make_sample_info()
-genome = sfs.get_genome_code()
 treatment_groups = sfs.group_treatment_files()
 
 RESULTS = config['results_path']
@@ -22,19 +22,19 @@ TEMP = config['temp_path']
 aligner_name = config['aligner'].lower()
 index_prefix = f"{RESULTS}/{aligner_name}"
 
-def get_index_files():
+def get_index_files(genome):
     match config['aligner'].lower():
         case "bowtie2":
             index_files = Bowtie2.get_index_file_names(index_prefix, genome)
         case "bwa-mem2":
-            index_files = BwaMem2.get_index_file_names(index_prefix,genome)
+            index_files = BwaMem2.get_index_file_names(index_prefix, genome)
         case "star":
-            index_files = STAR.get_index_file_names(index_prefix,genome)
+            index_files = STAR.get_index_file_names(index_prefix, genome)
         case _:
             raise ValueError(f"Aligner not supported, aligner provided: {config['aligner']}")
     return index_files
 
-def build_index_input():
+def build_index_input(genome: str):
     if str(config["aligner"]).lower() == "star":
         return f"{RESOURCES}/genomes/{genome}.fa"
     return f"{RESOURCES}/genomes/{genome}.fa.gz"
@@ -64,10 +64,10 @@ def peak_calling_input(sample: str) -> dict[str, list[str]]:
     return {"control": [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)],
             "treatment": [f"{path}/{file}.bam" for file in treatment_group]}
 
-def reference_genome_input():
-    if os.path.isfile(config["genome"]):
-        return config["genome"]
-    return ""
+def reference_genome_input(genome: str):
+    genomes = [sample['genome'] for sample in flatten_dict(file_info).values()]
+    valid = filter(lambda sample_sheet_genome: genome in sample_sheet_genome and os.path.isfile(sample_sheet_genome), genomes)
+    return next(valid, "")
 
 def get_fastqc_output() -> list[str]:
     file_names = sfs.get_all_file_names()

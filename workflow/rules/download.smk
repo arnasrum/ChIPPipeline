@@ -1,5 +1,3 @@
-ruleorder: symlink_reference_genome > download_reference_genome
-localrules: download_reference_genome, symlink_reference_genome
 
 rule fastq_dump_SE:
     output:
@@ -62,7 +60,7 @@ rule concatenate_runs:
     script:
         "../scripts/concatenate_runs.py"
 
-rule handle_provided_files:
+rule handle_provided_samples:
     input:
         lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
         lambda wildcards: symlink_input(wildcards.file_name)["read2"]["path"] if sfs.is_paired_end() else ""
@@ -77,44 +75,18 @@ rule handle_provided_files:
     script:
         "../scripts/handle_provided_files.py"
 
-rule symlink_reference_genome:
-    input:
-        reference_genome_input()
-    output:
-        RESOURCES + "/genomes/{genome}.fa.gz"
-    params:
-        gzip_args = config["gzip"]["args"]
-    log:
-        LOGS + "/ln/{genome}.log"
-    benchmark:
-        BENCHMARKS + "/ln/{genome}.benchmark.txt"
-    resources:
-        tmpdir=TEMP
-    shell:
-        '''
-        exec > {log} 2>&1
-        if [[ {input} == *.gz ]]; then
-            echo "The string ends with .gz, skipping compression."
-            ln -sr {input} {output} 
-        else
-            echo "The string does not end with .gz, compressing genome."
-            gzip {params.gzip_args} -kfc {input} > {output}
-        fi 
-        '''
-
-rule download_reference_genome:
+rule fetch_genome:
     output:
         RESOURCES + "/genomes/{genome}.fa.gz"
     conda:
         "../envs/download.yml"
     log:
-        LOGS + "/rsync/{genome}.log"
+        LOGS + "/genomes/{genome}.log"
     benchmark:
-        BENCHMARKS + "/rsync/{genome}.benchmark.txt"
+        BENCHMARKS + "/genomes/{genome}.benchmark.txt"
+    params:
+        genome = lambda wildcards: wildcards.genome
     resources:
         tmpdir=TEMP
-    shell:
-        '''
-        exec > {log} 2>&1
-        rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz {output}
-        '''
+    script:
+        "../scripts/fetch_genome.py"

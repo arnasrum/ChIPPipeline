@@ -41,6 +41,7 @@ class PipelineConfiguration:
                     raise InputException(f"Row {index} in \"peak_type\" treatment samples must have defined peak type.")
                 raise InputException(f"Row {index} in \"peak_type\" column contains invalid value. {row['type']}")
             if not isinstance(row["replicate"], int):
+                # something wrong here, if genome is defined this gives the wrong message
                 raise InputException(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be an integer.")
             if not row["accession"]:
                 raise InputException(f"Row {index} in column \"accession\" contains invalid value.")
@@ -69,10 +70,9 @@ class PipelineConfiguration:
                 geo_accessions.add(row["accession"])
                 sample_info[availability_type][sample] = {}
             if row["file_path"]:
-                # Check if the included files exist
                 availability_type = "provided"
                 paths = row["file_path"].split(";")
-                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}".lstrip("_")
+                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}_{row['genome']}".lstrip("_")
                 if row["accession"]:
                     sample = f"{row['accession']}_{sample}"
                 sample_info[availability_type][sample] = {}
@@ -81,7 +81,7 @@ class PipelineConfiguration:
                     sample_info[availability_type][sample][f"read{i + 1}"] = {
                         "path": read,
                         "file_extension": "".join(path.suffixes),
-                        "file_name": path.name.split("".join(path.suffixes))[0]#.split(f"_{i + 1}")[0]
+                        "file_name": path.name.split("".join(path.suffixes))[0]
                     }
                     sample_info[availability_type][sample]['file_name'] = sample
             sample_info[availability_type][sample].update({
@@ -90,10 +90,13 @@ class PipelineConfiguration:
                 "replicate": row["replicate"],
                 "mark": row["mark"],
                 "peak_type": row["peak_type"],
+                "genome": row["genome"],
             })
         # Handle publicly available files
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
+        for sample in sample_info['public']:
+            sample_info['public'][sample]['file_name'] += f"_{sample_info['public'][sample]['genome']}"
 
         json_dir = "/".join(self.json_path.split("/")[:-1]) + "/"
         if not os.path.exists(json_dir): os.makedirs(json_dir)
@@ -155,7 +158,8 @@ class PipelineConfiguration:
         treatment_samples: dict[str, dict[str, list[str]]] = {}
         for key, entry in self.__flatten_dict(self.sample_info).items():
             if entry['type'] != "treatment": continue
-            group = f"{entry['mark']}_{entry['sample']}"
+            genome = entry["genome"].split("/")[-1].split(".")[0]
+            group = f"{entry['mark']}_{entry['sample']}_{genome}"
             if not group in treatment_samples:
                 treatment_samples[group] = {}
             if not entry['replicate'] in treatment_samples[group]:
@@ -174,6 +178,10 @@ class PipelineConfiguration:
 
     def get_sample_entry_by_file_name(self, file_name: str) -> dict:
         return next(filter(lambda entry: entry["file_name"] == file_name, self.__flatten_dict(self.sample_info).values()))
+
+    def get_sample_genome(self, file_name: str) -> str:
+        genome = self.get_sample_entry_by_file_name(file_name)['genome'].split("/")[-1].split(".")[0]
+        return genome
 
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:
