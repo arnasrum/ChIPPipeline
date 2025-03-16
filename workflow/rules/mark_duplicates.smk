@@ -1,7 +1,7 @@
 rule picard_MarkDuplicates:
     input:
-        aligned = RESULTS + "/" + aligner_name + "/{sample}.bam",
-        aligned_index = RESULTS + "/" + aligner_name + "/{sample}.bam.bai",
+        aligned = f"{RESULTS}/{config['aligner']}/{{sample}}.bam",
+        aligned_index = f"{RESULTS}/{config['aligner']}/{{sample}}.bam.bai",
     output:
         sorted = temp(RESULTS + "/MarkDuplicates/{sample}_sorted.bam"),
         marked = RESULTS + "/MarkDuplicates/{sample}.bam",
@@ -25,7 +25,7 @@ rule picard_MarkDuplicates:
 
 rule samtools_markdup:
     input:
-        RESULTS + "/" + aligner_name + "/{sample}.bam"
+        f"{RESULTS}/{config['aligner']}/{{sample}}.bam"
     output:
         RESULTS + "/markdup/{sample}.bam",
     conda:
