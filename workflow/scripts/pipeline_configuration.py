@@ -72,7 +72,7 @@ class PipelineConfiguration:
             if row["file_path"]:
                 availability_type = "provided"
                 paths = row["file_path"].split(";")
-                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}_{row['genome']}".lstrip("_")
+                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}_{row['genome'].split('/')[-1].split('.')[0]}".lstrip("_")
                 if row["accession"]:
                     sample = f"{row['accession']}_{sample}"
                 sample_info[availability_type][sample] = {}
