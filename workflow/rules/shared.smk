@@ -3,9 +3,6 @@ import sys
 sys.path.append(".")
 from workflow.scripts.pipeline_configuration import PipelineConfiguration
 from workflow.scripts.set_config_options import set_module_options, set_output_paths
-from workflow.scripts.aligners.bowtie2 import Bowtie2
-from workflow.scripts.aligners.bwa_mem2 import BwaMem2
-from workflow.scripts.aligners.star import STAR
 
 set_module_options(config)
 set_output_paths(config)
@@ -19,32 +16,27 @@ LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 
-aligner_name = config['aligner'].lower()
-index_prefix = f"{RESULTS}/{aligner_name}"
-
-def get_index_files(genome):
-    match config['aligner'].lower():
-        case "bowtie2":
-            index_files = Bowtie2.get_index_file_names(index_prefix, genome)
-        case "bwa-mem2":
-            index_files = BwaMem2.get_index_file_names(index_prefix, genome)
-        case "star":
-            index_files = STAR.get_index_file_names(index_prefix, genome)
-        case _:
-            raise ValueError(f"Aligner not supported, aligner provided: {config['aligner']}")
-    return index_files
-
-def build_index_input(genome: str):
-    if str(config["aligner"]).lower() == "star":
-        return f"{RESOURCES}/genomes/{genome}.fa"
-    return f"{RESOURCES}/genomes/{genome}.fa.gz"
-
 fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if sfs.is_paired_end() else [".fastq.gz"]
 def trimmer_input(sample: str) -> list[str]:
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
+def reference_genome_input(genome: str):
+    genomes = [sample['genome'] for sample in flatten_dict(file_info).values()]
+    valid = filter(lambda sample_sheet_genome: genome in sample_sheet_genome and os.path.isfile(sample_sheet_genome), genomes)
+    return next(valid, "")
+
 def alignment_input(file_name: str) -> list[str]:
     return [f"{RESULTS}/{config["trimmer"]}/{file_name}{extension}" for extension in fastq_file_extensions]
+
+def peak_calling_input(sample: str) -> dict[str, list[str]]:
+    groups = [treatment_groups[pool][replicate]
+        for pool in treatment_groups
+        for replicate in treatment_groups[pool]
+    ]
+    treatment_group = next(filter(lambda group: sample in group, groups), None)
+    path = f"{RESULTS}/{config['duplicate_processor']}"
+    return {"control": [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)],
+            "treatment": [f"{path}/{file}.bam" for file in treatment_group]}
 
 def get_consensus_peak_input(treatment_group: str) -> list[str]:
     treatment_files = []
@@ -53,36 +45,6 @@ def get_consensus_peak_input(treatment_group: str) -> list[str]:
     if len(treatment_files) == 1:
         treatment_files.append(treatment_files[0])
     return treatment_files
-
-def peak_calling_input(sample: str) -> dict[str, list[str]]:
-    groups = [treatment_groups[pool][replicate]
-        for pool in treatment_groups
-        for replicate in treatment_groups[pool]
-    ]
-    treatment_group = next(filter(lambda group: sample in group, groups))
-    path = f"{RESULTS}/{config['duplicate_processor']}"
-    return {"control": [f"{path}/{file}.bam" for file in sfs.get_control_files(sample)],
-            "treatment": [f"{path}/{file}.bam" for file in treatment_group]}
-
-def reference_genome_input(genome: str):
-    genomes = [sample['genome'] for sample in flatten_dict(file_info).values()]
-    valid = filter(lambda sample_sheet_genome: genome in sample_sheet_genome and os.path.isfile(sample_sheet_genome), genomes)
-    return next(valid, "")
-
-def get_fastqc_output() -> list[str]:
-    file_names = sfs.get_all_file_names()
-    file_paths_raw = [f"{RESULTS}/fastqc/{config['trimmer']}/raw/{file_name}" for file_name in file_names]
-    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/trimmed/{file_name}" for file_name in file_names]
-
-    single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
-    paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
-    extensions = paired_end_extensions if sfs.is_paired_end() else single_end_extensions
-    output_files = [
-        f"{path}{extension}"
-        for path in file_paths_raw + file_paths_trimmed
-        for extension in extensions
-    ]
-    return output_files
 
 def symlink_input(file_name: str) -> None:
     samples = sfs.sample_info["provided"]
@@ -121,6 +83,21 @@ def get_all_input(config):
             input_files.append(f"{RESULTS}/homer/{group}/homerResults.html")
             input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
+
+def get_fastqc_output() -> list[str]:
+    file_names = sfs.get_all_file_names()
+    file_paths_raw = [f"{RESULTS}/fastqc/{config['trimmer']}/raw/{file_name}" for file_name in file_names]
+    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/trimmed/{file_name}" for file_name in file_names]
+
+    single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
+    paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
+    extensions = paired_end_extensions if sfs.is_paired_end() else single_end_extensions
+    output_files = [
+        f"{path}{extension}"
+        for path in file_paths_raw + file_paths_trimmed
+        for extension in extensions
+    ]
+    return output_files
 
 def flatten_dict(old_dict: dict) -> dict:
     new_dict = {}
