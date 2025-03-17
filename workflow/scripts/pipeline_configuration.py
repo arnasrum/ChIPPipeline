@@ -72,7 +72,7 @@ class PipelineConfiguration:
             if row["file_path"]:
                 availability_type = "provided"
                 paths = row["file_path"].split(";")
-                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}_{row['genome'].split('/')[-1].split('.')[0]}".lstrip("_")
+                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}_{row['genome'].split('/')[-1].split('.')[0]}"
                 if row["accession"]:
                     sample = f"{row['accession']}_{sample}"
                 sample_info[availability_type][sample] = {}
@@ -96,7 +96,7 @@ class PipelineConfiguration:
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
         for sample in sample_info['public']:
-            sample_info['public'][sample]['file_name'] += f"_{sample_info['public'][sample]['genome']}"
+            sample_info['public'][sample]['file_name'] += f"_{sample_info['public'][sample]['genome'].split('/')[-1].split('.')[0]}"
 
         json_dir = "/".join(self.json_path.split("/")[:-1]) + "/"
         if not os.path.exists(json_dir): os.makedirs(json_dir)
