@@ -35,7 +35,8 @@ rule bowtie2:
         args = config["bowtie2"]["args"],
         genome = lambda wildcards: sfs.get_sample_genome(wildcards.sample),
         paired_end = config["paired_end"],
-        index_path= lambda wildcards,input: os.path.commonpath(input.genome_index)
+        index_path= lambda wildcards,input: os.path.commonpath(input.genome_index),
+        read_group = '@RG\tID:{sample}\tSM:{sample}' 
     threads:
         int(config["aligning_threads"])
     log:
@@ -45,18 +46,9 @@ rule bowtie2:
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads
-    shell:
-        '''
-        exec > {log} 2>&1
-        shopt -s nocasematch
-        if [[ {params.paired_end} =~ true ]]; then
-            inputOptions=''; i=1
-            for file in {input.reads}; do inputOptions+="-$i $file "; i=$((i+1)); done
-        else
-            inputOptions='-U {input.reads}'
-        fi
-        bowtie2 -q --threads {threads} -x {params.index_path} $inputOptions {params.args} | samtools sort -@ {threads} -o {output} -
-        '''
+    script:
+        "../scripts/tools/bowtie2.py"
+
 rule build_bwa_index:
     input:
         f"{RESOURCES}/genomes/{{genome}}.fa.gz"
@@ -93,6 +85,7 @@ rule bwa_mem:
         genome = lambda wildcards: sfs.get_sample_genome(wildcards.sample),
         args = config["bwa-mem"]["args"],
         index_path= lambda wildcards, input: f"{os.path.commonpath(input.genome_index)}/{sfs.get_sample_genome(wildcards.sample)}",
+        read_group= '@RG\tID:{sample}\tSM:{sample}'
     threads:
         int(config['aligning_threads'])
     log:
@@ -143,7 +136,8 @@ rule bwa_mem2:
     params:
         genome = lambda wildcards: sfs.get_sample_genome(wildcards.sample),
         args = config["bwa-mem2"]["args"],
-        index_path = lambda wildcards, input: os.path.commonpath(input.genome_index)
+        index_path = lambda wildcards, input: os.path.commonpath(input.genome_index),
+        read_group= '@RG\tID:{sample}\tSM:{sample}'
     threads:
         int(config['aligning_threads'])
     log:
@@ -197,7 +191,8 @@ rule STAR:
     params:
         args = config["star"]["args"],
         index_path = f"{RESULTS}/star-index",
-        output_path = f"{RESULTS}/STAR"
+        output_path = f"{RESULTS}/STAR",
+        read_group= '@RG\tID:{sample}\tSM:{sample}'
     log:
         LOGS + "/STAR/{sample}.log"
     benchmark:
