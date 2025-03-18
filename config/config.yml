@@ -1,22 +1,4 @@
 # Workflow config
-indexing_threads: 12
-aligning_threads: 12
-
-
-
-small_task:
-  mem_mb: 512
-  threads: 1
-  runtime: 15
-medium_task:
-  mem_mb: 10000
-  threads: 8
-  runtime: 30
-large_task:
-  mem_mb: 60000
-  threads: 20
-  runtime: 120
-
 
 # String to overwrite which tools are to be run
 modules: ""
@@ -72,34 +54,66 @@ fastqc:
 trim_threads: 12
 
 trim_galore:
-  threads: 12
   args: ""
+  threads: 8
+  runtime: 60
+  mem_mb: 8000
 cutadapt:
-  threads: 12
   args: ""
+  threads: 8
+  runtime: 60
+  mem_mb: 8000
 fastp:
-  threads: 12
   args: ""
-trimmomatic:
   threads: 12
+  runtime: 60
+  mem_mb: 8000
+trimmomatic:
   args: ""
   run_options: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
-
+  threads: 12
+  runtime: 60
+  mem_mb: 8000
 # Aligner config
 
-
-bowtie2:
-  args: "--very-sensitive"
 bowtie2-build:
   args: ""
-bwa-mem:
-  args: "-v 1 -Y"
-bwa-mem2:
-  args: "-v 1 -Y"
-bwa-index:
+  threads: 25
+  mem_mb: 12000
+  runtime: 200
+bowtie2:
+  args: "--very-sensitive"
+  threads: 25
+  mem_mb: 16000
+  runtime: 120
+bwa_mem_index:
   args: ""
+  mem_mb: 60000
+  runtime: 200
+bwa_mem:
+  args: "-v 1 -Y"
+  threads: 25
+  mem_mb: 8000
+  runtime: 120
+bwa_mem2_index:
+  args: ""
+  mem_mb: 60000
+  runtime: 200
+bwa_mem2:
+  args: "-v 1 -Y"
+  threads: 25
+  mem_mb: 8000
+  runtime: 120
+star_index:
+  args: ""
+  threads: 25
+  mem_mb: 36000
+  runtime: 200
 star:
   args: ""
+  threads: 25
+  mem_mb: 8000
+  runtime: 120
 
 # Utils config
 gzip:

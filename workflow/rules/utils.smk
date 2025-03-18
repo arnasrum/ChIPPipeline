@@ -31,14 +31,15 @@ rule samtools_index:
     shell:
         """
         exec > {log} 2>&1
-        samtools index -@ {threads} - -o {output}
+        samtools sort -@ {threads} {input} | samtools index -@ {threads} - -o {output}
         """
 
 rule PicardBuildBamIndex:
     input:
         "{sample}.bam"
     output:
-        "{sample}.bam.bai"
+        sorted = temp(f"{TEMP}/{{sample}}.bam"),
+        index = "{sample}.bam.bai"
     log:
         LOGS + "/BuildBamIndex/{sample}.log"
     conda:
@@ -48,7 +49,8 @@ rule PicardBuildBamIndex:
     shell:
         """
         exec > {log} 2>&1
-        picard BuildBamIndex -I {input} -O {output}
+        picard SortSam -I {input} -O {output.sorted} -SO coordinate --TMP_DIR {resources.tmpdir}
+        picard BuildBamIndex -I {output.sorted} -O {output.index}
         """
 
 rule picardCreateGenomeSequenceDictionary:

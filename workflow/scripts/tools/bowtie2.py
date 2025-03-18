@@ -17,5 +17,5 @@ if len(snakemake.input['reads']) == 2:
     command += f" -1 {snakemake.input['reads'][0]} -2 {snakemake.input['reads'][1]}"
 elif len(snakemake.input['reads']) == 1:
     command += f" -U {snakemake.input['reads'][0]}"
-
-shell(f"({command} | samtools sort -@ {snakemake.threads} -o {snakemake.output[0]} -) {log}")
+command += f" | samtools view -o {snakemake.output[0]} -"
+shell(f"({command}) {log}")

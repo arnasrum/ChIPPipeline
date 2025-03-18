@@ -9,7 +9,7 @@ rule build_bowtie2_index:
         args = config["bowtie2-build"]["args"],
         path = RESULTS + "/bowtie2-build"
     threads:
-        int(config["indexing_threads"])
+        int(config['bowtie2-build']['threads'])
     log:
         f"{LOGS}/bowtie2-build/{{genome}}.log"
     benchmark:
@@ -33,19 +33,17 @@ rule bowtie2:
         "../envs/align.yml"
     params:
         args = config["bowtie2"]["args"],
-        genome = lambda wildcards: sfs.get_sample_genome(wildcards.sample),
-        paired_end = config["paired_end"],
-        index_path= lambda wildcards,input: os.path.commonpath(input.genome_index),
-        read_group = '@RG\tID:{sample}\tSM:{sample}' 
     threads:
-        int(config["aligning_threads"])
+        int(config['bowtie2']['threads'])
     log:
         LOGS + "/bowtie2/{sample}.log"
     benchmark:
         repeat(BENCHMARKS + "/bowtie2/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
-        cpus_per_task= lambda wildcards, threads: threads
+        cpus_per_task= lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['bowtie2']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['bowtie2']['runtime'] * attempt
     script:
         "../scripts/tools/bowtie2.py"
 
@@ -59,13 +57,15 @@ rule build_bwa_index:
     params:
         index_path = f"{RESULTS}/bwa-index/{{genome}}",
         dir = f"{RESULTS}/bwa-index/",
-        args = config["bwa-index"]["args"]
+        args = config["bwa_mem_index"]["args"]
     log:
         f"{LOGS}/bwa-index/{{genome}}.log"
     benchmark:
         f"{BENCHMARKS}/bwa-index/{{genome}}.txt"
     resources:
         tmpdir=TEMP,
+        mem_mb= lambda wildcards,attempt: config['bwa_mem_index']['mem_mb'] * attempt,
+        runtime= lambda wildcards,attempt: config['bwa_mem_index']['runtime'] * attempt
     shell:
         """
         exec > {log} 2>&1
@@ -83,18 +83,20 @@ rule bwa_mem:
         "../envs/align.yml"
     params:
         genome = lambda wildcards: sfs.get_sample_genome(wildcards.sample),
-        args = config["bwa-mem"]["args"],
+        args = config["bwa_mem"]["args"],
         index_path= lambda wildcards, input: f"{os.path.commonpath(input.genome_index)}/{sfs.get_sample_genome(wildcards.sample)}",
         read_group= '@RG\tID:{sample}\tSM:{sample}'
     threads:
-        int(config['aligning_threads'])
+        int(config['bwa_mem']['threads'])
     log:
         LOGS + "/bwa-mem/{sample}.log"
     benchmark:
         repeat(BENCHMARKS + "/bwa-mem/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
-        cpus_per_task= lambda wildcards, threads: threads
+        cpus_per_task= lambda wildcards, threads: threads,
+        mem_mb= lambda wildcards,attempt: config['bwa_mem']['mem_mb'] * attempt,
+        runtime= lambda wildcards,attempt: config['bwa_mem']['runtime'] * attempt
     shell:
         """
         exec > {log} 2>&1
@@ -111,13 +113,15 @@ rule build_bwa2_index:
     params:
         index_path = f"{RESULTS}/bwa2-index/{{genome}}",
         dir = f"{RESULTS}/bwa-index/",
-        args = config["bwa-index"]["args"]
+        args = config["bwa_mem2_index"]["args"]
     log:
         f"{LOGS}/bwa2-index/{{genome}}.log"
     benchmark:
         f"{BENCHMARKS}/bwa2-index/{{genome}}.txt"
     resources:
         tmpdir=TEMP,
+        mem_mb= lambda wildcards,attempt: config['bwa_mem2_index']['mem_mb'] * attempt,
+        runtime= lambda wildcards,attempt: config['bwa_mem2_index']['runtime'] * attempt
     shell:
         """
         exec > {log} 2>&1
@@ -134,24 +138,21 @@ rule bwa_mem2:
     conda:
         "../envs/align.yml"
     params:
-        genome = lambda wildcards: sfs.get_sample_genome(wildcards.sample),
-        args = config["bwa-mem2"]["args"],
-        index_path = lambda wildcards, input: os.path.commonpath(input.genome_index),
+        args = config["bwa_mem2"]["args"],
         read_group= '@RG\tID:{sample}\tSM:{sample}'
     threads:
-        int(config['aligning_threads'])
+        int(config['bwa_mem2']['threads'])
     log:
         LOGS + "/bwa-mem2/{sample}.log"
     benchmark:
         repeat(BENCHMARKS + "/bwa-mem2/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
-        cpus_per_task= lambda wildcards, threads: threads
-    shell:
-        """
-        exec > {log} 2>&1
-        bwa-mem2 mem -t {threads} {params.args} {params.index_path} {input.reads} | samtools sort -@ {threads} -o {output} -
-        """
+        cpus_per_task= lambda wildcards, threads: threads,
+        mem_mb= lambda wildcards,attempt: config['bwa_mem2']['mem_mb'] * attempt,
+        runtime= lambda wildcards,attempt: config['bwa_mem2']['runtime'] * attempt
+    script:
+        "../scripts/tools/bwa-mem2.py"
 
 rule build_STAR_index:
     input:
@@ -164,7 +165,7 @@ rule build_STAR_index:
     conda:
         "../envs/align.yml"
     threads:
-        config["indexing_threads"]
+        int(config['star_index']['threads'])
     log:
         f"{LOGS}/star_index/{{genome}}.log"
     benchmark:
@@ -187,7 +188,7 @@ rule STAR:
     conda:
         "../envs/align.yml"
     threads:
-        config["aligning_threads"]
+        int(config['star']['threads'])
     params:
         args = config["star"]["args"],
         index_path = f"{RESULTS}/star-index",

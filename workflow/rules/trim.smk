@@ -8,7 +8,6 @@ rule trim_galore:
     params:
         args = config["trim_galore"]["args"],
         output_dir = RESULTS + "/trim_galore",
-        paired_end = config["paired_end"]
     threads:
         int(config["trim_galore"]["threads"])
     log:
@@ -17,7 +16,9 @@ rule trim_galore:
         repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
-        cpus_per_task=lambda wildcards, threads: threads
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['trim_galore']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['trim_galore']['runtime'] * attempt
     script:
         "../scripts/tools/trim_galore.py"
 
@@ -30,7 +31,6 @@ rule cutadapt:
         "../envs/cutadapt.yml"
     params:
         args = config["cutadapt"]["args"],
-        paired_end = config["paired_end"]
     threads:
         int(config["cutadapt"]["threads"])
     log:
@@ -39,7 +39,9 @@ rule cutadapt:
         repeat(BENCHMARKS + "/cutadapt/{sample}.txt", config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
-        cpus_per_task=lambda wildcards, threads: threads
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['cutadapt']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['cutadapt']['runtime'] * attempt
     script:
         "../scripts/tools/cutadapt.py"
 
@@ -58,7 +60,9 @@ rule fastp:
         LOGS + "/fastp/{sample}.log"
     resources:
         tmpdir=TEMP,
-        cpus_per_task=lambda wildcards, threads: threads
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb= lambda wildcards,attempt: config['fastp']['mem_mb'] * attempt,
+        runtime= lambda wildcards,attempt: config['fastp']['runtime'] * attempt
     benchmark:
         repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat_trim"])
     script:
