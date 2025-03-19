@@ -20,13 +20,6 @@ if snakemake.params['args']:
     command += f" {snakemake.params['args']}"
 command += f" --outStd BAM"
 command += f" > {snakemake.output[0]}"
+command += f"\nsamtools addreplacerg -r 'ID:{snakemake.wildcards['sample']}\\tSM:{snakemake.wildcards['sample']}'"
+
 shell(f"({command}) {log}")
-
-
-
-"""
-exec > {log} 2>&1
-uuid=$(python3 -c "import uuid; print(uuid.uuid4())")
-STAR --outTmpDir "{resources.tmpdir}/STAR-${{uuid}}" --outFileNamePrefix {params.output_path}/{wildcards.sample}_ --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} --outStd SAM | samtools sort -@ {threads} -o {output} -
-"""
-
