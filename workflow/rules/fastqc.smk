@@ -10,13 +10,14 @@ rule fastqc:
     conda:
         "../envs/fastqc.yml"
     log:
-        config['logs_path'] + "/fastqc/{tool}/{sample}.log",
+        LOGS + "/fastqc/{tool}/{sample}.log",
     threads:
         int(config["fastqc"]["threads"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
-        mem_mb = int(config["fastqc"]["mem_mb"])
+        mem_mb = lambda wildcards, attempt: int(config["fastqc"]["mem_mb"]) * attempt,
+        runtime = lambda wildcards,attempt: 20 * attempt,
     shell:
         """
         exec > {log} 2>&1
