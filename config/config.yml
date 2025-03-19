@@ -118,13 +118,15 @@ star:
 # Utils config
 gzip:
   args: ""
-samtools-index:
-  threads: 4
 MarkDuplicates:
   args: ""
+  mem_mb: 8000
+  runtime: 60
 markdup:
   args: "-s"
   threads: 12
+  mem_mb: 8000
+  runtime: 60
 
 # Peak calling config
 macs3:

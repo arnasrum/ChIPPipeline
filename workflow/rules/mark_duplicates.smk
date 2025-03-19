@@ -15,7 +15,10 @@ rule picard_MarkDuplicates:
     benchmark:
         repeat(BENCHMARKS + "/MarkDuplicates/{sample}.txt", config["benchmark_repeat_duplicate"])
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_thread= lambda wildcards,threads: threads,
+        mem_mb= lambda wildcards,attempt: config["MarkDuplicates"]["mem_mb"] * attempt,
+        runtime= lambda wildcards,attempt: config["MarkDuplicates"]["runtime"] * attempt,
     shell:
         """
         exec > {log} 2>&1
@@ -29,7 +32,8 @@ rule samtools_markdup:
         f"{RESULTS}/{config['aligner']}/{{sample}}.bam"
     output:
         marked = RESULTS + "/markdup/{sample}.bam",
-        index = RESULTS + "/markdup/{sample}.bam.bai"
+        index = RESULTS + "/markdup/{sample}.bam.bai",
+        stats = RESULTS + "/markdup/{sample}_stats.txt"
     conda:
         "../envs/utils.yml"
     params:
@@ -43,15 +47,17 @@ rule samtools_markdup:
         repeat(BENCHMARKS + "/markdup/{sample}.txt", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP,
-        cpus_per_thread=lambda wildcards, threads: threads
+        cpus_per_thread=lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: config["markdup"]["mem_mb"] * attempt,
+        runtime = lambda wildcards,attempt: config["markdup"]["runtime"] * attempt,
     shell:
         """
         exec > {log} 2>&1
         mkdir -p {params.path} 
         uuid=$(python3 -c "import uuid; print(uuid.uuid4())")
-        samtools collate -O -T {resources.tmpdir}/${{uuid}}_collate {input} \
-            | samtools fixmate -@ {threads} -m - - \
+        samtools collate -@ {threads} -u -O -T {resources.tmpdir}/${{uuid}}_collate {input} \
+            | samtools fixmate -@ {threads} -u -m - - \
             | samtools sort -T {resources.tmpdir}/${{uuid}}_sort -@ {threads} - -u \
-            | samtools markdup {params.args} -T {resources.tmpdir}/${{uuid}}_markdup -@ {threads} - {output.marked}
+            | samtools markdup {params.args} -f {output.stats} -T {resources.tmpdir}/${{uuid}}_markdup -@ {threads} - {output.marked}
         samtools index -@ {threads} {output.marked} {output.index}
         """
