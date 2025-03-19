@@ -9,7 +9,7 @@ command = "STAR"
 
 uuid = str(uuid4())
 command += f" --outTmpDir {snakemake.resources['tmpdir']}/{uuid}"
-output_path = path.dirname(snakemake.output[0]) + snakemake.wildcards['sample'] + "_"
+output_path = path.dirname(snakemake.output[0]) + f"/{snakemake.wildcards['sample']}_"
 command += f" --outFileNamePrefix {output_path}"
 command += f" --readFilesType Fastx"
 command += f" --runThreadN {snakemake.threads}"
@@ -18,8 +18,8 @@ command += f" --genomeDir {genome_dir}"
 command += f" --readFilesIn {snakemake.input['reads']}"
 if snakemake.params['args']:
     command += f" {snakemake.params['args']}"
-command += f" --outStd BAM"
-command += f" > {snakemake.output[0]}"
-command += f"\nsamtools addreplacerg -r 'ID:{snakemake.wildcards['sample']}\\tSM:{snakemake.wildcards['sample']}'"
+command += f" --outSAMtype SAM"
+command += f" --outSAMattrRGline ID:{snakemake.wildcards['sample']} SM:{snakemake.wildcards['sample']}"
+command += f"\nmv {snakemake.output[0].replace('.bam', '')}_Aligned.out.bam {snakemake.output[0]}"
 
 shell(f"({command}) {log}")
