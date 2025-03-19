@@ -82,10 +82,7 @@ rule bwa_mem:
     conda:
         "../envs/align.yml"
     params:
-        genome = lambda wildcards: sfs.get_sample_genome(wildcards.sample),
         args = config["bwa_mem"]["args"],
-        index_path= lambda wildcards, input: f"{os.path.commonpath(input.genome_index)}/{sfs.get_sample_genome(wildcards.sample)}",
-        read_group= '@RG\tID:{sample}\tSM:{sample}'
     threads:
         int(config['bwa_mem']['threads'])
     log:
@@ -97,11 +94,8 @@ rule bwa_mem:
         cpus_per_task= lambda wildcards, threads: threads,
         mem_mb= lambda wildcards,attempt: config['bwa_mem']['mem_mb'] * attempt,
         runtime= lambda wildcards,attempt: config['bwa_mem']['runtime'] * attempt
-    shell:
-        """
-        exec > {log} 2>&1
-        bwa mem -t {threads} {params.args} {params.index_path} {input.reads} | samtools sort -@ {threads} -o {output} -
-        """
+    script:
+        "../scripts/tools/bwa-mem.py"
 
 rule build_bwa2_index:
     input:
@@ -139,7 +133,6 @@ rule bwa_mem2:
         "../envs/align.yml"
     params:
         args = config["bwa_mem2"]["args"],
-        read_group= '@RG\tID:{sample}\tSM:{sample}'
     threads:
         int(config['bwa_mem2']['threads'])
     log:

@@ -4,7 +4,7 @@ from os import path
 
 log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 
-command = "bwa-mem2 mem"
+command = "bwa mem"
 command += f" -t {snakemake.threads}"
 if snakemake.params['args']:
     command += f" {snakemake.params['args']}"
