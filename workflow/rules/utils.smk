@@ -1,10 +1,20 @@
 rule unzip_genome:
     input:
-        RESOURCES + "/genomes/{genome}.gz"
+        f"{RESOURCES}/genomes/{{genome}}.gz"
     output:
-        RESOURCES + "/genomes/{genome}"
-    wildcard_constraints:
-        genome = r"^(.*).(fa|fasta)$"
+        temp(f"{RESOURCES}/genomes/{{genome}}")
+    resources:
+        tmpdir=TEMP
+    params:
+        args = config["gzip"]["args"]
+    shell:
+        "gzip {params.args} -dkf {input}"
+
+rule unzip_sample:
+    input:
+        f"{RESULTS}/{config['trimmer']}/{{sample}}.gz"
+    output:
+        temp(f"{RESULTS}/{config['trimmer']}/{{sample}}")
     resources:
         tmpdir=TEMP
     params:
