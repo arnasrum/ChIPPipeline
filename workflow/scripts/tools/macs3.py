@@ -4,7 +4,7 @@ from os import path
 
 log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 
-out_dir = str(path.commonpath(snakemake.output))
+out_dir = str(path.dirname(snakemake.output[0]))
 
 command = "macs3 callpeak"
 if snakemake.params['args']:
@@ -23,8 +23,8 @@ if snakemake.input['control']:
 if snakemake.params['peak_type'] == "broad":
     command += " --broad"
     command += (f"\nmv {out_dir}/{snakemake.wildcards['sample']}_peaks.broadPeak " +
-     f"{out_dir}/{snakemake.wildcards['sample']}.bed")
+     f"{out_dir}/{snakemake.wildcards['sample']}_peaks.bed")
 if snakemake.params['peak_type'] == "narrow":
     command += (f"\nmv {out_dir}/{snakemake.wildcards['sample']}_peaks.narrowPeak " +
-                f"{out_dir}/{snakemake.wildcards['sample']}.bed")
+                f"{out_dir}/{snakemake.wildcards['sample']}_peaks.bed")
 shell(f"({command}) {log}")
