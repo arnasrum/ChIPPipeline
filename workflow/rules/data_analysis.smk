@@ -37,7 +37,9 @@ rule deeptools_computeMatrix:
         int(config["computeMatrix"]["threads"])
     resources:
         tmpdir=TEMP,
-        cpus_per_task= lambda wildcards,threads: threads
+        cpus_per_task= lambda wildcards,threads: threads,
+        mem_mb= lambda wildcards,attempt: 8000 * attempt,
+        runtime= lambda wildcards,attempt: 30 * attempt,
     shell:
         """
         mkdir -p {params.outdir}
@@ -127,7 +129,9 @@ rule homer_annotate_peaks:
         LOGS + "/homer/{group}_annotate.log"
     resources:
         tmpdir=TEMP,
-        cpus_per_task = lambda wildcards, threads: threads
+        cpus_per_task = lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: 8000 * attempt,
+        runtime = lambda wildcards, attempt: 30 * attempt,
     shell:
         '''
         exec > {log} 2>&1
@@ -153,7 +157,9 @@ rule homer_find_motifs_genome:
         LOGS + "/homer/{sample}_findMotifs.log"
     resources:
         tmpdir=TEMP,
-        cpus_per_task= lambda wildcards,threads: threads
+        cpus_per_task= lambda wildcards,threads: threads,
+        mem_mb= lambda wildcards,attempt: 8000 * attempt,
+        runtime= lambda wildcards,attempt: 30 * attempt,
     shell:
         '''
         exec > {log} 2>&1
