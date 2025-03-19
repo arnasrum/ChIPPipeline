@@ -1,10 +1,10 @@
 rule picard_MarkDuplicates:
     input:
         aligned = f"{RESULTS}/{config['aligner']}/{{sample}}.bam",
-        aligned_index = f"{RESULTS}/{config['aligner']}/{{sample}}.bam.bai",
     output:
         sorted = temp(RESULTS + "/MarkDuplicates/{sample}_sorted.bam"),
         marked = RESULTS + "/MarkDuplicates/{sample}.bam",
+        index = f"{RESULTS}/MarkDuplicates/{{sample}}.bam.bai",
         metrics = RESULTS + "/MarkDuplicates/{sample}.metrics.txt"
     params:
         args = config['MarkDuplicates']['args']
@@ -21,13 +21,15 @@ rule picard_MarkDuplicates:
         exec > {log} 2>&1
         picard SortSam --TMP_DIR {resources.tmpdir} -I {input.aligned} -O {output.sorted} --SO coordinate
         picard MarkDuplicates -ASO coordinate --TMP_DIR {resources.tmpdir} -I {output.sorted} -O {output.marked} -M {output.metrics} {params.args}
+        picard BuildBamIndex -I {output.marked} -O {output.index}
         """
 
 rule samtools_markdup:
     input:
         f"{RESULTS}/{config['aligner']}/{{sample}}.bam"
     output:
-        RESULTS + "/markdup/{sample}.bam",
+        marked = RESULTS + "/markdup/{sample}.bam",
+        index = RESULTS + "/markdup/{sample}.bam.bai"
     conda:
         "../envs/utils.yml"
     params:
@@ -50,5 +52,6 @@ rule samtools_markdup:
         samtools collate -O -T {resources.tmpdir}/${{uuid}}_collate {input} \
             | samtools fixmate -@ {threads} -m - - \
             | samtools sort -T {resources.tmpdir}/${{uuid}}_sort -@ {threads} - -u \
-            | samtools markdup {params.args} -T {resources.tmpdir}/${{uuid}}_markdup -@ {threads} - {output}
+            | samtools markdup {params.args} -T {resources.tmpdir}/${{uuid}}_markdup -@ {threads} - {output.marked}
+        samtools index -@ {threads} {output.marked} {output.index}
         """

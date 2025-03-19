@@ -12,7 +12,7 @@ rule deeptools_bamCoverage:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards,threads: threads
     threads:
-        12
+        1
     shell:
         """
         exec > {log} 2>&1
