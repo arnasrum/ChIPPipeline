@@ -175,7 +175,7 @@ rule build_STAR_index:
 rule STAR:
     input:
         genome_index = lambda wildcards: multiext(RESULTS + f"/star_index/{sfs.get_sample_genome(wildcards.sample)}/SA", "", "index"),
-        reads = lambda wildcards: alignment_input(wildcards.sample)
+        reads = lambda wildcards: [sample.replace(".gz", "") for sample in alignment_input(wildcards.sample)]
     output:
         temp(RESULTS + "/STAR/{sample}.bam")
     conda:
@@ -193,9 +193,5 @@ rule STAR:
         repeat(BENCHMARKS + "/STAR/{sample}.txt", config["benchmark_repeat_align"])
     resources:
         tmpdir=TEMP
-    shell:
-        """
-        exec > {log} 2>&1
-        uuid=$(python3 -c "import uuid; print(uuid.uuid4())")
-        STAR --outTmpDir "{resources.tmpdir}/STAR-${{uuid}}" --outFileNamePrefix {params.output_path}/{wildcards.sample}_ --readFilesType Fastx --runThreadN {threads} --genomeDir {params.index_path} --readFilesIn {input.reads} {params.args} --outStd SAM | samtools sort -@ {threads} -o {output} -
-        """
+    script:
+        "../scripts/tools/star.py"
