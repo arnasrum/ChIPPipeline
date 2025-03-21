@@ -8,11 +8,13 @@ rule deeptools_bamCoverage:
         "../envs/data_analysis.yml"
     log:
         LOGS + "/bamCoverage/{sample}.log"
+    threads:
+        int(config['bamCoverage']['threads'])
     resources:
         tmpdir=TEMP,
-        cpus_per_task= lambda wildcards,threads: threads
-    threads:
-        1
+        cpus_per_task= lambda wildcards,threads: threads,
+        mem_mb= lambda wildcards,attempt: int(config['bamCoverage']['mem_mb']) * attempt,
+        runtime= lambda wildcards,attempt: int(config['bamCoverage']['runtime']) * attempt,
     shell:
         """
         exec > {log} 2>&1
@@ -37,9 +39,9 @@ rule deeptools_computeMatrix:
         int(config["computeMatrix"]["threads"])
     resources:
         tmpdir=TEMP,
-        cpus_per_task= lambda wildcards,threads: threads,
-        mem_mb= lambda wildcards,attempt: 8000 * attempt,
-        runtime= lambda wildcards,attempt: 30 * attempt,
+        cpus_per_task= lambda wildcards, threads: threads,
+        mem_mb= lambda wildcards, attempt: int(config['computeMatrix']['mem_mb']) * attempt,
+        runtime= lambda wildcards, attempt: int(config['computeMatrix']['runtime']) * attempt,
     shell:
         """
         mkdir -p {params.outdir}

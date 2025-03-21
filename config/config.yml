@@ -74,8 +74,8 @@ trimmomatic:
   threads: 12
   runtime: 60
   mem_mb: 8000
-# Aligner config
 
+# Aligner config
 bowtie2-build:
   args: ""
   threads: 25
@@ -131,6 +131,7 @@ markdup:
 # Peak calling config
 macs3:
   args: ""
+
 pyGenomeTracks:
   args: ""
   # Comma seperated options will be appended the track files
@@ -140,7 +141,13 @@ pyGenomeTracks:
 # Deeptools computeMatrix args used for plot_heat_map and plot_profile
 computeMatrix:
   threads: 12
+  mem_mb: 8000
+  runtime: 30
   args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
+bamCoverage:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
 
 homer:
   threads: 12
