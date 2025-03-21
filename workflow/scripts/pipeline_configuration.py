@@ -20,17 +20,26 @@ class PipelineConfiguration:
         self.json_path = config["json_path"]
         self.config = config
 
-    def __verify_config(self):
+    def __validate_config_arguments(self):
+        char_whitelist = re.compile(r"[a-zA-Z0-9,._:\s\"\'\-]")
+        injectable_options = ["args", "run_options"]
+        for tool in self.config:
+            for key in injectable_options:
+                if isinstance(self.config[tool], dict) and key in self.config[tool].keys() and self.config[tool][key]:
+                    if next(filter(lambda char: not re.match(char_whitelist, char), self.config[tool][key]), None):
+                        raise InputException(f"The configuration argument; {tool} {key}, contains invalid characters.")
+
+    def __validate_config(self):
         config = self.config
-        if config["genome"] == "" or config["genome"] is None:
-            raise InputException("Please specify a genome in the configuration file.")
         # Verify boolean arguments
         boolean_keys = ["paired_end", "generate_fastqc_reports"]
         for key in boolean_keys:
             if not (str(config[key]).lower() == "true" or str(config[key]).lower() == "false"):
                 raise InputException(f"The configuration argument; {key}, must be true or false.")
+        self.__validate_config_arguments()
 
-    def __verify_sample_sheet(self):
+
+    def __validate_sample_sheet(self):
         with open(self.sample_sheet, "r") as file:
             sample_sheet = pd.read_csv(file, keep_default_na=False)
         for index, row in sample_sheet.iterrows():
@@ -53,8 +62,8 @@ class PipelineConfiguration:
                 raise InputException(f"Running pipeline in paired end mode, but only one read provided for row {index} in sample sheet.")
 
     def make_sample_info(self) -> dict[str:dict]:
-        self.__verify_sample_sheet()
-        self.__verify_config()
+        self.__validate_sample_sheet()
+        self.__validate_config()
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
@@ -72,7 +81,8 @@ class PipelineConfiguration:
             if row["file_path"]:
                 availability_type = "provided"
                 paths = row["file_path"].split(";")
-                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}_{row['genome'].split('/')[-1].split('.')[0]}".lstrip('_')
+                genome_name = row['genome'].split('/')[-1].split('.')[0]
+                sample = f"{row['mark']}_{row['sample']}_{row['type']}_rep{row['replicate']}_{genome_name}".lstrip('_')
                 if row["accession"]:
                     sample = f"{row['accession']}_{sample}"
                 sample_info[availability_type][sample] = {}
