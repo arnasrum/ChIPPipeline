@@ -149,7 +149,7 @@ rule homer_find_motifs_genome:
         "../envs/data_analysis.yml"
     params:
         outdir = RESULTS + "/homer",
-        genome = config['genome'],
+        genome = lambda wildcards: wildcards.sample.split("_")[-1],
         args = config["homer"]["args"]
     threads:
         int(config["homer"]["threads"])
