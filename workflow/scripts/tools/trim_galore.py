@@ -14,7 +14,7 @@ if len(snakemake.output) == 2:
     command += f"\nmv {snakemake.params.output_dir}/{snakemake.wildcards.sample}_val_1.fq.gz {snakemake.output[0]}"
     command += f"\nmv {snakemake.params.output_dir}/{snakemake.wildcards.sample}_val_2.fq.gz {snakemake.output[1]}"
 elif len(snakemake.output) == 1:
-    command += f"\nmv {snakemake.params.output_dir} / {snakemake.wildcards.sample}_trimmed.fq.gz {snakemake.output[0]}"
+    command += f"\nmv {snakemake.params.output_dir}/{snakemake.wildcards.sample}_trimmed.fq.gz {snakemake.output[0]}"
 else:
     raise Exception("Got unexpected number of output elements")
 
