@@ -68,3 +68,27 @@ rule fastp:
     script:
         "../scripts/tools/fastp.py"
 
+rule trimmomatic:
+    input:
+        samples = lambda wildcards: trimmer_input(wildcards.sample)
+    output:
+        temp(expand(RESULTS + "/trimmomatic/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
+    conda:
+        "../envs/trim.yml"
+    params:
+        args = config["trimmomatic"]["args"],
+        run_options = config['trimmomatic']['run_options']
+    threads:
+        int(config["trimmomatic"]["threads"])
+    log:
+        LOGS + "/trimmomatic/{sample}.log"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=config['trimmomatic']['mem_mb'],
+        runtime=config['trimmomatic']['runtime']
+    benchmark:
+        repeat(BENCHMARKS + "/trimmomatic/{sample}.txt", config["benchmark_repeat_trim"])
+    script:
+        "../scripts/tools/trimmomatic.py"
+
