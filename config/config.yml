@@ -82,27 +82,27 @@ bowtie2-build:
   mem_mb: 12000
   runtime: 200
 bowtie2:
-  args: "--very-sensitive"
+  args: ""
   threads: 25
   mem_mb: 16000
   runtime: 120
 bwa_mem_index:
   args: ""
-  mem_mb: 60000
+  mem_mb: 64000
   runtime: 200
 bwa_mem:
   args: "-v 1 -Y"
   threads: 25
-  mem_mb: 8000
+  mem_mb: 32000
   runtime: 120
 bwa_mem2_index:
   args: ""
-  mem_mb: 60000
+  mem_mb: 64000
   runtime: 200
 bwa_mem2:
   args: "-v 1 -Y"
   threads: 25
-  mem_mb: 8000
+  mem_mb: 32000
   runtime: 120
 star_index:
   args: ""
