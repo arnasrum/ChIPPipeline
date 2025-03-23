@@ -8,9 +8,9 @@ log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 read2 = None
 file_name = snakemake.wildcards['sample']
 output_path = os.path.dirname(snakemake.output[0])
-read_extensions = [".fastq"]
+read_extensions = [".fastq.gz"]
 if len(snakemake.input) == 2:
-    read_extensions = ["_1.fastq", "_2.fastq"]
+    read_extensions = ["_1.fastq.gz", "_2.fastq.gz"]
     read2 = snakemake.input[1]
 
 
