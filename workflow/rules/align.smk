@@ -17,6 +17,8 @@ rule build_bowtie2_index:
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb= lambda wildcards,attempt: config['bowtie2-build']['mem_mb'] * max(2 * (attempt - 1), 1),
+        runtime= lambda wildcards,attempt: config['bowtie2-build']['runtime'] * attempt
     shell:
         '''
         exec > {log} 2>&1
