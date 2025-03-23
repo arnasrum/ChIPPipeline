@@ -78,7 +78,7 @@ rule bwa_mem:
         reads = lambda wildcards: alignment_input(wildcards.sample),
         genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa-index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
     output:
-        temp(RESULTS + "/bwa-mem/{sample}.bam")
+        temp(RESULTS + "/bwa_mem/{sample}.bam")
     conda:
         "../envs/align.yml"
     params:
@@ -86,9 +86,9 @@ rule bwa_mem:
     threads:
         int(config['bwa_mem']['threads'])
     log:
-        LOGS + "/bwa-mem/{sample}.log"
+        LOGS + "/bwa_mem/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bwa-mem/{sample}.txt", int(config["benchmark_repeat_align"]))
+        repeat(BENCHMARKS + "/bwa_mem/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
@@ -101,17 +101,17 @@ rule build_bwa2_index:
     input:
         f"{RESOURCES}/genomes/{{genome}}.fa.gz"
     output:
-        multiext(f"{RESULTS}/bwa2-index/{{genome}}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
+        multiext(f"{RESULTS}/bwa2_index/{{genome}}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
     conda:
         "../envs/align.yml"
     params:
-        index_path = f"{RESULTS}/bwa2-index/{{genome}}",
-        dir = f"{RESULTS}/bwa-index/",
+        index_path = f"{RESULTS}/bwa2_index/{{genome}}",
+        dir = f"{RESULTS}/bwa2_index/",
         args = config["bwa_mem2_index"]["args"]
     log:
-        f"{LOGS}/bwa2-index/{{genome}}.log"
+        f"{LOGS}/bwa2_index/{{genome}}.log"
     benchmark:
-        f"{BENCHMARKS}/bwa2-index/{{genome}}.txt"
+        f"{BENCHMARKS}/bwa2_index/{{genome}}.txt"
     resources:
         tmpdir=TEMP,
         mem_mb= lambda wildcards,attempt: config['bwa_mem2_index']['mem_mb'] * attempt,
@@ -126,9 +126,9 @@ rule build_bwa2_index:
 rule bwa_mem2:
     input:
         reads = lambda wildcards: alignment_input(wildcards.sample),
-        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa2-index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
+        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa2_index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
     output:
-        temp(RESULTS + "/bwa-mem2/{sample}.bam")
+        temp(RESULTS + "/bwa_mem2/{sample}.bam")
     conda:
         "../envs/align.yml"
     params:
@@ -136,9 +136,9 @@ rule bwa_mem2:
     threads:
         int(config['bwa_mem2']['threads'])
     log:
-        LOGS + "/bwa-mem2/{sample}.log"
+        LOGS + "/bwa_mem2/{sample}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bwa-mem2/{sample}.txt", int(config["benchmark_repeat_align"]))
+        repeat(BENCHMARKS + "/bwa_mem2/{sample}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
