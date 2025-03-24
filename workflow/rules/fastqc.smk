@@ -1,9 +1,32 @@
-rule fastqc:
+rule fastqc_unprocessed:
     input:
         raw = RESOURCES + "/reads/{sample}.fastq.gz",
+    output:
+        raw = multiext(RESULTS + "/fastqc/unprocessed/{sample}_fastqc.", "zip", "html"),
+    params:
+        outputPath = lambda wildcards: f"{RESULTS}/fastqc/unprocessed"
+    conda:
+        "../envs/fastqc.yml"
+    log:
+        LOGS + "/fastqc/{sample}.log",
+    threads:
+        int(config["fastqc"]["threads"])
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: int(config["fastqc"]["mem_mb"]) * attempt,
+        runtime = lambda wildcards,attempt: 20 * attempt,
+    shell:
+        """
+        exec > {log} 2>&1
+        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath} {input.raw} 
+        """
+
+rule fastqc_trimmed:
+    input:
         trimmed = RESULTS + "/{tool}/{sample}.fastq.gz",
     output:
-        raw = multiext(RESULTS + "/fastqc/{tool}/raw/{sample}_fastqc.", "zip", "html"),
+        raw = multiext(RESULTS + "/fastqc/{tool}/unprocessed/{sample}_fastqc.", "zip", "html"),
         trimmed = multiext(RESULTS + "/fastqc/{tool}/trimmed/{sample}_fastqc.","zip","html")
     params:
         outputPath = lambda wildcards: f"{RESULTS}/fastqc/{wildcards.tool}"
@@ -21,9 +44,5 @@ rule fastqc:
     shell:
         """
         exec > {log} 2>&1
-        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath}/raw --memory {resources.mem_mb} {input.raw} 
-        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath}/trimmed --memory {resources.mem_mb} {input} 
+        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath} {input.trimmed} 
         """
-
-
-
