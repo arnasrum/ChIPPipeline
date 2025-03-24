@@ -87,7 +87,7 @@ def get_all_input(config):
 def get_fastqc_output() -> list[str]:
     file_names = sfs.get_all_file_names()
     file_paths_raw = [f"{RESULTS}/fastqc/unprocessed/{file_name}" for file_name in file_names]
-    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/trimmed/{file_name}" for file_name in file_names]
+    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}" for file_name in file_names]
 
     single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
     paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]

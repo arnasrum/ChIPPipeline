@@ -26,8 +26,7 @@ rule fastqc_trimmed:
     input:
         trimmed = RESULTS + "/{tool}/{sample}.fastq.gz",
     output:
-        raw = multiext(RESULTS + "/fastqc/{tool}/unprocessed/{sample}_fastqc.", "zip", "html"),
-        trimmed = multiext(RESULTS + "/fastqc/{tool}/trimmed/{sample}_fastqc.","zip","html")
+        trimmed = multiext(RESULTS + "/fastqc/{tool}/{sample}_fastqc.","zip","html")
     params:
         outputPath = lambda wildcards: f"{RESULTS}/fastqc/{wildcards.tool}"
     conda:
