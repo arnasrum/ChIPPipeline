@@ -18,7 +18,7 @@ command += f" --genomeDir {genome_dir}"
 command += f" --readFilesIn {snakemake.input['reads']}"
 if snakemake.params['args']:
     command += f" {snakemake.params['args']}"
-command += f" --outSAMtype SAM"
+command += f" --outSAMtype BAM Unsorted"
 command += f" --outSAMattrRGline ID:{snakemake.wildcards['sample']} SM:{snakemake.wildcards['sample']}"
 command += f"\nmv {snakemake.output[0].replace('.bam', '')}_Aligned.out.bam {snakemake.output[0]}"
 
