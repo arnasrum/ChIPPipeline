@@ -3,6 +3,7 @@ latency-wait: 60
 conda-frontend: conda
 use-conda: True
 rerun-incomplete: True
+retries: 3
 
 default-resources:
   slurm_account: "Insert account here"
