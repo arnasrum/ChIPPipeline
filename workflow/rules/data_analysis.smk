@@ -83,7 +83,7 @@ rule plot_genome_track:
         tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_tracks.ini"),
         plot = RESULTS + "/pyGenomeTracks/{sample}.png"
     params:
-        region = config["plot_regions"],
+        region = config["plot_region"],
         args = config["pyGenomeTracks"]["args"],
         peak_type = lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
         bigwig_options = config["pyGenomeTracks"]["bigwig_options"],

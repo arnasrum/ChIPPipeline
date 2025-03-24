@@ -3,7 +3,7 @@
 # String to overwrite which tools are to be run
 modules: ""
 # Choose trimmer
-trimmer: "trim_galore"
+trimmer: "fastp"
 # Choose alginer
 aligner: "bowtie2"
 # Choose tool to process duplicates
@@ -11,12 +11,10 @@ duplicate_processor: "markdup"
 peak_caller: "macs3"
 
 # Genome to be used to peak call and align
-genome: "mm10"
-
 generate_fastqc_reports: True
 
 # Plotting region for peaks plotted by pyGenomeTracks
-plot_regions: "chr1:14,000,000-15,000,000"
+plot_region: "chr1:14,000,000-15,000,000"
 
 # Defined reads in sample sheet are paired end
 paired_end: True
@@ -116,8 +114,6 @@ star:
   runtime: 120
 
 # Utils config
-gzip:
-  args: ""
 MarkDuplicates:
   args: ""
   mem_mb: 8000
@@ -127,17 +123,11 @@ markdup:
   threads: 12
   mem_mb: 8000
   runtime: 60
-
 # Peak calling config
 macs3:
+  mem_mb: 8000
+  runtime: 30
   args: ""
-
-pyGenomeTracks:
-  args: ""
-  # Comma seperated options will be appended the track files
-  bigwig_options: "max_value = 6"
-  bed_options: ""
-
 # Deeptools computeMatrix args used for plot_heat_map and plot_profile
 computeMatrix:
   threads: 12
@@ -148,6 +138,11 @@ bamCoverage:
   threads: 12
   mem_mb: 8000
   runtime: 30
+pyGenomeTracks:
+  args: ""
+  # Comma seperated options will be appended the track files
+  bigwig_options: "max_value = 6"
+  bed_options: ""
 
 homer:
   threads: 12

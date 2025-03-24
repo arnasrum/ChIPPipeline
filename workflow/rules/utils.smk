@@ -5,8 +5,6 @@ rule unzip_genome:
         temp(f"{RESOURCES}/genomes/{{genome}}")
     resources:
         tmpdir=TEMP
-    params:
-        args = config["gzip"]["args"]
     shell:
         "gzip {params.args} -dkf {input}"
 
@@ -17,8 +15,6 @@ rule unzip_sample:
         temp(f"{RESULTS}/{config['trimmer']}/{{sample}}")
     resources:
         tmpdir=TEMP
-    params:
-        args = config["gzip"]["args"]
     shell:
         "gzip {params.args} -dkf {input}"
 

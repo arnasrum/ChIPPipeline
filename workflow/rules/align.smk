@@ -1,4 +1,4 @@
-rule build_bowtie2_index:
+rule bowtie2_build:
     input:
         f"{RESOURCES}/genomes/{{genome}}.fa.gz"
     output:
@@ -49,21 +49,21 @@ rule bowtie2:
     script:
         "../scripts/tools/bowtie2.py"
 
-rule build_bwa_index:
+rule bwa_index:
     input:
         f"{RESOURCES}/genomes/{{genome}}.fa.gz"
     output: 
-        multiext(f"{RESULTS}/bwa-index/{{genome}}.", "amb", "ann", "pac", "sa", "bwt")
+        multiext(f"{RESULTS}/bwa_index/{{genome}}.", "amb", "ann", "pac", "sa", "bwt")
     conda:
         "../envs/align.yml"
     params:
-        index_path = f"{RESULTS}/bwa-index/{{genome}}",
-        dir = f"{RESULTS}/bwa-index/",
+        index_path = f"{RESULTS}/bwa_index/{{genome}}",
+        dir = f"{RESULTS}/bwa_index/",
         args = config["bwa_mem_index"]["args"]
     log:
-        f"{LOGS}/bwa-index/{{genome}}.log"
+        f"{LOGS}/bwa_index/{{genome}}.log"
     benchmark:
-        f"{BENCHMARKS}/bwa-index/{{genome}}.txt"
+        f"{BENCHMARKS}/bwa_index/{{genome}}.txt"
     resources:
         tmpdir=TEMP,
         mem_mb= lambda wildcards,attempt: config['bwa_mem_index']['mem_mb'] * attempt,
@@ -78,7 +78,7 @@ rule build_bwa_index:
 rule bwa_mem:
     input:
         reads = lambda wildcards: alignment_input(wildcards.sample),
-        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa-index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
+        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa_index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
     output:
         temp(RESULTS + "/bwa_mem/{sample}.bam")
     conda:
@@ -99,7 +99,7 @@ rule bwa_mem:
     script:
         "../scripts/tools/bwa-mem.py"
 
-rule build_bwa2_index:
+rule bwa_mem2_index:
     input:
         f"{RESOURCES}/genomes/{{genome}}.fa.gz"
     output:
@@ -149,7 +149,7 @@ rule bwa_mem2:
     script:
         "../scripts/tools/bwa-mem2.py"
 
-rule build_STAR_index:
+rule star_index:
     input:
         f"{RESOURCES}/genomes/{{genome}}.fa"
     output:

@@ -14,6 +14,9 @@ rule macs3:
     benchmark:
         BENCHMARKS + "/macs3/{sample}.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_thread = lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: config['macs3']['mem_mb'] * attempt,
+        runtime = lambda wildcards,attempt: config['macs3']['runtime'] * attempt
     script:
         "../scripts/tools/macs3.py"
