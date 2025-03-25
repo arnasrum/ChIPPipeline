@@ -80,7 +80,7 @@ rule bwa_mem:
         reads = lambda wildcards: alignment_input(wildcards.sample),
         genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa_index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
     output:
-        temp(RESULTS + "/bwa_mem/{sample}.bam")
+        RESULTS + "/bwa_mem/{sample}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -130,7 +130,7 @@ rule bwa_mem2:
         reads = lambda wildcards: alignment_input(wildcards.sample),
         genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa2_index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
     output:
-        temp(RESULTS + "/bwa_mem2/{sample}.bam")
+        RESULTS + "/bwa_mem2/{sample}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -179,7 +179,7 @@ rule STAR:
         genome_index = lambda wildcards: multiext(RESULTS + f"/star_index/{sfs.get_sample_genome(wildcards.sample)}/SA", "", "index"),
         reads = lambda wildcards: [sample.replace(".gz", "") for sample in alignment_input(wildcards.sample)]
     output:
-        temp(RESULTS + "/STAR/{sample}.bam")
+        RESULTS + "/STAR/{sample}.bam"
     conda:
         "../envs/align.yml"
     threads:
