@@ -56,7 +56,9 @@ rule deeptools_plotHeatMap:
     conda:
         "../envs/data_analysis.yml"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        runtime= lambda wildcards,attempt: config['plotHeatMap']['runtime'] * attempt,
+        mem_mb= lambda wildcards,attempt: config['plotHeatMap']['mem_mb'] * attempt,
     shell:
         """
         plotHeatmap -m {input} -o {output}
@@ -69,7 +71,9 @@ rule deeptools_plotProfile:
     conda:
         "../envs/data_analysis.yml"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        runtime = lambda wildcards, attempt: config['plotProfile']['runtime'] * attempt,
+        mem_mb = lambda  wildcards, attempt: config['plotProfile']['mem_mb'] * attempt,
     shell:
         """
         plotProfile -m {input} -o {output}
