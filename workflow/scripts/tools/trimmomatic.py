@@ -33,9 +33,14 @@ if read2:
     command += f" {output_path}/{file_name}{read_extensions[1]}"
     unpaired2 = f"{output_path}/{file_name}_unpaired{read_extensions[1]}"
     command += f" {unpaired2}"
-command += f" {snakemake.params.run_options}"
+if snakemake.params['run_options']:
+    command += f" {snakemake.params.run_options}"
+elif read2:
+    command += f" ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
+else:
+    command += f" ILLUMINACLIP:TruSeq3-SE:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
 if read2:
-    command += f"\nrm {unpaired1}"
-    command += f"\nrm {unpaired2}"
+    command += f"&& rm {unpaired1}"
+    command += f"&& rm {unpaired2}"
 
 shell(f"({command}) {log}")
