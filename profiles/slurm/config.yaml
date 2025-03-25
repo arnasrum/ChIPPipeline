@@ -11,15 +11,3 @@ default-resources:
   runtime: 120
   mem_mb: 512
   cpus_per_task: 1
-
-set-resources:
-  trim:
-    mem_mb: 16000
-  fastqc:
-    mem_mb: 3000
-  build_index:
-    mem_mb: 64000
-  align:
-    mem_mb: 6000
-  samtools_markdup:
-    mem_mb: 8000
