@@ -58,7 +58,7 @@ class PipelineConfiguration:
                 for file in row["file_path"].split(";"):
                     if not os.path.isfile(file):
                         raise InputException(f"Provided file: {file}, in row {index}, does not exist.")
-            if row["file_path"] and self.is_paired_end() and len(row["file_path"].split(";")) == 1:
+            if row["file_path"] and str(row["paired_end"]).lower() == 'true' and len(row["file_path"].split(";")) == 1:
                 raise InputException(f"Running pipeline in paired end mode, but only one read provided for row {index} in sample sheet.")
 
     def make_sample_info(self) -> dict[str:dict]:
@@ -67,7 +67,6 @@ class PipelineConfiguration:
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
-        #print(f"sample_sheet: {self.sample_sheet}")
         with open(self.sample_sheet, "r") as file:
             sample_sheet = pd.read_csv(file, keep_default_na=False)
         for index, row in sample_sheet.iterrows():
@@ -101,6 +100,7 @@ class PipelineConfiguration:
                 "mark": row["mark"],
                 "peak_type": row["peak_type"],
                 "genome": row["genome"],
+                "paired_end": str(row["paired_end"]).lower(),
             })
         # Handle publicly available files
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
@@ -115,8 +115,8 @@ class PipelineConfiguration:
         self.sample_info = sample_info
         return sample_info
 
-    def is_paired_end(self) -> bool:
-        return str(self.paired_end).lower() == "true"
+    def is_paired_end(self, file_name: str) -> bool:
+        return self.get_sample_entry_by_file_name(file_name)["paired_end"] in ["true", "yes", "y", "t"]
 
     def check_diff(self) -> bool:
         samples_csv = open(self.sample_sheet)

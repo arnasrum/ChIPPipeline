@@ -16,8 +16,8 @@ LOGS = config['logs_path']
 BENCHMARKS = config['benchmarks_path']
 TEMP = config['temp_path']
 
-fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if sfs.is_paired_end() else [".fastq.gz"]
 def trimmer_input(sample: str) -> list[str]:
+    fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if sfs.is_paired_end(sample) else [".fastq.gz"]
     return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
 def reference_genome_input(genome: str):
@@ -26,6 +26,7 @@ def reference_genome_input(genome: str):
     return next(valid, "")
 
 def alignment_input(file_name: str) -> list[str]:
+    fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if sfs.is_paired_end(file_name) else [".fastq.gz"]
     return [f"{RESULTS}/{config["trimmer"]}/{file_name}{extension}" for extension in fastq_file_extensions]
 
 def peak_calling_input(sample: str) -> dict[str, list[str]]:
@@ -50,7 +51,8 @@ def symlink_input(file_name: str) -> None:
     samples = sfs.sample_info["provided"]
     return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
-def concatenate_runs_input(runs, extensions):
+def concatenate_runs_input(runs: list[str], file_name: str) -> list[str]:
+    extensions = ["_1", "_2"] if sfs.is_paired_end(file_name) else []
     return [
         RESOURCES + f"/reads/{run}{extension}.fastq"
         for extension in extensions
@@ -67,7 +69,8 @@ def get_all_input(config):
     input_files = []
     path = config["results_path"]
     if str(config['generate_fastqc_reports']).lower() == "true":
-        input_files += get_fastqc_output()
+        for file_name in sfs.get_all_file_names():
+            input_files += get_fastqc_output(file_name)
     for treatment_file in sfs.get_treatment_files():
         if sfs.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "narrow":
             input_files += [f"{path}/pyGenomeTracks/{treatment_file}.png"]
@@ -84,14 +87,13 @@ def get_all_input(config):
             input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
 
-def get_fastqc_output() -> list[str]:
-    file_names = sfs.get_all_file_names()
-    file_paths_raw = [f"{RESULTS}/fastqc/unprocessed/{file_name}" for file_name in file_names]
-    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}" for file_name in file_names]
+def get_fastqc_output(file_name: str) -> list[str]:
+    file_paths_raw = [f"{RESULTS}/fastqc/unprocessed/{file_name}"]
+    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}"]
 
     single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
     paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
-    extensions = paired_end_extensions if sfs.is_paired_end() else single_end_extensions
+    extensions = paired_end_extensions if sfs.is_paired_end(file_name) else single_end_extensions
     output_files = [
         f"{path}{extension}"
         for path in file_paths_raw + file_paths_trimmed
