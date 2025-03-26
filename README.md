@@ -13,17 +13,17 @@ Installation of conda and snakemake is required to run the pipeline.
 
 Install conda by following the instructions provided by the official conda [documentation](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)
 
-Then install snakemake by running:
+Then install the environment by running:
 
-`conda create snakemake -n snakemake -c conda-forge -c bioconda`
+`conda evn create --file environment.yml -p <path>`
 
-Activate the environment and start using the pipeline:
+or: 
 
-`conda activate snakemake`
+`conda evn create --file environment.yml -n pipeline`
 
-Inside the git repository run:
+Activate the environment and start using the pipeline by running inside the git repository:
 
-`snakemake -c <num_cores> -j <num_jobs> -C <config_options>`
+`snakemake -c <num_cores> -C <config_options>`
 
 ## Apptainer/Singularity
 
@@ -41,12 +41,18 @@ Run the pipeline by running the following commands inside the git repository:
 
 or more explicitly
 
-`apptainer exec container.sif snakemake --sdm conda --conda-frontend conda -c <num_cores> -j <num_jobs> -C <config_options>`
+`apptainer exec container.sif snakemake -c <num_cores> -j <num_jobs> -C <config_options>`
 
 N.B. remember to bind the working directory if it is outside the home directory.
 
 
 ### Running on HPC
+
+If conda is available on your HPC create the environment and run:
+
+`snakemake --jobs <num> --profile profiles/slurm`
+
+If conda is not available use containers.
 
 Pull the container from Dockerhub using Apptainer/Singularity.
 
@@ -67,36 +73,50 @@ Then you can submit the pipeline to the workload manager, e.g. using Slurm
     <th>Column</th>
     <th>Description</th>
     <th>Required</th>
+    <th>Valid Values</th>
     <tr>
         <td>Mark</td>
         <td>Identifier for transcription factor or histone mark for treatment file.</td>
         <td>Yes, only for treatment samples. Leave blank for control samples.</td>
+        <td>String</td>
     </tr>
     <tr>
         <td>Sample</td>
         <td>The biological sample or condition the sequences were derived from.</td>
         <td>Yes, used for associating samples with corresponding sample origin.</td>
+        <td>String</td>
     </tr>
     <tr>
         <td>Type</td>
         <td>Specifies whether the sample is treatment or control.</td> 
         <td>Yes</td>
+        <td>treatment/control</td>
     </tr>
     <tr>
         <td>Peak_type</td>
         <td>Must be narrow/broad, decides if the peak caller will treat the sample as narrow or broad peaks.</td>
         <td>Yes, for treatment files. Can be omitted for control files.</td>
+        <td>narrow/broad</td>
     </tr>
     <tr>
         <td>Accession</td>
         <td>GEO accession number for publicly available samples, used to download the sample from GEO if a local file path is not specified. If file_path is specified, this column serves as a prefix for the filename.</td>
         <td>Yes; if file_path is not defined.</td>
+        <td>String</td>
     </tr>    
+    <tr>
+        <td>Genome</td>
+        <td>The genome that the sample will the aligned to. Samples will also be separated by the genome they are aligned to.</td>
+        <td>Yes</td>
+        <td>Genome identifier or path to a FASTA or gzipped FASTA file named after the identifier. Example; hg19 or path/to/genome/hg19.fa.gz</td>
+    </tr>
     <tr>
         <td>File_path</td>
         <td>Paths to the reads sample reads. If paired_end is set to true, then two paths must be defined in the column by separating them with ";" character. Files without file_path specified will try </td>
-        <td>No, but necessary when using local files instead of downloaded GEO samples.</td>
+        <td>No, if not specified the pipeline will try to download the sample based on the GEO accession.</td>
+        <td>If paired_end is false; path/to/read.fq.gz. If paired_end is true: path/to/read1.fq.gz;path/to/read2.fq.gz </td>
     </tr>
+        
 
 </table>
 
@@ -109,7 +129,7 @@ Refer to the [configuration documentaion](docs/conf.md).
 
 Overwrite the default configuration by running:
 
-`snakemake -c <num> <rule> --config modules="--flag1 <value1> --flag2 <value2>"`
+`snakemake -c <num> <rule> --config modules="--flag1 <value1> -f <value2>"`
 
 ## Flags
 
@@ -117,5 +137,4 @@ Overwrite the default configuration by running:
 
 **-a** or **--align** overwrites the aligner
 
-**-g** or **--genome** sets the reference genome to be aligned to
 

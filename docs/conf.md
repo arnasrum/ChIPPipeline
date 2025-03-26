@@ -12,14 +12,6 @@ Or by editing the [configuration file](../config/config.yml) directly
 
 # Configuration Options
 
-## Required Configuration
-
-**genome**: Specifies the genome code which will be used for downloading the genome or provides the file path to the FASTA file, which can be gzipped. This is essential for aligning and calling peaks on the specified genome.
-
-**paired_end**: A boolean flag indicating whether the reads defined in the sample sheet are paired-end. This should be True if the sample sheet specifies paired-end samples.
-
-# Workflow Configuration
-
 ## General Configuration
 
 **outdir**: If specified will be used as the directory for all generated files. 
@@ -40,7 +32,7 @@ Or by editing the [configuration file](../config/config.yml) directly
 
 **peak_caller**: Dictates the tool for peak calling, with macs3 as the default option and only option for now.
 
-
+**args**: extra options that will be passed to the tools.
 
 
 
