@@ -40,22 +40,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-a", help="Bed input file")
     parser.add_argument("-b", help="Bigwig input file")
+    parser.add_argument("-o", help="Trackfile path file")
     parser.add_argument("-x", help="Max value of bigwig")
     args = parser.parse_args()
     options = {
         "bed": {"title": "Peaks"},
         "bigwig": {"title": "Bam Coverage"},
     }
-    make_tracks(args.infile, options)
-
-def test():
-    parser = argparse.ArgumentParser()
-    options = {
-        "bed": {"title": "test Peask"},
-        "bigwig": {"title": "Bam Coverage"},
-    }
-    make_tracks("tracks.ini", "bed.bed", "bigwig.bw", options)
-
-
-if __name__ == "__main__":
-    test()
+    make_tracks(args.o, args.a, args.b, options)
