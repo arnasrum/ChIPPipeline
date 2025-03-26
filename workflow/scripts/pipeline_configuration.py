@@ -148,18 +148,19 @@ class PipelineConfiguration:
         control_files: dict[str, dict[str, list[str]]] = {}
         for key, entry in self.__flatten_dict(self.sample_info).items():
             if entry['type'] != "control": continue
-            if not entry['sample'] in control_files:
-                control_files[entry['sample']] = {}
-            if not entry['replicate'] in control_files[entry['sample']]:
-                control_files[entry['sample']][entry['replicate']] = []
-            control_files[entry['sample']][entry['replicate']].append(entry['file_name'])
+            group_name = f"{entry['sample']}_{entry['genome']}"
+            if not group_name in control_files:
+                control_files[group_name] = {}
+            if not entry['replicate'] in control_files[group_name]:
+                control_files[group_name][entry['replicate']] = []
+            control_files[group_name][entry['replicate']].append(entry['file_name'])
         return control_files
 
     def get_control_files(self, treatment_file: str) -> list[str]:
         treatment_entry = next(filter(lambda entry: entry["file_name"] == treatment_file, self.__flatten_dict(self.sample_info).values()))
         if treatment_entry is None:
             raise Exception(f"File: {treatment_file}; does not exists in sample info")
-        sample = treatment_entry["sample"]
+        sample = f"{treatment_entry["sample"]}_{self.get_sample_genome(treatment_file)}"
         replicate = treatment_entry["replicate"]
         control_files = self.__group_control_files().get(sample, {}).get(replicate, [])
         return control_files
@@ -183,9 +184,6 @@ class PipelineConfiguration:
         else:
             return [entry['file_name'] for entry in filter(lambda entry: entry["type"] == "treatment", self.__flatten_dict(self.sample_info).values())]
 
-    def get_genome_code(self):
-        return self.config["genome"].split("/")[-1].split(".")[0]
-
     def get_sample_entry_by_file_name(self, file_name: str) -> dict:
         return next(filter(lambda entry: entry["file_name"] == file_name, self.__flatten_dict(self.sample_info).values()))
 
@@ -207,5 +205,4 @@ if __name__ == "__main__":
     file.close()
     sfs = PipelineConfiguration(config)
     sfs.make_sample_info()
-    #sfs.group_samples()
     sfs.get_control_files("GSM1871972_H3K4me3_8cell_treatment_rep1")
