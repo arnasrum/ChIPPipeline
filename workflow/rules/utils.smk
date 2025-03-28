@@ -3,6 +3,8 @@ rule unzip_genome:
         f"{RESOURCES}/genomes/{{genome}}.gz"
     output:
         temp(f"{RESOURCES}/genomes/{{genome}}")
+    wildcard_constraints:
+        genome = r"[.]*.(fastq|fa)"
     resources:
         tmpdir=TEMP
     shell:
@@ -13,6 +15,8 @@ rule unzip_sample:
         f"{RESULTS}/{config['trimmer']}/{{sample}}.gz"
     output:
         temp(f"{RESULTS}/{config['trimmer']}/{{sample}}")
+    wildcard_constraints:
+        sample = r"[.]*.fastq"
     resources:
         tmpdir=TEMP
     shell:
