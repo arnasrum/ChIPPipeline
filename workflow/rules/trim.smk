@@ -83,7 +83,7 @@ rule cutadapt_PE:
         temp(RESULTS + "/cutadapt/{sample}_1.fastq.gz"),
         temp(RESULTS + "/cutadapt/{sample}_2.fastq.gz"),
     conda:
-        "../envs/cutadapt.yml"
+        "../envs/trim.yml"
     params:
         args=config["cutadapt"]["args"],
     threads:
