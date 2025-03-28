@@ -1,4 +1,7 @@
 ruleorder: trim_galore_SE > trim_galore_PE
+ruleorder: fastp_SE > fastp_PE
+ruleorder: cutadapt_SE > cutadapt_PE
+ruleorder: trimmomatic_SE > trimmomatic_PE
 
 rule trim_galore_SE:
     input:
@@ -56,7 +59,7 @@ rule cutadapt_SE:
     output:
         temp(RESULTS + "/cutadapt/{sample}.fastq.gz")
     conda:
-        "../envs/cutadapt.yml"
+        "../envs/trim.yml"
     params:
         args = config["cutadapt"]["args"],
     threads:
