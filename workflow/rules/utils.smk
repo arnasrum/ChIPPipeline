@@ -8,7 +8,7 @@ rule unzip_genome:
     resources:
         tmpdir=TEMP
     shell:
-        "gzip {params.args} -dkf {input}"
+        "gzip -dkf {input}"
 
 rule unzip_sample:
     input:
@@ -20,7 +20,7 @@ rule unzip_sample:
     resources:
         tmpdir=TEMP
     shell:
-        "gzip {params.args} -dkf {input}"
+        "gzip -dkf {input}"
 
 rule picardCreateGenomeSequenceDictionary:
     input:
