@@ -148,7 +148,7 @@ class PipelineConfiguration:
         control_files: dict[str, dict[str, list[str]]] = {}
         for key, entry in self.__flatten_dict(self.sample_info).items():
             if entry['type'] != "control": continue
-            group_name = f"{entry['sample']}_{entry['genome']}"
+            group_name = f"{entry['sample']}_{self.get_sample_genome(entry['file_name'])}"
             if not group_name in control_files:
                 control_files[group_name] = {}
             if not entry['replicate'] in control_files[group_name]:
