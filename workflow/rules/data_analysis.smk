@@ -32,7 +32,7 @@ rule deeptools_computeMatrix:
     conda:
         "../envs/data_analysis.yml"
     params:
-        mode = "reference-point",
+        mode = config["computeMatrix"]["mode"],
         args = config["computeMatrix"]["args"],
         outdir = f"{RESULTS}/deeptools"
     threads:
@@ -45,7 +45,7 @@ rule deeptools_computeMatrix:
     shell:
         """
         mkdir -p {params.outdir}
-        computeMatrix {params.mode} -p {threads} -S {input.bigwigs} -R {input.beds} -o {output} {params.args}
+        computeMatrix {params.mode} {params.args} -p {threads} -S {input.bigwigs} -R {input.beds} -o {output}
         """
 
 rule deeptools_plotHeatMap:
@@ -61,7 +61,7 @@ rule deeptools_plotHeatMap:
         mem_mb= lambda wildcards,attempt: config['plotHeatMap']['mem_mb'] * attempt,
     shell:
         """
-        plotHeatmap -m {input} -o {output}
+        plotHeatmap -m {input} -o {output} --whatToShow 'heatmap and colorbar'
         """
 rule deeptools_plotProfile:
     input:

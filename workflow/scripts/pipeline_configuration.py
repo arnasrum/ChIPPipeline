@@ -22,7 +22,7 @@ class PipelineConfiguration:
 
     def __validate_config_arguments(self):
         char_whitelist = re.compile(r"[a-zA-Z0-9,._:\s\"\'\-]")
-        injectable_options = ["args", "run_options"]
+        injectable_options = ["args", "run_options", "mode"]
         for tool in self.config:
             for key in injectable_options:
                 if isinstance(self.config[tool], dict) and key in self.config[tool].keys() and self.config[tool][key]:
