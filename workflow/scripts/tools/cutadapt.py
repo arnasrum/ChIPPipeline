@@ -7,8 +7,8 @@ command += f" -j {snakemake.threads}"
 command += f" -o {snakemake.output[0]}"
 if len(snakemake.output) == 2:
     command += f" -p {snakemake.output[1]}"
-if snakemake.params['args']:
-    command += f" {snakemake.params['args']}"
+if snakemake.config['cutadapt']['args']:
+    command += f" {snakemake.config['cutadapt']['args']}"
 command += f" {snakemake.input[0]}"
 if len(snakemake.input) == 2:
     command += f" {snakemake.input[1]}"
