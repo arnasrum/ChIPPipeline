@@ -1,49 +1,30 @@
-ruleorder: fastq_dump_SE > fastq_dump_PE
+ruleorder: get_fastq_PE > get_fastq_SE
 ruleorder: concatenate_runs_SE > concatenate_runs_PE
 
-rule fastq_dump_SE:
-    output:
-        temp(RESOURCES + "/reads/{srr}.fastq")
-    params:
-        path = f"{RESOURCES}/reads"
-    conda:
-        "../envs/download.yml"
-    wildcard_constraints:
-        srr = r"SRR[0-9]*"
-    log:
-        LOGS + "/fastq-dump/{srr}_SE.log"
-    benchmark:
-        BENCHMARKS + "/fastq-dump/{srr}_SE.log"
-    resources:
-        tmpdir=TEMP
-    shell:
-        '''
-        exec > {log} 2>&1
-        fastq-dump -O {params.path} {wildcards.srr}
-        '''
 
-rule fastq_dump_PE:
+rule get_fastq_PE:
     output:
-        temp(RESOURCES + "/reads/{srr}_1.fastq"),
-        temp(RESOURCES + "/reads/{srr}_2.fastq")
-    wildcard_constraints:
-        srr = r"SRR[0-9]*"
-    params:
-        path = f"{RESOURCES}/reads"
-    conda:
-        "../envs/download.yml"
+        # the wildcard name must be accession, pointing to an SRA number
+        temp(RESOURCES + "/reads/{accession}_1.fastq"),
+        temp(RESOURCES + "/reads/{accession}_2.fastq")
     log:
-        LOGS + "/fastq-dump/{srr}_PE.log"
-    benchmark:
-        BENCHMARKS + "/fastq-dump/{srr}_PE.log"
-    resources:
-        tmpdir=TEMP
+        "logs/pe/{accession}.log"
+    params:
+        extra="--skip-technical"
+    threads: 6  # defaults to 6
+    wrapper:
+        "v5.10.0/bio/sra-tools/fasterq-dump"
+
+rule get_fastq_SE:
+    output:
+        temp(RESOURCES + "/reads/{accession}.fastq")
+    log:
+        "logs/se/{accession}.log"
+    params:
+        extra="--skip-technical"
     threads: 6
-    shell:
-        '''
-        exec > {log} 2>&1
-        fasterq-dump -t {resources.tmpdir} -e {threads} -O {params.path} --split-files {wildcards.srr}
-        '''
+    wrapper:
+        "v5.10.0/bio/sra-tools/fasterq-dump"
 
 rule concatenate_runs_SE:
     input:
