@@ -13,7 +13,6 @@ if len(snakemake.input) == 2:
     read_extensions = ["_1.fastq.gz", "_2.fastq.gz"]
     read2 = snakemake.input[1]
 
-
 command = "trimmomatic"
 if read2:
     command += " PE"
@@ -21,8 +20,8 @@ else:
     command += " SE"
 command += f" -threads {snakemake.threads}"
 command += f" -summary {output_path}/{file_name}_summary.txt"
-if snakemake.params.args:
-    command += f" {snakemake.params.args}"
+if snakemake.config['trimmomatic']['args']:
+    command += f" {snakemake.config['trimmomatic']['args']}"
 command += f" {snakemake.input[0]}"
 if read2:
     command += f" {read2}"
@@ -33,8 +32,8 @@ if read2:
     command += f" {output_path}/{file_name}{read_extensions[1]}"
     unpaired2 = f"{output_path}/{file_name}_unpaired{read_extensions[1]}"
     command += f" {unpaired2}"
-if snakemake.params['run_options']:
-    command += f" {snakemake.params.run_options}"
+if snakemake.config['trimmomatic']['run_options']:
+    command += f" {snakemake.config['trimmomatic']['run_options']}"
 elif read2:
     command += f" ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
 else:

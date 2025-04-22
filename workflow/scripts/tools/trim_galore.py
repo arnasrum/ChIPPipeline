@@ -6,8 +6,8 @@ command = "trim_galore"
 command += f" --basename {snakemake.wildcards.sample}"
 command += f" -j {snakemake.threads}"
 command += f" -o {snakemake.params['output_dir']}"
-if snakemake.params['args']:
-    command += f" {snakemake.params['args']}"
+if snakemake.config['trim_galore']['args']:
+    command += f" {snakemake.config['trim_galore']['args']}"
 command += " "  + " ".join(snakemake.input)
 if len(snakemake.output) == 2:
     command += f" --paired"

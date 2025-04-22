@@ -1,7 +1,6 @@
 from snakemake.script import snakemake
 from snakemake import shell
 
-
 log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 command = "fastp"
 command += f" -w {snakemake.threads}"
@@ -12,7 +11,6 @@ if len(snakemake.input) == 2:
     command += f" -O {snakemake.output[1]}"
 command += f" -j {snakemake.output[0].split('.')[0]}.json"
 command += f" -h {snakemake.output[0].split('.')[0]}.html"
-if snakemake.params['args']:
-    command += " " + snakemake.params['args']
-
+if snakemake.config["fastp"]["args"]:
+    command += " " + snakemake.config["fastp"]["args"]
 shell(f"({command}) {log}")
