@@ -16,7 +16,6 @@ class PipelineConfiguration:
             self.sample_sheet = "config/samples.csv"
         else:
             self.sample_sheet = config["sample_sheet"]
-        self.paired_end = config["paired_end"]
         self.json_path = config["json_path"]
         self.config = config
 
@@ -160,7 +159,7 @@ class PipelineConfiguration:
         treatment_entry = next(filter(lambda entry: entry["file_name"] == treatment_file, self.__flatten_dict(self.sample_info).values()))
         if treatment_entry is None:
             raise Exception(f"File: {treatment_file}; does not exists in sample info")
-        sample = f"{treatment_entry["sample"]}_{self.get_sample_genome(treatment_file)}"
+        sample = f"{treatment_entry['sample']}_{self.get_sample_genome(treatment_file)}"
         replicate = treatment_entry["replicate"]
         control_files = self.__group_control_files().get(sample, {}).get(replicate, [])
         return control_files
