@@ -90,15 +90,14 @@ def get_all_input(config):
     return input_files
 
 def get_fastqc_output(file_name: str) -> list[str]:
-    file_paths_raw = [f"{RESULTS}/fastqc/unprocessed/{file_name}"]
-    file_paths_trimmed = [f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}"]
+    base_paths = [f"{RESULTS}/fastqc/unprocessed/{file_name}", f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}"]
 
     single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
     paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
     extensions = paired_end_extensions if sfs.is_paired_end(file_name) else single_end_extensions
     output_files = [
         f"{path}{extension}"
-        for path in file_paths_raw + file_paths_trimmed
+        for path in base_paths
         for extension in extensions
     ]
     return output_files
