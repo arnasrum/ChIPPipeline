@@ -1,7 +1,7 @@
-ruleorder: trim_galore_SE > trim_galore_PE
-ruleorder: fastp_SE > fastp_PE
-ruleorder: cutadapt_SE > cutadapt_PE
-ruleorder: trimmomatic_SE > trimmomatic_PE
+ruleorder: trim_galore_PE > trim_galore_SE
+ruleorder: fastp_PE > fastp_SE
+ruleorder: cutadapt_PE > cutadapt_SE
+ruleorder: trimmomatic_PE > trimmomatic_SE
 
 rule trim_galore_SE:
     input:
@@ -51,7 +51,6 @@ rule trim_galore_PE:
         runtime=lambda wildcards, attempt: config['trim_galore']['runtime'] * attempt
     script:
         "../scripts/tools/trim_galore.py"
-
 
 rule cutadapt_SE:
     input:
