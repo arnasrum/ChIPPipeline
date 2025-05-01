@@ -1,3 +1,4 @@
 mark,sample,type,replicate,peak_type,paired_end,accession,file_path,genome
-p53,sample1,treatment,1,narrow,true,GSM0000000,data/treatment_sample_1.fq.gz;data/treatment_sample_2.fq.gz,mm10
+antibody,sample1,treatment,1,narrow,true,GSM0000000,data/treatment_sample_1.fq.gz;data/treatment_sample_2.fq.gz,data/mm10.fa.gz
 ,sample1,control,1,,true,GSM0000001,data/control_sample_1.fq.gz;data/control_sample_2.fq.gz,mm10
+antibody,sample1,treatment,1,narrow,true,GSM0000000,data/treatment_sample_1.fq.gz;data/treatment_sample_2.fq.gz,mm10
