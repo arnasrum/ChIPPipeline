@@ -46,6 +46,7 @@ fasterq-dump:
 fastqc:
   args: ""
   threads: 12
+  runtime: 20
   mem_mb: 4000
 
 # Trimmer config
@@ -133,7 +134,7 @@ computeMatrix:
   threads: 12
   mem_mb: 8000
   runtime: 30
-  mode: "--referencePoint 'center'"
+  mode: "reference-point"
   args: "--skipZeros -a 4000 -b 4000"
 plotHeatMap:
   mem_mb: 8000

@@ -15,7 +15,7 @@ rule fastqc_unprocessed:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
         mem_mb = lambda wildcards, attempt: int(config["fastqc"]["mem_mb"]) * attempt,
-        runtime = lambda wildcards,attempt: 20 * attempt,
+        runtime = lambda wildcards, attempt: int(config["fastqc"]["runtime"]) * attempt,
     shell:
         """
         exec > {log} 2>&1
@@ -39,7 +39,7 @@ rule fastqc_trimmed:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
         mem_mb = lambda wildcards, attempt: int(config["fastqc"]["mem_mb"]) * attempt,
-        runtime = lambda wildcards,attempt: 20 * attempt,
+        runtime = lambda wildcards, attempt: int(config["fastqc"]["runtime"]) * attempt,
     shell:
         """
         exec > {log} 2>&1
