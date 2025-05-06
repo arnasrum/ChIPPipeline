@@ -144,7 +144,12 @@ pyGenomeTracks:
   # Comma seperated options will be appended the track files
   bigwig_options: "max_value = 6"
   bed_options: ""
-
-homer:
+annotate_peaks:
   threads: 12
+  mem_mb: 8000
+  runtime: 30
+find_motifs_genome:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
   args: "-size 200"

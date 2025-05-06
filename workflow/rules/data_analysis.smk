@@ -136,8 +136,8 @@ rule homer_annotate_peaks:
     resources:
         tmpdir=TEMP,
         cpus_per_task = lambda wildcards, threads: threads,
-        mem_mb = lambda wildcards, attempt: 8000 * attempt,
-        runtime = lambda wildcards, attempt: 30 * attempt,
+        mem_mb = lambda wildcards, attempt: config["annotate_peaks"]["mem_mb"] * attempt,
+        runtime = lambda wildcards, attempt: config["annotate_peaks"]["runtime"] * attempt,
     shell:
         '''
         exec > {log} 2>&1
@@ -154,18 +154,18 @@ rule homer_find_motifs_genome:
     conda:
         "../envs/data_analysis.yml"
     params:
-        outdir = RESULTS + "/homer",
+        outdir = f"{RESULTS}/homer",
         genome = lambda wildcards: wildcards.sample.split("_")[-1],
-        args = config["homer"]["args"]
+        args = config["find_motifs_genome"]["args"]
     threads:
-        int(config["homer"]["threads"])
+        int(config["find_motifs_genome"]["threads"])
     log:
         LOGS + "/homer/{sample}_findMotifs.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards,threads: threads,
-        mem_mb= lambda wildcards,attempt: 8000 * attempt,
-        runtime= lambda wildcards,attempt: 30 * attempt,
+        mem_mb= lambda wildcards,attempt: config["find_motifs_genome"]["mem_mb"] * attempt,
+        runtime= lambda wildcards,attempt: config["find_motifs_genome"]["runtime"] * attempt,
     shell:
         '''
         exec > {log} 2>&1
