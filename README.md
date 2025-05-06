@@ -11,6 +11,13 @@ The recommended method to run the pipeline is with Conda.
 
 Alternatively, it possible to run the pipeline using Apptainer/Singularity containers.
 
+## Preparing Sample Data
+
+A small data set to do a test run is provided with a premade sample sheet.
+
+For running the pipeline on other data sets, the sample sheet needs be prepared, which defines the input data. 
+
+For editing the sample sheet refer to the [sample sheet docs](docs/sample_sheet.md).
 
 ## Conda
 
@@ -72,10 +79,4 @@ Or edit and submit the provided Slurm [script](slurm.sh):
 ## Editing Config 
 
 Refer to the [configuration documentaion](docs/conf.md).
-
-### Preparing Sample Data
-
-Before running the pipeline, the sample sheet needs be prepared, which defines the input data. 
-
-For editing the sample sheet refer to the [sample sheet docs](docs/sample_sheet.md).
 
