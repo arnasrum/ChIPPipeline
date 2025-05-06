@@ -25,7 +25,7 @@ Install conda by following the instructions provided by the official conda [docu
 
 Then install the environment by running:
 
-`conda evn create --file environment.yml`
+`conda env create --file environment.yml`
 
 Activate the environment and start using the pipeline:
 
