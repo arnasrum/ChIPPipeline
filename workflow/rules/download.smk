@@ -1,17 +1,20 @@
 ruleorder: get_fastq_PE > get_fastq_SE
-ruleorder: concatenate_runs_SE > concatenate_runs_PE
-
+ruleorder: concatenate_runs_PE > concatenate_runs_SE
 
 rule get_fastq_PE:
     output:
-        # the wildcard name must be accession, pointing to an SRA number
         temp(RESOURCES + "/reads/{accession}_1.fastq"),
         temp(RESOURCES + "/reads/{accession}_2.fastq")
     log:
         "logs/pe/{accession}.log"
     params:
-        extra="--skip-technical"
-    threads: 6  # defaults to 6
+        extra=str(config["fastq-dump"]["args"])
+    threads:
+        int(config["fastq-dump"]["threads"])
+    resources:
+        cpus_per_task = int(config["fastq-dump"]["threads"]),
+        runtime = int(config["fastq-dump"]["runtime"]),
+        mem_mb = int(config["fastq-dump"]["mem_mb"])
     wrapper:
         "v5.10.0/bio/sra-tools/fasterq-dump"
 
@@ -21,8 +24,13 @@ rule get_fastq_SE:
     log:
         "logs/se/{accession}.log"
     params:
-        extra="--skip-technical"
-    threads: 6
+        extra=str(config["fastq-dump"]["args"])
+    threads:
+        int(config["fastq-dump"]["threads"])
+    resources:
+        cpus_per_task = int(config["fastq-dump"]["threads"]),
+        runtime = int(config["fastq-dump"]["runtime"]),
+        mem_mb = int(config["fastq-dump"]["mem_mb"])
     wrapper:
         "v5.10.0/bio/sra-tools/fasterq-dump"
 

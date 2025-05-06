@@ -16,9 +16,6 @@ generate_fastqc_reports: True
 # Plotting region for peaks plotted by pyGenomeTracks
 plot_region: "chr1:14,000,000-15,000,000"
 
-# Defined reads in sample sheet are paired end
-paired_end: True
-
 # Path to sample sheet
 sample_sheet: "config/samples.csv"
 
@@ -39,19 +36,16 @@ benchmark_repeat_align: 1
 benchmark_repeat_duplicate: 1
 
 
-fasterq-dump:
-  downloadPath: "resources/reads"
-  args: ""
-
+fastq-dump:
+  args: "--skip-technical"
+  threads: 12
+  runtime: 20
+  mem_mb: 4000
 fastqc:
   args: ""
   threads: 12
   runtime: 20
   mem_mb: 4000
-
-# Trimmer config
-trim_threads: 12
-
 trim_galore:
   args: ""
   threads: 8
