@@ -1,7 +1,7 @@
 
 # Specify samples 
 
-The pipeline requires a sample sheet (defaulting to config/samples.csv) to define the input data and metadata for each sample. This file should be in CSV format and include specific columns as detailed below.
+The pipeline requires a sample sheet (defaulting to config/samples.csv) to define the input data and metadata for each sample. This file should be in CSV or JSON format and include specific columns as detailed below.
 
 <table>
     <th>Column</th>
@@ -57,6 +57,8 @@ The pipeline requires a sample sheet (defaulting to config/samples.csv) to defin
 ## Example sheet
 
 An example sheet showing the possibilities:
+
+A sample sheet in CSV format:
 
 ```csv
 type,peak_type,replicate,accession,file_path,genome,mark,sample,paired_end
