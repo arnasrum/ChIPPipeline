@@ -11,7 +11,7 @@ command = "macs3 callpeak"
 if snakemake.config['macs3']['args']:
     command += f" {snakemake.config['macs3']['args']}"
 command += f" --outdir {out_dir}"
-if str(snakemake.config['paired_end']).lower() == "true":
+if snakemake.params['paired_end']:
     command += f" -f BAMPE"
 else:
     command += f" -f BAM"
