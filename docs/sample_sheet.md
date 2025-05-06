@@ -69,3 +69,109 @@ treatment,broad,2,,data/sample2_R1.fastq.gz;data/sample2_R2.fastq.gz,genomes/mm1
 control,,,1,,data/control1.fastq.gz,genomes/mm10.fa.gz,Input,TissueX,False
 control,,,2,,data/control2.fastq.gz,genomes/mm10.fa.gz,Input,TissueX,False
 treatment,narrow,1,GSM9876543,,dm6,H3K27me3,FlySampleY,False
+```
+Or in JSON format:
+
+```json
+[
+  {
+    "type": "treatment",
+    "sample": "CellLineA",
+    "replicate": 1,
+    "mark": "H3K4me3",
+    "peak_type": "narrow",
+    "genome": "genomes/hg19.fa",
+    "paired_end": "true",
+    "accession": "GSM1234567",
+    "file_path": ""
+  },
+  {
+    "type": "treatment",
+    "sample": "CellLineA",
+    "replicate": 2,
+    "mark": "H3K4me3",
+    "peak_type": "narrow",
+    "genome": "genomes/hg19.fa",
+    "paired_end": "true",
+    "accession": "GSM1234568",
+    "file_path": ""
+  },
+  {
+    "type": "control",
+    "sample": "CellLineA",
+    "replicate": 1,
+    "mark": "IgG",
+    "peak_type": "",
+    "genome": "genomes/hg19.fa",
+    "paired_end": "true",
+    "accession": "GSM1234569",
+    "file_path": ""
+  },
+  {
+    "type": "control",
+    "sample": "CellLineA",
+    "replicate": 2,
+    "mark": "IgG",
+    "peak_type": "",
+    "genome": "genomes/hg19.fa",
+    "paired_end": "true",
+    "accession": "GSM1234570",
+    "file_path": ""
+  },
+  {
+    "type": "treatment",
+    "sample": "TissueX",
+    "replicate": 1,
+    "mark": "H3K36me3",
+    "peak_type": "broad",
+    "genome": "genomes/mm10.fa",
+    "paired_end": "true",
+    "accession": "",
+    "file_path": "data/sample1_R1.fastq.gz;data/sample1_R2.fastq.gz",
+  },
+  {
+    "type": "treatment",
+    "sample": "TissueX",
+    "replicate": 2,
+    "mark": "H3K36me3",
+    "peak_type": "broad",
+    "genome": "genomes/mm10.fa",
+    "paired_end": "true",
+    "accession": "",
+    "file_path": "data/sample2_R1.fastq.gz;data/sample2_R2.fastq.gz"
+  },
+  {
+    "type": "control",
+    "sample": "TissueX",
+    "replicate": 1,
+    "mark": "Input",
+    "peak_type": "",
+    "genome": "genomes/mm10.fa",
+    "paired_end": "false",
+    "accession": "",
+    "file_path": "data/control1.fastq.gz"
+  },
+  {
+    "type": "control",
+    "sample": "TissueX",
+    "replicate": 2,
+    "mark": "Input",
+    "peak_type": "",
+    "genome": "genomes/mm10.fa",
+    "paired_end": false,
+    "accession": "",
+    "file_path": "data/control2.fastq.gz"
+  },
+  {
+    "type": "treatment",
+    "sample": "FlySampleY",
+    "replicate": 1,
+    "mark": "H3K27me3",
+    "peak_type": "narrow",
+    "genome": "dm6",
+    "paired_end": false,
+    "accession": "GSM9876543",
+    "file_path": ""
+  }
+]
+```
