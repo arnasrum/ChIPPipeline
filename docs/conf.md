@@ -34,6 +34,21 @@ Or by editing the [configuration file](../config/config.yml) directly
 
 **args**: extra options that will be passed to the tools.
 
+## Module Options
 
+Overwrite the default configuration by running:
 
+`snakemake -c <num> <rule> --config modules="--flag1 <value1> -f <value2>"`
+
+Example:
+
+`snakemake -c <num> <rule> --config modules="-t trimmomatic -a bwa_mem2"`
+
+## Flags
+
+**-t** or **--trim** overwrites the trimmer
+
+**-a** or **--align** overwrites the aligner
+
+**-d** or **--duplicate_processor** overwrites the duplicate processor
 
