@@ -35,7 +35,7 @@ def set_module_options(config: dict) -> None:
 
 def set_output_paths(config):
     if config["outdir"] != "" and config["outdir"][-1] != "/": config["outdir"] += "/"
-    for config_option in ["json_path", "benchmarks_path", "results_path", "resources_path", "temp_path", "logs_path"]:
+    for config_option in ["benchmarks_path", "results_path", "resources_path", "temp_path", "logs_path"]:
         config[config_option] = config["outdir"] + config[config_option]
 
 def __set_config_option(config:dict, option: str, value: str) -> None:

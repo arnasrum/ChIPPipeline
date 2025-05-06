@@ -3,6 +3,7 @@ import re
 import json
 import pathlib
 import pandas as pd
+import numpy as np
 from workflow.scripts.fetch_data import get_meta_data, get_sra_accessions
 
 class InputException(Exception):
@@ -29,7 +30,6 @@ class PipelineConfiguration:
             self.sample_sheet = "config/samples.csv"
         else:
             self.sample_sheet = config["sample_sheet"]
-        self.json_path = config["json_path"]
         self.config = config
 
     def __validate_config(self):
@@ -57,16 +57,14 @@ class PipelineConfiguration:
                         raise InputException(f"The configuration argument; {tool} {key}, contains invalid characters.")
 
 
-    def __validate_sample_sheet(self):
-        with open(self.sample_sheet, "r") as file:
-            sample_sheet = pd.read_csv(file, keep_default_na=False)
+    def __validate_sample_sheet(self, sample_sheet: pd.DataFrame):
         for index, row in sample_sheet.iterrows():
             if not row["type"] in ["treatment", "control"]:
                 raise InputException(f"Row {index} in \"type\" column contains invalid value. {row['type']}")
-            if not row["peak_type"] in ["narrow", "broad", ""]:
-                if row["type"] == "treatment" and row["peak_type"] == "":
+            if  row["type"] == "treatment" and not row["peak_type"] in ["narrow", "broad", ""]:
+                if row["peak_type"] == "" or row["peak_type"] is None:
                     raise InputException(f"Row {index} in \"peak_type\" treatment samples must have defined peak type.")
-                raise InputException(f"Row {index} in \"peak_type\" column contains invalid value. {row['type']}")
+                raise InputException(f"Row {index} in \"peak_type\" column contains invalid value. {row['peak_type']}")
             if not isinstance(row["replicate"], int):
                 # something wrong here, if genome is defined this gives the wrong message
                 raise InputException(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be an integer.")
@@ -90,17 +88,29 @@ class PipelineConfiguration:
         Returns:
             A dictionary containing the structured sample information.
         """
-        self.__validate_sample_sheet()
-        self.__validate_config()
+
         geo_accession_pattern = re.compile(r"^GSM[0-9]*$")
         geo_accessions = set()
         sample_info: dict = {"public": {}, "provided": {}}
-        with open(self.sample_sheet, "r") as file:
-            sample_sheet = pd.read_csv(file, keep_default_na=False)
+
+        if not os.path.isfile(self.sample_sheet):
+            raise InputException(f"Sample sheet; \"{self.sample_sheet}\" does not exist.")
+        if self.sample_sheet.endswith(".csv"):
+            with open(self.sample_sheet, "r") as file:
+                sample_sheet = pd.read_csv(file, keep_default_na=False)
+        elif self.sample_sheet.endswith(".json"):
+            with open(self.sample_sheet, "r") as file:
+                sample_sheet = pd.read_json(file)
+        else:
+            raise Exception("Sample sheet file format not supported. Only .csv and .json are supported.")
+        sample_sheet = sample_sheet.fillna(np.nan).replace([np.nan], [None])
+        self.__validate_sample_sheet(sample_sheet)
+        self.__validate_config()
+
         for index, row in sample_sheet.iterrows():
             sample = ""
             availability_type = ""
-            if row["file_path"] == "" and geo_accession_pattern.match(row["accession"]):
+            if (row["file_path"] is None or row["file_path"] == "") and geo_accession_pattern.match(row["accession"]):
                 availability_type = "public"
                 sample = row["accession"]
                 geo_accessions.add(row["accession"])
@@ -136,10 +146,6 @@ class PipelineConfiguration:
         for sample in sample_info['public']:
             sample_info['public'][sample]['file_name'] += f"_{sample_info['public'][sample]['genome'].split('/')[-1].split('.')[0]}"
 
-        json_dir = "/".join(self.json_path.split("/")[:-1]) + "/"
-        if not os.path.exists(json_dir): os.makedirs(json_dir)
-        with open(self.json_path, "w") as outfile:
-            outfile.write(json.dumps(sample_info, indent=4))
         self.sample_info = sample_info
         return sample_info
 
@@ -273,28 +279,6 @@ class PipelineConfiguration:
         """
         genome = self.get_sample_entry_by_file_name(file_name)['genome'].split("/")[-1].split(".")[0]
         return genome
-
-    def check_diff(self) -> bool:
-        samples_csv = open(self.sample_sheet)
-        json_file = open(self.json_path)
-        sample_sheet = pd.read_csv(samples_csv, keep_default_na=False); samples_csv.close()
-        samples_json = json.load(json_file); json_file.close()
-        samples_json = PipelineConfiguration.__flatten_dict(samples_json)
-        if len(sample_sheet) != len(samples_json["public"]) + len(samples_json["provided"]): return False
-        for index, row in sample_sheet.iterrows():
-            if row["accession"] in samples_json["public"]:
-                # print(row["accession"], "in public")
-                for header in sample_sheet.head():
-                    if header == "accession": continue
-                    if not header in samples_json["public"][row["accession"]]: return False
-                    if not row[header] == samples_json["public"][row["accession"]][header]: return False
-                continue
-            if row["accession"] in samples_json["provided"]:
-
-                # print(row["accession"], "in provided")
-                continue
-            return False
-        return True
 
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:

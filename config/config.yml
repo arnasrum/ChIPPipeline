@@ -21,7 +21,6 @@ sample_sheet: "config/samples.csv"
 
 # Path to write generated files to
 outdir: ""
-json_path: "samples.json"
 results_path: "results"
 resources_path: "resources"
 logs_path: "logs"
