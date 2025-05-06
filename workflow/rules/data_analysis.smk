@@ -1,7 +1,7 @@
 rule deeptools_bamCoverage:
     input:
-        bam = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam",
-        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam.bai",
+        bam = f"{RESULTS}/{config['duplicate_processor']}/{{sample}}.bam",
+        bam_index = f"{RESULTS}/{config['duplicate_processor']}/{{sample}}.bam.bai",
     output:
         RESULTS + "/deeptools-bamCoverage/{sample}.bw"
     conda:
@@ -26,7 +26,7 @@ rule deeptools_computeMatrix:
         beds = lambda wildcards:f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak",
         bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
-        RESULTS + "/deeptools/{sample}_matrix.gz"
+        f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     wildcard_constraints:
         replicate = r"[0-9]"
     conda:
@@ -50,9 +50,9 @@ rule deeptools_computeMatrix:
 
 rule deeptools_plotHeatMap:
     input:
-        RESULTS + "/deeptools/{sample}_matrix.gz"
+        f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     output:
-        RESULTS + "/deeptools/{sample}_heatmap.png"
+        f"{RESULTS}/deeptools/{{sample}}_heatmap.png"
     conda:
         "../envs/data_analysis.yml"
     resources:
@@ -65,9 +65,9 @@ rule deeptools_plotHeatMap:
         """
 rule deeptools_plotProfile:
     input:
-        RESULTS + "/deeptools/{sample}_matrix.gz"
+        f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     output:
-        RESULTS + "/deeptools/{sample}_profile.png"
+        f"{RESULTS}/deeptools/{{sample}}_profile.png"
     conda:
         "../envs/data_analysis.yml"
     resources:
@@ -84,12 +84,12 @@ rule pyGenomeTracks:
         bed = lambda wildcards: [f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak"],
         bigwig = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
-        tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_tracks.ini"),
-        plot = RESULTS + "/pyGenomeTracks/{sample}.png"
+        tracks = temp(f"{RESULTS}/pyGenomeTracks/{{sample}}_tracks.ini"),
+        plot = f"{RESULTS}/pyGenomeTracks/{{sample}}.png"
     params:
         region = config["plot_region"],
         args = config["pyGenomeTracks"]["args"],
-        peak_type = lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
+        peak_type = lambda wildcards: pipeline_config.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
         bigwig_options = config["pyGenomeTracks"]["bigwig_options"],
         bed_options = config["pyGenomeTracks"]["bed_options"],
     conda:
@@ -106,7 +106,7 @@ rule bedtools_intersect:
         a = lambda wildcards: get_consensus_peak_input(wildcards.sample)[0],
         b = lambda wildcards: get_consensus_peak_input(wildcards.sample)[1:]
     output:
-        RESULTS + "/bedtools/{sample}.consensusPeak"
+        f"{RESULTS}/bedtools/{{sample}}.consensusPeak"
     conda:
         "../envs/data_analysis.yml"
     log:
@@ -125,11 +125,11 @@ rule homer_annotate_peaks:
     input:
         lambda wildcards: f"{RESULTS}/bedtools/{wildcards.group}.consensusPeak",
     output:
-        RESULTS + "/homer/{group}_annotate.txt"
+        f"{RESULTS}/homer/{{group}}_annotate.txt"
     conda:
         "../envs/data_analysis.yml"
     params:
-        outdir = RESULTS + "/homer",
+        outdir = f"{RESULTS}/homer",
         genome = lambda wildcards: wildcards.group.split("_")[-1]
     log:
         LOGS + "/homer/{group}_annotate.log"
@@ -148,9 +148,9 @@ rule homer_annotate_peaks:
 
 rule homer_find_motifs_genome:
     input:
-        RESULTS + "/homer/{sample}_annotate.txt"
+        f"{RESULTS}/homer/{{sample}}_annotate.txt"
     output:
-        multiext(RESULTS + "/homer/{sample}/", "homerResults.html", "knownResults.html")
+        multiext(f"{RESULTS}/homer/{{sample}}/", "homerResults.html", "knownResults.html")
     conda:
         "../envs/data_analysis.yml"
     params:
@@ -175,10 +175,10 @@ rule homer_find_motifs_genome:
 
 rule plot_annotated_peaks:
     input:
-        RESULTS + "/homer/{sample}_annotate.txt"
+        f"{RESULTS}/homer/{{sample}}_annotate.txt"
     output:
-        distribution_plot = RESULTS + "/plots/{sample}_distribution.png",
-        gene_distribution_plot =  RESULTS + "/plots/{sample}_genes.png"
+        distribution_plot = f"{RESULTS}/plots/{{sample}}_distribution.png",
+        gene_distribution_plot =  f"{RESULTS}/plots/{{sample}}_genes.png"
     params:
         threshold_fraction = 0.01
     conda:

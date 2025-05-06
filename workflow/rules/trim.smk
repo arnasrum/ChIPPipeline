@@ -7,18 +7,18 @@ rule trim_galore_SE:
     input:
         lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/trim_galore/{sample}.fastq.gz")
+        temp(f"{RESULTS}/trim_galore/{{sample}}.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
         args = config["trim_galore"]["args"],
-        output_dir = RESULTS + "/trim_galore",
+        output_dir = f"{RESULTS}/trim_galore",
     threads:
         int(config["trim_galore"]["threads"])
     log:
-        LOGS + "/trim_galore/{sample}.log"
+        f"{LOGS}/trim_galore/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/trim_galore/{{sample}}.txt", config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -31,19 +31,19 @@ rule trim_galore_PE:
     input:
         lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/trim_galore/{sample}_1.fastq.gz"),
-        temp(RESULTS + "/trim_galore/{sample}_2.fastq.gz"),
+        temp(f"{RESULTS}/trim_galore/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/trim_galore/{{sample}}_2.fastq.gz"),
     conda:
         "../envs/trim.yml"
     params:
         args=config["trim_galore"]["args"],
-        output_dir=RESULTS + "/trim_galore",
+        output_dir=f"{RESULTS}/trim_galore",
     threads:
         int(config["trim_galore"]["threads"])
     log:
-        LOGS + "/trim_galore/{sample}.log"
+        f"{LOGS}/trim_galore/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/trim_galore/{sample}.txt",config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/trim_galore/{{sample}}.txt",config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -56,7 +56,7 @@ rule cutadapt_SE:
     input:
         lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/cutadapt/{sample}.fastq.gz")
+        temp(f"{RESULTS}/cutadapt/{{sample}}.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
@@ -64,9 +64,9 @@ rule cutadapt_SE:
     threads:
         int(config["cutadapt"]["threads"])
     log:
-        LOGS + "/cutadapt/{sample}.log"
+        f"{LOGS}/cutadapt/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/cutadapt/{sample}.txt", config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/cutadapt/{{sample}}.txt", config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -79,8 +79,8 @@ rule cutadapt_PE:
     input:
         lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/cutadapt/{sample}_1.fastq.gz"),
-        temp(RESULTS + "/cutadapt/{sample}_2.fastq.gz"),
+        temp(f"{RESULTS}/cutadapt/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/cutadapt/{{sample}}_2.fastq.gz"),
     conda:
         "../envs/trim.yml"
     params:
@@ -88,9 +88,9 @@ rule cutadapt_PE:
     threads:
         int(config["cutadapt"]["threads"])
     log:
-        LOGS + "/cutadapt/{sample}.log"
+        f"{LOGS}/cutadapt/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/cutadapt/{sample}.txt",config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/cutadapt/{{sample}}.txt",config["benchmark_repeat_trim"])
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -103,7 +103,7 @@ rule fastp_SE:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/fastp/{sample}.fastq.gz")
+        temp(f"{RESULTS}/fastp/{{sample}}.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
@@ -111,14 +111,14 @@ rule fastp_SE:
     threads:
         int(config["fastp"]["threads"])
     log:
-        LOGS + "/fastp/{sample}.log"
+        f"{LOGS}/fastp/{{sample}}.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
         mem_mb= lambda wildcards,attempt: config['fastp']['mem_mb'] * attempt,
         runtime= lambda wildcards,attempt: config['fastp']['runtime'] * attempt
     benchmark:
-        repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/fastp/{{sample}}.txt", config["benchmark_repeat_trim"])
     script:
         "../scripts/tools/fastp.py"
 
@@ -126,8 +126,8 @@ rule fastp_PE:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/fastp/{sample}_1.fastq.gz"),
-        temp(RESULTS + "/fastp/{sample}_2.fastq.gz")
+        temp(f"{RESULTS}/fastp/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/fastp/{{sample}}_2.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
@@ -135,14 +135,14 @@ rule fastp_PE:
     threads:
         int(config["fastp"]["threads"])
     log:
-        LOGS + "/fastp/{sample}.log"
+        f"{LOGS}/fastp/{{sample}}.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
         mem_mb=lambda wildcards, attempt: config['fastp']['mem_mb'] * attempt,
         runtime=lambda wildcards, attempt: config['fastp']['runtime'] * attempt
     benchmark:
-        repeat(BENCHMARKS + "/fastp/{sample}.txt",config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/fastp/{{sample}}.txt",config["benchmark_repeat_trim"])
     script:
         "../scripts/tools/fastp.py"
 
@@ -151,7 +151,7 @@ rule trimmomatic_SE:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/trimmomatic/{sample}.fastq.gz"),
+        temp(f"{RESULTS}/trimmomatic/{{sample}}.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
@@ -160,14 +160,14 @@ rule trimmomatic_SE:
     threads:
         int(config["trimmomatic"]["threads"])
     log:
-        LOGS + "/trimmomatic/{sample}.log"
+        f"{LOGS}/trimmomatic/{{sample}}.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
         mem_mb=config['trimmomatic']['mem_mb'],
         runtime=config['trimmomatic']['runtime']
     benchmark:
-        repeat(BENCHMARKS + "/trimmomatic/{sample}.txt", config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/trimmomatic/{{sample}}.txt", config["benchmark_repeat_trim"])
     script:
         "../scripts/tools/trimmomatic.py"
 
@@ -175,8 +175,8 @@ rule trimmomatic_PE:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample)
     output:
-        temp(RESULTS + "/trimmomatic/{sample}_1.fastq.gz"),
-        temp(RESULTS + "/trimmomatic/{sample}_2.fastq.gz"),
+        temp(f"{RESULTS}/trimmomatic/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/trimmomatic/{{sample}}_2.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
@@ -185,13 +185,13 @@ rule trimmomatic_PE:
     threads:
         int(config["trimmomatic"]["threads"])
     log:
-        LOGS + "/trimmomatic/{sample}.log"
+        f"{LOGS}/trimmomatic/{{sample}}.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
         mem_mb=config['trimmomatic']['mem_mb'],
         runtime=config['trimmomatic']['runtime']
     benchmark:
-        repeat(BENCHMARKS + "/trimmomatic/{sample}.txt", config["benchmark_repeat_trim"])
+        repeat(f"{BENCHMARKS}/trimmomatic/{{sample}}.txt", config["benchmark_repeat_trim"])
     script:
         "../scripts/tools/trimmomatic.py"

@@ -2,18 +2,18 @@ rule picard_MarkDuplicates:
     input:
         aligned = f"{RESULTS}/{config['aligner']}/{{sample}}.bam",
     output:
-        sorted = temp(RESULTS + "/MarkDuplicates/{sample}_sorted.bam"),
-        marked = RESULTS + "/MarkDuplicates/{sample}.bam",
+        sorted = temp(f"{RESULTS}/MarkDuplicates/{{sample}}_sorted.bam"),
+        marked = f"{RESULTS}/MarkDuplicates/{{sample}}.bam",
         index = f"{RESULTS}/MarkDuplicates/{{sample}}.bam.bai",
-        metrics = RESULTS + "/MarkDuplicates/{sample}.metrics.txt"
+        metrics = f"{RESULTS}/MarkDuplicates/{{sample}}.metrics.txt"
     params:
         args = config['MarkDuplicates']['args']
     conda:
         "../envs/utils.yml"
     log:
-        LOGS + "/MarkDuplicates/{sample}.log"
+        f"{LOGS}/MarkDuplicates/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/MarkDuplicates/{sample}.txt", config["benchmark_repeat_duplicate"])
+        repeat(f"{BENCHMARKS}/MarkDuplicates/{{sample}}.txt", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP,
         cpus_per_thread= lambda wildcards,threads: threads,
@@ -31,9 +31,9 @@ rule samtools_markdup:
     input:
         f"{RESULTS}/{config['aligner']}/{{sample}}.bam"
     output:
-        marked = RESULTS + "/markdup/{sample}.bam",
-        index = RESULTS + "/markdup/{sample}.bam.bai",
-        stats = RESULTS + "/markdup/{sample}_stats.txt"
+        marked = f"{RESULTS}/markdup/{{sample}}.bam",
+        index = f"{RESULTS}/markdup/{{sample}}.bam.bai",
+        stats = f"{RESULTS}/markdup/{{sample}}_stats.txt"
     conda:
         "../envs/utils.yml"
     params:
@@ -42,9 +42,9 @@ rule samtools_markdup:
     threads:
         int(config["markdup"]["threads"])
     log:
-        LOGS + "/markdup/{sample}.log"
+        f"{LOGS}/markdup/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/markdup/{sample}.txt", config["benchmark_repeat_duplicate"])
+        repeat(f"{BENCHMARKS}/markdup/{{sample}}.txt", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP,
         cpus_per_thread=lambda wildcards, threads: threads,

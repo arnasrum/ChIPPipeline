@@ -3,10 +3,10 @@ ruleorder: concatenate_runs_PE > concatenate_runs_SE
 
 rule get_fastq_PE:
     output:
-        temp(RESOURCES + "/reads/{accession}_1.fastq"),
-        temp(RESOURCES + "/reads/{accession}_2.fastq")
+        temp(f"{RESOURCES}/reads/{{accession}}_1.fastq"),
+        temp(f"{RESOURCES}/reads/{{accession}}_2.fastq")
     log:
-        "logs/pe/{accession}.log"
+        "logs/fastq-dump_pe/{accession}.log"
     params:
         extra=str(config["fastq-dump"]["args"])
     threads:
@@ -20,9 +20,9 @@ rule get_fastq_PE:
 
 rule get_fastq_SE:
     output:
-        temp(RESOURCES + "/reads/{accession}.fastq")
+        temp(f"{RESOURCES}/reads/{{accession}}.fastq")
     log:
-        "logs/se/{accession}.log"
+        "logs/fastq-dump_se/{accession}.log"
     params:
         extra=str(config["fastq-dump"]["args"])
     threads:
@@ -38,9 +38,9 @@ rule concatenate_runs_SE:
     input:
         lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample)
     output:
-        [RESOURCES + "/reads/{sample}.fastq.gz"]
+        [f"{RESOURCES}/reads/{{sample}}.fastq.gz"]
     log:
-        LOGS + "/concatenate/{sample}.log"
+        f"{LOGS}/concatenate/{{sample}}.log"
     resources:
         tmpdir=TEMP
     script:
@@ -50,9 +50,10 @@ rule concatenate_runs_PE:
     input:
         lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample)
     output:
-        [RESOURCES + "/reads/{sample}_1.fastq.gz", RESOURCES + "/reads/{sample}_2.fastq.gz"]
+        f"{RESOURCES}/reads/{{sample}}_1.fastq.gz",
+        f"{RESOURCES}/reads/{{sample}}_2.fastq.gz"
     log:
-        LOGS + "/concatenate/{sample}.log"
+        f"{LOGS}/concatenate/{{sample}}.log"
     resources:
         tmpdir=TEMP
     script:
@@ -62,9 +63,9 @@ rule handle_provided_samples_SE:
     input:
         lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
     output:
-        RESOURCES + "/reads/{file_name}.fastq.gz"
+        f"{RESOURCES}/reads/{{file_name}}.fastq.gz"
     log:
-        LOGS + "/provided_files/{file_name}.log"
+        f"{LOGS}/provided_files/{{file_name}}.log"
     resources:
         tmpdir=TEMP
     script:
@@ -75,7 +76,8 @@ rule handle_provided_samples_PE:
         lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
         lambda wildcards: symlink_input(wildcards.file_name)["read2"]["path"]
     output:
-        [f"{RESOURCES}/reads/{{file_name}}_1.fastq.gz", f"{RESOURCES}/reads/{{file_name}}_2.fastq.gz"]
+        f"{RESOURCES}/reads/{{file_name}}_1.fastq.gz",
+        f"{RESOURCES}/reads/{{file_name}}_2.fastq.gz"
     log:
         LOGS + "/provided_files/{file_name}.log"
     resources:
@@ -85,13 +87,13 @@ rule handle_provided_samples_PE:
 
 rule fetch_genome:
     output:
-        RESOURCES + "/genomes/{genome}.fa.gz"
+        f"{RESOURCES}/genomes/{{genome}}.fa.gz"
     conda:
         "../envs/download.yml"
     log:
-        LOGS + "/genomes/{genome}.log"
+        f"{LOGS}/genomes/{{genome}}.log"
     benchmark:
-        BENCHMARKS + "/genomes/{genome}.benchmark.txt"
+        f"{BENCHMARKS}/genomes/{{genome}}.benchmark.txt"
     params:
         genome = lambda wildcards: wildcards.genome
     resources:

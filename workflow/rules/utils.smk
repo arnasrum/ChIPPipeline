@@ -20,9 +20,9 @@ rule unzip_sample:
 
 rule picardCreateGenomeSequenceDictionary:
     input:
-        RESOURCES + "/genomes/{genome}.fa"
+        f"{RESOURCES}/genomes/{{genome}}.fa"
     output:
-        RESOURCES + "/genomes/{genome}.dict"
+        f"{RESOURCES}/genomes/{{genome}}.dict"
     conda:
         "../envs/utils.yml"
     resources:

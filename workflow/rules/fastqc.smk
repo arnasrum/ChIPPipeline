@@ -1,14 +1,14 @@
 rule fastqc_unprocessed:
     input:
-        raw = RESOURCES + "/reads/{sample}.fastq.gz",
+        raw = f"{RESOURCES}/reads/{{sample}}.fastq.gz",
     output:
-        raw = multiext(RESULTS + "/fastqc/unprocessed/{sample}_fastqc.", "zip", "html"),
+        raw = multiext(f"{RESULTS}/fastqc/unprocessed/{{sample}}_fastqc.", "zip", "html"),
     params:
         outputPath = lambda wildcards: f"{RESULTS}/fastqc/unprocessed"
     conda:
         "../envs/fastqc.yml"
     log:
-        LOGS + "/fastqc/{sample}.log",
+        f"{LOGS}/fastqc/{{sample}}.log",
     threads:
         int(config["fastqc"]["threads"])
     resources:
@@ -24,15 +24,15 @@ rule fastqc_unprocessed:
 
 rule fastqc_trimmed:
     input:
-        trimmed = RESULTS + "/{tool}/{sample}.fastq.gz",
+        trimmed = f"{RESULTS}/{{tool}}/{{sample}}.fastq.gz",
     output:
-        trimmed = multiext(RESULTS + "/fastqc/{tool}/{sample}_fastqc.","zip","html")
+        trimmed = multiext(f"{RESULTS}/fastqc/{{tool}}/{{sample}}_fastqc.","zip","html")
     params:
         outputPath = lambda wildcards: f"{RESULTS}/fastqc/{wildcards.tool}"
     conda:
         "../envs/fastqc.yml"
     log:
-        LOGS + "/fastqc/{tool}/{sample}.log",
+        f"{LOGS}/fastqc/{{tool}}/{{sample}}.log",
     threads:
         int(config["fastqc"]["threads"])
     resources:

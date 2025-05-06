@@ -8,13 +8,14 @@ rule macs3_narrow_peak:
         summits=f"{RESULTS}/macs3/{{sample}}_summits.bed",
     params:
         args=config[config['peak_caller']]["args"],
-        peak_type=lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"]
+        peak_type=lambda wildcards: pipeline_config.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
+        paired_end= lambda wildcards: pipeline_config.is_paired_end(wildcards.sample)
     conda:
         "../envs/peak_calling.yml"
     log:
-        LOGS + "/macs3/{sample}.log"
+        f"{LOGS}/macs3/{{sample}}.log"
     benchmark:
-        BENCHMARKS + "/macs3/{sample}.log"
+        f"{BENCHMARKS}/macs3/{{sample}}.log"
     resources:
         tmpdir=TEMP,
         cpus_per_thread = lambda wildcards, threads: threads,
@@ -33,13 +34,14 @@ rule macs3_broad_peak:
         summits=f"{RESULTS}/macs3/{{sample}}_summits.bed",
     params:
         args=config[config['peak_caller']]["args"],
-        peak_type=lambda wildcards: sfs.get_sample_entry_by_file_name(wildcards.sample)["peak_type"]
+        peak_type=lambda wildcards: pipeline_config.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
+        paired_end= lambda wildcards: pipeline_config.is_paired_end(wildcards.sample)
     conda:
         "../envs/peak_calling.yml"
     log:
-        LOGS + "/macs3/{sample}.log"
+        f"{LOGS}/macs3/{{sample}}.log"
     benchmark:
-        BENCHMARKS + "/macs3/{sample}.log"
+        f"{BENCHMARKS}/macs3/{{sample}}.log"
     resources:
         tmpdir=TEMP,
         cpus_per_thread = lambda wildcards, threads: threads,

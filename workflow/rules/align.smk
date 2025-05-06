@@ -27,10 +27,10 @@ rule bowtie2_build:
 
 rule bowtie2:
     input:
-        genome_index = lambda wildcards: multiext(f"{RESULTS}/bowtie2-build/{sfs.get_sample_genome(wildcards.sample)}.", "1.bt2", "2.bt2", "3.bt2", "4.bt2"),
+        genome_index = lambda wildcards: multiext(f"{RESULTS}/bowtie2-build/{pipeline_config.get_sample_genome(wildcards.sample)}.", "1.bt2", "2.bt2", "3.bt2", "4.bt2"),
         reads = lambda wildcards: alignment_input(wildcards.sample)
     output:
-        RESULTS + "/bowtie2/{sample}.bam"
+        f"{RESULTS}/bowtie2/{{sample}}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -38,9 +38,9 @@ rule bowtie2:
     threads:
         int(config['bowtie2']['threads'])
     log:
-        LOGS + "/bowtie2/{sample}.log"
+        f"{LOGS}/bowtie2/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bowtie2/{sample}.txt", int(config["benchmark_repeat_align"]))
+        repeat(f"{BENCHMARKS}/bowtie2/{{sample}}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
@@ -78,7 +78,7 @@ rule bwa_index:
 rule bwa_mem:
     input:
         reads = lambda wildcards: alignment_input(wildcards.sample),
-        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa_index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
+        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa_index/{pipeline_config.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
     output:
         RESULTS + "/bwa_mem/{sample}.bam"
     conda:
@@ -88,9 +88,9 @@ rule bwa_mem:
     threads:
         int(config['bwa_mem']['threads'])
     log:
-        LOGS + "/bwa_mem/{sample}.log"
+        f"{LOGS}/bwa_mem/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bwa_mem/{sample}.txt", int(config["benchmark_repeat_align"]))
+        repeat(f"{BENCHMARKS}/bwa_mem/{{sample}}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
@@ -128,9 +128,9 @@ rule bwa_mem2_index:
 rule bwa_mem2:
     input:
         reads = lambda wildcards: alignment_input(wildcards.sample),
-        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa2_index/{sfs.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
+        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa2_index/{pipeline_config.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
     output:
-        RESULTS + "/bwa_mem2/{sample}.bam"
+        f"{RESULTS}/bwa_mem2/{{sample}}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -138,9 +138,9 @@ rule bwa_mem2:
     threads:
         int(config['bwa_mem2']['threads'])
     log:
-        LOGS + "/bwa_mem2/{sample}.log"
+        f"{LOGS}/bwa_mem2/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/bwa_mem2/{sample}.txt", int(config["benchmark_repeat_align"]))
+        repeat(f"{BENCHMARKS}/bwa_mem2/{{sample}}.txt", int(config["benchmark_repeat_align"]))
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
@@ -153,7 +153,7 @@ rule star_index:
     input:
         f"{RESOURCES}/genomes/{{genome}}.fa"
     output:
-        multiext(RESULTS + "/star_index/{genome}/SA", "", "index")
+        multiext(f"{RESULTS}/star_index/{{genome}}/SA", "", "index")
     params:
         genome_path = f"{RESOURCES}/genomes/{{genome}}.fa",
         result_path = lambda wildcards: f"{RESULTS}/star_index/{wildcards.genome}",
@@ -176,10 +176,10 @@ rule star_index:
 
 rule STAR:
     input:
-        genome_index = lambda wildcards: multiext(RESULTS + f"/star_index/{sfs.get_sample_genome(wildcards.sample)}/SA", "", "index"),
+        genome_index = lambda wildcards: multiext(RESULTS + f"/star_index/{pipeline_config.get_sample_genome(wildcards.sample)}/SA", "", "index"),
         reads = lambda wildcards: [sample.replace(".gz", "") for sample in alignment_input(wildcards.sample)]
     output:
-        RESULTS + "/STAR/{sample}.bam"
+        f"{RESULTS}/STAR/{{sample}}.bam"
     conda:
         "../envs/align.yml"
     threads:
@@ -190,9 +190,9 @@ rule STAR:
         output_path = f"{RESULTS}/STAR",
         read_group= '@RG\tID:{sample}\tSM:{sample}'
     log:
-        LOGS + "/STAR/{sample}.log"
+        f"{LOGS}/STAR/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/STAR/{sample}.txt", config["benchmark_repeat_align"])
+        repeat(f"{BENCHMARKS}/STAR/{{sample}}.txt", config["benchmark_repeat_align"])
     resources:
         tmpdir=TEMP
     script:
