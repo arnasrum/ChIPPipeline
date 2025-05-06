@@ -66,6 +66,7 @@ rule bwa_index:
         f"{BENCHMARKS}/bwa_index/{{genome}}.txt"
     resources:
         tmpdir=TEMP,
+        cpus_per_task = lambda wildcards, threads: threads,
         mem_mb= lambda wildcards,attempt: config['bwa_mem_index']['mem_mb'] * attempt,
         runtime= lambda wildcards,attempt: config['bwa_mem_index']['runtime'] * attempt
     shell:
@@ -116,6 +117,7 @@ rule bwa_mem2_index:
         f"{BENCHMARKS}/bwa2_index/{{genome}}.txt"
     resources:
         tmpdir=TEMP,
+        cpus_per_task = lambda wildcards, threads: threads,
         mem_mb= lambda wildcards,attempt: config['bwa_mem2_index']['mem_mb'] * attempt,
         runtime= lambda wildcards,attempt: config['bwa_mem2_index']['runtime'] * attempt
     shell:
@@ -166,7 +168,10 @@ rule star_index:
     benchmark:
         f"{BENCHMARKS}/star_index/{{genome}}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads,
+        runtime= lambda wildcards,attempt: config['star_index']['runtime'] * attempt,
+        mem_mb= lambda wildcards,attempt: config['star_index']['mem_mb'] * attempt,
     shell:
         """
         exec > {log} 2>&1
@@ -194,6 +199,9 @@ rule STAR:
     benchmark:
         repeat(f"{BENCHMARKS}/STAR/{{sample}}.txt", config["benchmark_repeat_align"])
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task = lambda wildcards, threads: threads,
+        runtime = lambda wildcards, attempt: config['star']['runtime'] * attempt,
+        mem_mb = lambda wildcards,attempt: config['star']['mem_mb'] * attempt,
     script:
         "../scripts/tools/star.py"
