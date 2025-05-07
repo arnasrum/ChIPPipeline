@@ -57,25 +57,6 @@ class PipelineConfiguration:
                         raise InputException(f"The configuration argument; {tool} {key}, contains invalid characters.")
 
 
-    def __validate_sample_sheet(self, sample_sheet: pd.DataFrame):
-        for index, row in sample_sheet.iterrows():
-            if not row["type"] in ["treatment", "control"]:
-                raise InputException(f"Row {index} in \"type\" column contains invalid value. {row['type']}")
-            if  row["type"] == "treatment" and not row["peak_type"] in ["narrow", "broad", ""]:
-                if row["peak_type"] == "" or row["peak_type"] is None:
-                    raise InputException(f"Row {index} in \"peak_type\" treatment samples must have defined peak type.")
-                raise InputException(f"Row {index} in \"peak_type\" column contains invalid value. {row['peak_type']}")
-            if not isinstance(row["replicate"], int):
-                # something wrong here, if genome is defined this gives the wrong message
-                raise InputException(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be an integer.")
-            if not row["accession"] and not row["file_path"]:
-                raise InputException(f"Row {index} in column \"accession\" contains invalid value.")
-            if row["file_path"]:
-                for file in row["file_path"].split(";"):
-                    if not os.path.isfile(file):
-                        raise InputException(f"Provided file: {file}, in row {index}, does not exist.")
-            if row["file_path"] and str(row["paired_end"]).lower() == 'true' and len(row["file_path"].split(";")) == 1:
-                raise InputException(f"Running pipeline in paired end mode, but only one read provided for row {index} in sample sheet.")
 
     def make_sample_info(self) -> dict[str:dict]:
         """
@@ -104,7 +85,7 @@ class PipelineConfiguration:
         else:
             raise Exception("Sample sheet file format not supported. Only .csv and .json are supported.")
         sample_sheet = sample_sheet.fillna(np.nan).replace([np.nan], [None])
-        self.__validate_sample_sheet(sample_sheet)
+        PipelineConfiguration.__validate_sample_sheet(sample_sheet)
         self.__validate_config()
 
         for index, row in sample_sheet.iterrows():
@@ -281,6 +262,27 @@ class PipelineConfiguration:
         """
         genome = self.get_sample_entry_by_file_name(file_name)['genome'].split("/")[-1].split(".")[0]
         return genome
+
+    @staticmethod
+    def __validate_sample_sheet(sample_sheet: pd.DataFrame):
+        for index, row in sample_sheet.iterrows():
+            if not row["type"] in ["treatment", "control"]:
+                raise InputException(f"Row {index} in \"type\" column contains invalid value. {row['type']}")
+            if  row["type"] == "treatment" and not row["peak_type"] in ["narrow", "broad", ""]:
+                if row["peak_type"] == "" or row["peak_type"] is None:
+                    raise InputException(f"Row {index} in \"peak_type\" treatment samples must have defined peak type.")
+                raise InputException(f"Row {index} in \"peak_type\" column contains invalid value. {row['peak_type']}")
+            if not isinstance(row["replicate"], int) or int(row["replicate"]) < 0:
+                # something wrong here, if genome is defined this gives the wrong message
+                raise InputException(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be a positive integer.")
+            if not row["accession"] and not row["file_path"]:
+                raise InputException(f"Row {index} in column \"accession\" contains invalid value.")
+            if row["file_path"]:
+                for file in row["file_path"].split(";"):
+                    if not os.path.isfile(file):
+                        raise InputException(f"Provided file: {file}, in row {index}, does not exist.")
+            if row["file_path"] and str(row["paired_end"]).lower() == 'true' and len(row["file_path"].split(";")) == 1:
+                raise InputException(f"Running pipeline in paired end mode, but only one read provided for row {index} in sample sheet.")
 
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:
