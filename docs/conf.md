@@ -139,9 +139,9 @@ Or by editing the [configuration file](../config/config.yml) directly
       <td colspan="3">Some tools have unique parameters specific to their functionality:</td>
     </tr>
      <tr>
-      <td><code>trimmomatic</code> -> <code>run_options</code></td>
+      <td><code>trimmomatic</code> -> <code>trimming_steps</code></td>
       <td>String (e.g., <code>"ILLUMINACLIP:..."</code>)</td>
-      <td>Specific run parameters or options string passed directly to Trimmomatic's command.</td>
+      <td>Specific trimming parameters and steps string passed directly to Trimmomatic's command.</td>
     </tr>
      <tr>
       <td><code>computeMatrix</code> -> <code>mode</code></td>

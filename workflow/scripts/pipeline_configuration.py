@@ -49,7 +49,7 @@ class PipelineConfiguration:
             if not (str(self.config[key]).lower() == "true" or str(self.config[key]).lower() == "false"):
                 raise InputException(f"The configuration argument; {key}, must be true or false.")
         char_whitelist = re.compile(r"[a-zA-Z0-9,._:\s\"\'\-]")
-        injectable_options = ["args", "run_options", "mode"]
+        injectable_options = ["args", "trimming_steps", "mode"]
         for tool in self.config:
             for key in injectable_options:
                 if isinstance(self.config[tool], dict) and key in self.config[tool].keys() and self.config[tool][key]:

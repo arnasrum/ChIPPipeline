@@ -32,7 +32,7 @@ if read2:
     command += f" {output_path}/{file_name}{read_extensions[1]}"
     unpaired2 = f"{output_path}/{file_name}_unpaired{read_extensions[1]}"
     command += f" {unpaired2}"
-if snakemake.config['trimmomatic']['run_options']:
+if snakemake.config['trimmomatic']['trimming_steps']:
     command += f" {snakemake.config['trimmomatic']['run_options']}"
 elif read2:
     command += f" ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
