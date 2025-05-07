@@ -6,7 +6,7 @@ rule get_fastq_PE:
         temp(f"{RESOURCES}/reads/{{accession}}_1.fastq"),
         temp(f"{RESOURCES}/reads/{{accession}}_2.fastq")
     log:
-        "logs/fastq-dump_pe/{accession}.log"
+        f"{LOGS}/fastq-dump_pe/{{accession}}.log"
     params:
         extra=str(config["fastq-dump"]["args"])
     threads:
@@ -22,7 +22,7 @@ rule get_fastq_SE:
     output:
         temp(f"{RESOURCES}/reads/{{accession}}.fastq")
     log:
-        "logs/fastq-dump_se/{accession}.log"
+        f"{LOGS}/fastq-dump_se/{{accession}}.log"
     params:
         extra=str(config["fastq-dump"]["args"])
     threads:
@@ -38,11 +38,13 @@ rule concatenate_runs_SE:
     input:
         lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample)
     output:
-        [f"{RESOURCES}/reads/{{sample}}.fastq.gz"]
+        f"{RESOURCES}/reads/{{sample}}.fastq.gz"
     log:
         f"{LOGS}/concatenate/{{sample}}.log"
     resources:
         tmpdir=TEMP
+    conda:
+        "../envs/input.yml"
     script:
         "../scripts/concatenate_runs.py"
 
@@ -56,6 +58,8 @@ rule concatenate_runs_PE:
         f"{LOGS}/concatenate/{{sample}}.log"
     resources:
         tmpdir=TEMP
+    conda:
+        "../envs/input.yml"
     script:
         "../scripts/concatenate_runs.py"
 
@@ -68,6 +72,8 @@ rule handle_provided_samples_SE:
         f"{LOGS}/provided_files/{{file_name}}.log"
     resources:
         tmpdir=TEMP
+    conda:
+        "../envs/input.yml"
     script:
         "../scripts/handle_provided_files.py"
 
@@ -79,17 +85,17 @@ rule handle_provided_samples_PE:
         f"{RESOURCES}/reads/{{file_name}}_1.fastq.gz",
         f"{RESOURCES}/reads/{{file_name}}_2.fastq.gz"
     log:
-        LOGS + "/provided_files/{file_name}.log"
+        f"{LOGS}/provided_files/{{file_name}}.log"
     resources:
         tmpdir=TEMP
+    conda:
+        "../envs/input.yml"
     script:
         "../scripts/handle_provided_files.py"
 
 rule fetch_genome:
     output:
         f"{RESOURCES}/genomes/{{genome}}.fa.gz"
-    conda:
-        "../envs/download.yml"
     log:
         f"{LOGS}/genomes/{{genome}}.log"
     benchmark:
@@ -98,5 +104,7 @@ rule fetch_genome:
         genome = lambda wildcards: wildcards.genome
     resources:
         tmpdir=TEMP
+    conda:
+        "../envs/input.yml"
     script:
         "../scripts/fetch_genome.py"
