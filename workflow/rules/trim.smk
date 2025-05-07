@@ -156,7 +156,7 @@ rule trimmomatic_SE:
         "../envs/trim.yml"
     params:
         args = config["trimmomatic"]["args"],
-        run_options = config['trimmomatic']['run_options']
+        trimming_steps = config['trimmomatic']['trimming_steps']
     threads:
         int(config["trimmomatic"]["threads"])
     log:
@@ -181,7 +181,7 @@ rule trimmomatic_PE:
         "../envs/trim.yml"
     params:
         args = config["trimmomatic"]["args"],
-        run_options = config['trimmomatic']['run_options']
+        trimming_steps = config['trimmomatic']['trimming_steps']
     threads:
         int(config["trimmomatic"]["threads"])
     log:
