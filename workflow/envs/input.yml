@@ -6,4 +6,3 @@ dependencies:
   - sra-tools=3.1.1
   - rsync=3.3
   - gzip=1.12
-  - cat=9.4

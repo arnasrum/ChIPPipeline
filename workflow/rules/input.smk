@@ -101,7 +101,7 @@ rule fetch_genome:
     benchmark:
         f"{BENCHMARKS}/genomes/{{genome}}.benchmark.txt"
     params:
-        genome = lambda wildcards: wildcards.genome
+        samples = flatten_dict(file_info)
     resources:
         tmpdir=TEMP
     conda:

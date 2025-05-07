@@ -91,12 +91,12 @@ class PipelineConfiguration:
         for index, row in sample_sheet.iterrows():
             sample = ""
             availability_type = ""
-            if (row["file_path"] is None or row["file_path"] == "") and geo_accession_pattern.match(row["accession"]):
+            if ("file_path" in row and not row["file_path"]) and geo_accession_pattern.match(row["accession"]):
                 availability_type = "public"
                 sample = row["accession"]
                 geo_accessions.add(row["accession"])
                 sample_info[availability_type][sample] = {}
-            if row["file_path"]:
+            if "file_path" in row and row["file_path"]:
                 availability_type = "provided"
                 paths = row["file_path"].split(";")
                 genome_name = row['genome'].split('/')[-1].split('.')[0]
@@ -277,11 +277,11 @@ class PipelineConfiguration:
                 raise InputException(f"Row {index} in \"replicate\" column contains invalid value. {row['replicate']} must be a positive integer.")
             if not row["accession"] and not row["file_path"]:
                 raise InputException(f"Row {index} in column \"accession\" contains invalid value.")
-            if row["file_path"]:
+            if "file_path" in row and row["file_path"]:
                 for file in row["file_path"].split(";"):
                     if not os.path.isfile(file):
                         raise InputException(f"Provided file: {file}, in row {index}, does not exist.")
-            if row["file_path"] and str(row["paired_end"]).lower() == 'true' and len(row["file_path"].split(";")) == 1:
+            if "file_path" in row and row["file_path"] and str(row["paired_end"]).lower() == 'true' and len(row["file_path"].split(";")) == 1:
                 raise InputException(f"Running pipeline in paired end mode, but only one read provided for row {index} in sample sheet.")
 
     @staticmethod
