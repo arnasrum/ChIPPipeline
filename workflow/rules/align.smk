@@ -81,7 +81,7 @@ rule bwa_mem:
         reads = lambda wildcards: alignment_input(wildcards.sample),
         genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa_index/{pipeline_config.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
     output:
-        RESULTS + "/bwa_mem/{sample}.bam"
+        f"{RESULTS}/bwa_mem/{{sample}}.bam"
     conda:
         "../envs/align.yml"
     params:
@@ -191,9 +191,6 @@ rule STAR:
         int(config['star']['threads'])
     params:
         args = config["star"]["args"],
-        index_path = f"{RESULTS}/star-index",
-        output_path = f"{RESULTS}/STAR",
-        read_group= '@RG\tID:{sample}\tSM:{sample}'
     log:
         f"{LOGS}/STAR/{{sample}}.log"
     benchmark:

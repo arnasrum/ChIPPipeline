@@ -54,7 +54,7 @@ def symlink_input(file_name: str) -> None:
 def concatenate_runs_input(runs: list[str], file_name: str) -> list[str]:
     extensions = ["_1", "_2"] if pipeline_config.is_paired_end(file_name) else []
     return [
-        RESOURCES + f"/reads/{run}{extension}.fastq"
+        f"{RESOURCES}/reads/{run}{extension}.fastq"
         for extension in extensions
         for run in runs
     ]

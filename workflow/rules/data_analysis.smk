@@ -3,11 +3,11 @@ rule deeptools_bamCoverage:
         bam = f"{RESULTS}/{config['duplicate_processor']}/{{sample}}.bam",
         bam_index = f"{RESULTS}/{config['duplicate_processor']}/{{sample}}.bam.bai",
     output:
-        RESULTS + "/deeptools-bamCoverage/{sample}.bw"
+        f"{RESULTS}/deeptools-bamCoverage/{{sample}}.bw"
     conda:
         "../envs/data_analysis.yml"
     log:
-        LOGS + "/bamCoverage/{sample}.log"
+        f"{LOGS}/bamCoverage/{{sample}}.log"
     threads:
         int(config['bamCoverage']['threads'])
     resources:
@@ -95,7 +95,7 @@ rule pyGenomeTracks:
     conda:
         "../envs/data_analysis.yml"
     log:
-        LOGS + "/pyGenomeTracks/{sample}.log"
+        f"{LOGS}/pyGenomeTracks/{{sample}}.log"
     resources:
         tmpdir=TEMP
     script:
@@ -103,16 +103,16 @@ rule pyGenomeTracks:
 
 rule bedtools_intersect:
     input:
-        a = lambda wildcards: get_consensus_peak_input(wildcards.sample)[0],
-        b = lambda wildcards: get_consensus_peak_input(wildcards.sample)[1:]
+        a = lambda wildcards: get_consensus_peak_input(wildcards.group)[0],
+        b = lambda wildcards: get_consensus_peak_input(wildcards.group)[1:]
     output:
-        f"{RESULTS}/bedtools/{{sample}}.consensusPeak"
+        f"{RESULTS}/bedtools/{{group}}.consensusPeak"
     conda:
         "../envs/data_analysis.yml"
     log:
-        LOGS + "/bedtools-intersect/{sample}.log"
+        f"{LOGS}/bedtools-intersect/{{group}}.log"
     benchmark:
-        BENCHMARKS + "/bedtools-intersect/{sample}.txt"
+        f"{BENCHMARKS}/bedtools-intersect/{{group}}.txt"
     resources:
         tmpdir=TEMP,
     shell:
@@ -132,7 +132,7 @@ rule homer_annotate_peaks:
         outdir = f"{RESULTS}/homer",
         genome = lambda wildcards: wildcards.group.split("_")[-1]
     log:
-        LOGS + "/homer/{group}_annotate.log"
+        f"{LOGS}/homer/{{group}}_annotate.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task = lambda wildcards, threads: threads,
@@ -148,19 +148,19 @@ rule homer_annotate_peaks:
 
 rule homer_find_motifs_genome:
     input:
-        f"{RESULTS}/homer/{{sample}}_annotate.txt"
+        f"{RESULTS}/homer/{{group}}_annotate.txt"
     output:
-        multiext(f"{RESULTS}/homer/{{sample}}/", "homerResults.html", "knownResults.html")
+        multiext(f"{RESULTS}/homer/{{group}}/", "homerResults.html", "knownResults.html")
     conda:
         "../envs/data_analysis.yml"
     params:
         outdir = f"{RESULTS}/homer",
-        genome = lambda wildcards: wildcards.sample.split("_")[-1],
+        genome = lambda wildcards: wildcards.group.split("_")[-1],
         args = config["find_motifs_genome"]["args"]
     threads:
         int(config["find_motifs_genome"]["threads"])
     log:
-        LOGS + "/homer/{sample}_findMotifs.log"
+        f"{LOGS}/homer/{{group}}_findMotifs.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards,threads: threads,
@@ -170,7 +170,7 @@ rule homer_find_motifs_genome:
         '''
         exec > {log} 2>&1
         mkdir -p {params.outdir}
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.sample} -p {threads} {params.args}
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.group} -p {threads} {params.args}
         '''
 
 rule plot_annotated_peaks:
@@ -183,5 +183,7 @@ rule plot_annotated_peaks:
         threshold_fraction = 0.01
     conda:
         "../envs/data_analysis.yml"
+    log:
+        f"{LOGS}/plot_annotated_peaks/{{sample}}.log"
     script:
         "../scripts/plot_annotated_peaks.py"
