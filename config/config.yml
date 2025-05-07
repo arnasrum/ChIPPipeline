@@ -107,7 +107,7 @@ star:
   mem_mb: 8000
   runtime: 120
 
-# Utils config
+# Duplicate processor config
 MarkDuplicates:
   args: ""
   mem_mb: 8000
@@ -117,6 +117,7 @@ markdup:
   threads: 12
   mem_mb: 8000
   runtime: 60
+
 # Peak calling config
 macs3:
   mem_mb: 1200
@@ -144,6 +145,7 @@ pyGenomeTracks:
   # Comma seperated options will be appended the track files
   bigwig_options: "max_value = 6"
   bed_options: ""
+# HOMER config
 annotate_peaks:
   threads: 12
   mem_mb: 8000
