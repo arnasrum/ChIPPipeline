@@ -7,8 +7,7 @@ log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 
 command = "STAR"
 
-uuid = str(uuid4())
-command += f" --outTmpDir {snakemake.resources['tmpdir']}/{uuid}"
+command += f" --outTmpDir {snakemake.resources['tmpdir']}/{str(uuid4())}"
 output_path = path.dirname(snakemake.output[0]) + f"/{snakemake.wildcards['sample']}_"
 command += f" --outFileNamePrefix {output_path}"
 command += f" --readFilesType Fastx"

@@ -159,6 +159,7 @@ rule star_index:
     params:
         genome_path = f"{RESOURCES}/genomes/{{genome}}.fa",
         result_path = lambda wildcards: f"{RESULTS}/star_index/{wildcards.genome}",
+        uuid = str(uuid4())
     conda:
         "../envs/align.yml"
     threads:
@@ -175,8 +176,7 @@ rule star_index:
     shell:
         """
         exec > {log} 2>&1
-        rm -rf {resources.tmpdir}/star-index
-        STAR --outTmpDir {resources.tmpdir}/star_index --runThreadN {threads} --runMode genomeGenerate --genomeDir {params.result_path} --genomeFastaFiles {params.genome_path}
+        STAR --outTmpDir {resources.tmpdir}/star_index/{params.uuid} --runThreadN {threads} --runMode genomeGenerate --genomeDir {params.result_path} --genomeFastaFiles {params.genome_path}
         """ 
 
 rule STAR:
