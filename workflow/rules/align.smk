@@ -28,7 +28,7 @@ rule bowtie2_build:
 rule bowtie2:
     input:
         genome_index = lambda wildcards: multiext(f"{RESULTS}/bowtie2-build/{pipeline_config.get_sample_genome(wildcards.sample)}.", "1.bt2", "2.bt2", "3.bt2", "4.bt2"),
-        reads = lambda wildcards: alignment_input(wildcards.sample)
+        reads = lambda wildcards: alignment_input(wildcards.sample, RESULTS, pipeline_config)
     output:
         f"{RESULTS}/bowtie2/{{sample}}.bam"
     conda:
@@ -78,8 +78,8 @@ rule bwa_index:
 
 rule bwa_mem:
     input:
-        reads = lambda wildcards: alignment_input(wildcards.sample),
-        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa_index/{pipeline_config.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt")
+        genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa_index/{pipeline_config.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "sa", "bwt"),
+        reads = lambda wildcards: alignment_input(wildcards.sample,RESULTS,pipeline_config)
     output:
         f"{RESULTS}/bwa_mem/{{sample}}.bam"
     conda:
@@ -129,7 +129,7 @@ rule bwa_mem2_index:
 
 rule bwa_mem2:
     input:
-        reads = lambda wildcards: alignment_input(wildcards.sample),
+        reads = lambda wildcards: alignment_input(wildcards.sample, RESULTS, pipeline_config),
         genome_index = lambda wildcards: multiext(f"{RESULTS}/bwa2_index/{pipeline_config.get_sample_genome(wildcards.sample)}.", "amb", "ann", "pac", "bwt.2bit.64", "0123")
     output:
         f"{RESULTS}/bwa_mem2/{{sample}}.bam"
@@ -181,10 +181,10 @@ rule star_index:
 
 rule STAR:
     input:
+        reads = lambda wildcards: alignment_input(wildcards.sample, RESULTS, pipeline_config),
         genome_index = lambda wildcards: multiext(RESULTS + f"/star_index/{pipeline_config.get_sample_genome(wildcards.sample)}/SA", "", "index"),
-        reads = lambda wildcards: [sample.replace(".gz", "") for sample in alignment_input(wildcards.sample)]
     output:
-        f"{RESULTS}/STAR/{{sample}}.bam"
+        f"{RESULTS}/star/{{sample}}.bam"
     conda:
         "../envs/align.yml"
     threads:
