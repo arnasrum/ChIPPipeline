@@ -13,4 +13,3 @@
 
 ## Do some work:
 apptainer exec -B </path_to_workdir> <container_name> snakemake -c <num>
-~                                                                                                     

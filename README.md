@@ -39,7 +39,7 @@ Using Singularity and Apptainer it is possible run the pipeline without installi
 
 Run:
 
-`apptainer pull container_name docker://arnasrum/chippipeline`
+`apptainer pull <container_name> docker://arnasrum/chippipeline`
 
 Snakemake together conda is available for use in the container.
 
