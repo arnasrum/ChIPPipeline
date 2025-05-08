@@ -5,7 +5,7 @@ ruleorder: trimmomatic_PE > trimmomatic_SE
 
 rule trim_galore_SE:
     input:
-        lambda wildcards: trimmer_input(wildcards.sample)
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/trim_galore/{{sample}}.fastq.gz")
     conda:
@@ -29,7 +29,7 @@ rule trim_galore_SE:
 
 rule trim_galore_PE:
     input:
-        lambda wildcards: trimmer_input(wildcards.sample)
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/trim_galore/{{sample}}_1.fastq.gz"),
         temp(f"{RESULTS}/trim_galore/{{sample}}_2.fastq.gz"),
@@ -54,7 +54,7 @@ rule trim_galore_PE:
 
 rule cutadapt_SE:
     input:
-        lambda wildcards: trimmer_input(wildcards.sample)
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/cutadapt/{{sample}}.fastq.gz")
     conda:
@@ -77,7 +77,7 @@ rule cutadapt_SE:
 
 rule cutadapt_PE:
     input:
-        lambda wildcards: trimmer_input(wildcards.sample)
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/cutadapt/{{sample}}_1.fastq.gz"),
         temp(f"{RESULTS}/cutadapt/{{sample}}_2.fastq.gz"),
@@ -101,7 +101,7 @@ rule cutadapt_PE:
 
 rule fastp_SE:
     input:
-        samples = lambda wildcards: trimmer_input(wildcards.sample)
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/fastp/{{sample}}.fastq.gz")
     conda:
@@ -124,7 +124,7 @@ rule fastp_SE:
 
 rule fastp_PE:
     input:
-        samples = lambda wildcards: trimmer_input(wildcards.sample)
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/fastp/{{sample}}_1.fastq.gz"),
         temp(f"{RESULTS}/fastp/{{sample}}_2.fastq.gz")
@@ -149,7 +149,7 @@ rule fastp_PE:
 
 rule trimmomatic_SE:
     input:
-        samples = lambda wildcards: trimmer_input(wildcards.sample)
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/trimmomatic/{{sample}}.fastq.gz")
     conda:
@@ -173,7 +173,7 @@ rule trimmomatic_SE:
 
 rule trimmomatic_PE:
     input:
-        samples = lambda wildcards: trimmer_input(wildcards.sample)
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         temp(f"{RESULTS}/trimmomatic/{{sample}}_1.fastq.gz"),
         temp(f"{RESULTS}/trimmomatic/{{sample}}_2.fastq.gz")

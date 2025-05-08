@@ -1,7 +1,7 @@
 rule deeptools_bamCoverage:
     input:
-        bam = f"{RESULTS}/{config['duplicate_processor']}/{{sample}}.bam",
-        bam_index = f"{RESULTS}/{config['duplicate_processor']}/{{sample}}.bam.bai",
+        bam = f"{RESULTS}/{pipeline_config.get_config_option('duplicate_processor')}/{{sample}}.bam",
+        bam_index = f"{RESULTS}/{pipeline_config.get_config_option('duplicate_processor')}/{{sample}}.bam.bai",
     output:
         f"{RESULTS}/deeptools-bamCoverage/{{sample}}.bw"
     conda:
@@ -23,7 +23,7 @@ rule deeptools_bamCoverage:
 
 rule deeptools_computeMatrix:
     input:
-        beds = lambda wildcards:f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak",
+        beds = lambda wildcards:f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak",
         bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
@@ -81,7 +81,7 @@ rule deeptools_plotProfile:
 
 rule pyGenomeTracks:
     input:
-        bed = lambda wildcards: [f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}_peaks.narrowPeak"],
+        bed = lambda wildcards: [f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak"],
         bigwig = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         tracks = temp(f"{RESULTS}/pyGenomeTracks/{{sample}}_tracks.ini"),
@@ -103,8 +103,8 @@ rule pyGenomeTracks:
 
 rule bedtools_intersect:
     input:
-        a = lambda wildcards: get_consensus_peak_input(wildcards.group)[0],
-        b = lambda wildcards: get_consensus_peak_input(wildcards.group)[1:]
+        a = lambda wildcards: get_consensus_peak_input(wildcards.group, RESULTS, pipeline_config)[0],
+        b = lambda wildcards: get_consensus_peak_input(wildcards.group, RESULTS, pipeline_config)[1:]
     output:
         f"{RESULTS}/bedtools/{{group}}.consensusPeak"
     conda:

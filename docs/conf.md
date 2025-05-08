@@ -41,7 +41,7 @@ Or by editing the [configuration file](../config/config.yml) directly
     </tr>
     <tr>
       <td><code>duplicate_processor</code></td>
-      <td>String (e.g., <code>"MarkDuplicates"</code>, <code>"markdup"</code>)</td>
+      <td>String (e.g., <code>"mark_duplicates"</code>, <code>"markdup"</code>)</td>
       <td>Selects the tool used to identify and/or mark duplicate reads.</td>
     </tr>
     <tr>

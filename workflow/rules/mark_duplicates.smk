@@ -1,24 +1,24 @@
-rule picard_MarkDuplicates:
+rule picard_mark_duplicates:
     input:
-        aligned = f"{RESULTS}/{config['aligner']}/{{sample}}.bam",
+        aligned = f"{RESULTS}/{pipeline_config.get_config_option('aligner')}/{{sample}}.bam",
     output:
-        sorted = temp(f"{RESULTS}/MarkDuplicates/{{sample}}_sorted.bam"),
-        marked = f"{RESULTS}/MarkDuplicates/{{sample}}.bam",
-        index = f"{RESULTS}/MarkDuplicates/{{sample}}.bam.bai",
-        metrics = f"{RESULTS}/MarkDuplicates/{{sample}}.metrics.txt"
+        sorted = temp(f"{RESULTS}/mark_duplicates/{{sample}}_sorted.bam"),
+        marked = f"{RESULTS}/mark_duplicates/{{sample}}.bam",
+        index = f"{RESULTS}/mark_duplicates/{{sample}}.bam.bai",
+        metrics = f"{RESULTS}/mark_duplicates/{{sample}}.metrics.txt"
     params:
-        args = config['MarkDuplicates']['args']
+        args = config['mark_duplicates']['args']
     conda:
         "../envs/utils.yml"
     log:
-        f"{LOGS}/MarkDuplicates/{{sample}}.log"
+        f"{LOGS}/mark_duplicates/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/MarkDuplicates/{{sample}}.txt", config["benchmark_repeat_duplicate"])
+        repeat(f"{BENCHMARKS}/mark_duplicates/{{sample}}.txt", config["benchmark_repeat_duplicate"])
     resources:
         tmpdir=TEMP,
         cpus_per_thread= lambda wildcards,threads: threads,
-        mem_mb= lambda wildcards,attempt: config["MarkDuplicates"]["mem_mb"] * attempt,
-        runtime= lambda wildcards,attempt: config["MarkDuplicates"]["runtime"] * attempt,
+        mem_mb= lambda wildcards,attempt: config["mark_duplicates"]["mem_mb"] * attempt,
+        runtime= lambda wildcards,attempt: config["mark_duplicates"]["runtime"] * attempt,
     shell:
         """
         exec > {log} 2>&1
@@ -29,7 +29,7 @@ rule picard_MarkDuplicates:
 
 rule samtools_markdup:
     input:
-        f"{RESULTS}/{config['aligner']}/{{sample}}.bam"
+        f"{RESULTS}/{pipeline_config.get_config_option('aligner')}/{{sample}}.bam"
     output:
         marked = f"{RESULTS}/markdup/{{sample}}.bam",
         index = f"{RESULTS}/markdup/{{sample}}.bam.bai",

@@ -1,82 +1,71 @@
-import os.path
-import sys
-sys.path.append(".")
 from workflow.scripts.pipeline_configuration import PipelineConfiguration
-from workflow.scripts.set_config_options import set_module_options, set_output_paths
-from uuid import uuid4
+import os
 
-set_module_options(config)
-set_output_paths(config)
-pipeline_config = PipelineConfiguration(config)
-file_info = pipeline_config.make_sample_info()
-treatment_groups = pipeline_config.group_treatment_files()
 
-RESULTS = config['results_path']
-RESOURCES = config['resources_path']
-LOGS = config['logs_path']
-BENCHMARKS = config['benchmarks_path']
-TEMP = config['temp_path']
-
-def trimmer_input(sample: str) -> list[str]:
+def trimmer_input(sample: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if pipeline_config.is_paired_end(sample) else [".fastq.gz"]
-    return [f"{RESOURCES}/reads/{sample}{extension}" for extension in fastq_file_extensions]
+    return [f"{resource_path}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
-def reference_genome_input(genome: str):
-    genomes = [sample['genome'] for sample in flatten_dict(file_info).values()]
+def reference_genome_input(genome: str, pipeline_config: PipelineConfiguration) -> str:
+    genomes = [sample['genome'] for sample in flatten_dict(pipeline_config.sample_info).values()]
     valid = filter(lambda sample_sheet_genome: genome in sample_sheet_genome and os.path.isfile(sample_sheet_genome), genomes)
     return next(valid, "")
 
-def alignment_input(file_name: str) -> list[str]:
+def alignment_input(file_name: str, result_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if pipeline_config.is_paired_end(file_name) else [".fastq.gz"]
-    return [f"{RESULTS}/{config['trimmer']}/{file_name}{extension}" for extension in fastq_file_extensions]
+    return [f"{result_path}/{pipeline_config.get_config_option('trimmer')}/{file_name}{extension}" for extension in fastq_file_extensions]
 
-def peak_calling_input(sample: str) -> dict[str, list[str]]:
+def peak_calling_input(sample: str, result_path: str, pipeline_config: PipelineConfiguration) -> dict[str, list[str]]:
+    treatment_groups = pipeline_config.group_treatment_files()
     groups = [treatment_groups[pool][replicate]
         for pool in treatment_groups
         for replicate in treatment_groups[pool]
     ]
     treatment_group = next(filter(lambda group: sample in group, groups), None)
-    path = f"{RESULTS}/{config['duplicate_processor']}"
+    path = f"{result_path}/{pipeline_config.get_config_option('duplicate_processor')}"
     return {"control": [f"{path}/{file}.bam" for file in pipeline_config.get_control_files(sample)],
             "treatment": [f"{path}/{file}.bam" for file in treatment_group]}
 
-def get_consensus_peak_input(treatment_group: str) -> list[str]:
+def get_consensus_peak_input(treatment_group: str, result_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     treatment_files = []
+    treatment_groups = pipeline_config.group_treatment_files()
     for files in treatment_groups[treatment_group].values():
-        treatment_files += [f"{RESULTS}/{config['peak_caller']}/{file}_peaks.narrowPeak" for file in files]
+        treatment_files += [f"{result_path}/{pipeline_config.get_config_option('peak_caller')}/{file}_peaks.narrowPeak" for file in files]
     if len(treatment_files) == 1:
         treatment_files.append(treatment_files[0])
     return treatment_files
 
-def symlink_input(file_name: str) -> None:
+def symlink_input(file_name: str, pipeline_config: PipelineConfiguration) -> str:
     samples = pipeline_config.sample_info["provided"]
     return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
-def concatenate_runs_input(runs: list[str], file_name: str) -> list[str]:
+def concatenate_runs_input(runs: list[str], file_name: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     extensions = ["_1", "_2"] if pipeline_config.is_paired_end(file_name) else [""]
     return [
-        f"{RESOURCES}/reads/{run}{extension}.fastq"
+        f"{resource_path}/reads/{run}{extension}.fastq"
         for extension in extensions
         for run in runs
     ]
 
-def join_read_files(runs: list, paired_end: bool):
+def join_read_files(runs: list, paired_end: bool, resource_path: str) -> tuple[str] | list[str]:
     if paired_end:
-        return [" ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_1.fastq", runs))),
-                " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}_2.fastq", runs)))]
-    return " ".join(list(map(lambda run: RESOURCES + f"/reads/{run}.fastq", runs))),
+        return [" ".join([f"{resource_path}/reads/{run}_1.fastq" for run in runs]),
+                " ".join([f"{resource_path}/reads/{run}_2.fastq" for run in runs])
+        ]
+    return " ".join([f"{resource_path}/reads/{run}.fastq" for run in runs]),
 
-def get_all_input(config):
+def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     input_files = []
-    path = config["results_path"]
-    if str(config['generate_fastqc_reports']).lower() == "true":
+    path = result_path
+    treatment_groups = pipeline_config.group_treatment_files()
+    if pipeline_config.get_config_option('generate_fastqc_reports') == "true":
         for file_name in pipeline_config.get_all_file_names():
-            input_files += get_fastqc_output(file_name)
+            input_files += get_fastqc_output(file_name, path, pipeline_config)
     for treatment_file in pipeline_config.get_treatment_files():
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "narrow":
             input_files += [f"{path}/pyGenomeTracks/{treatment_file}.png"]
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "broad":
-            input_files += [f"{path}/{config['peak_caller']}/{treatment_file}_peaks.broadPeak"]
+            input_files += [f"{path}/{pipeline_config.get_config_option('peak_caller')}/{treatment_file}_peaks.broadPeak"]
         input_files.append(f"{path}/deeptools/{treatment_file}_heatmap.png")
         input_files.append(f"{path}/deeptools/{treatment_file}_profile.png")
     for group, replicates in treatment_groups.items():
@@ -86,13 +75,14 @@ def get_all_input(config):
             for sample in replicates[replicate]
         )
         if allow_append:
-            input_files.append(f"{RESULTS}/homer/{group}/homerResults.html")
+            input_files.append(f"{path}/homer/{group}/homerResults.html")
             input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
 
-def get_fastqc_output(file_name: str) -> list[str]:
-    base_paths = [f"{RESULTS}/fastqc/unprocessed/{file_name}", f"{RESULTS}/fastqc/{config['trimmer']}/{file_name}"]
-
+def get_fastqc_output(file_name: str, result_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
+    base_paths = [f"{result_path}/fastqc/unprocessed/{file_name}",
+                  f"{result_path}/fastqc/{pipeline_config.get_config_option('trimmer')}/{file_name}"
+    ]
     single_end_extensions = ["_fastqc.zip", "_fastqc.html"]
     paired_end_extensions = ["_1_fastqc.zip", "_2_fastqc.zip", "_1_fastqc.html", "_2_fastqc.html"]
     extensions = paired_end_extensions if pipeline_config.is_paired_end(file_name) else single_end_extensions

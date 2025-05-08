@@ -1,8 +1,7 @@
 configfile: "config/config.yml"
-
 conda: "envs/main.yml"
 
-include: "rules/shared.smk"
+include: "rules/setup.smk"
 include: "rules/input.smk"
 include: "rules/trim.smk"
 include: "rules/fastqc.smk"
@@ -14,7 +13,7 @@ include: "rules/data_analysis.smk"
 
 rule all:
     input:
-        get_all_input(config)
+        get_all_input(RESULTS, pipeline_config)
     default_target: True
     params:
         temp_path = config["temp_path"]

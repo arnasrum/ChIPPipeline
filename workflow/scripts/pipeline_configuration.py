@@ -63,7 +63,7 @@ class PipelineConfiguration:
         Creates a dictionary of with parsed sample information from the sample sheet.
 
         Validates the configuration and sample sheet, then processes the sample sheet
-        to create a nested dictionary structure separating public and provided data.
+        to create a nested dictionary separating public and provided data.
         Fetches metadata for public accessions and saves the combined sample info.
 
         Returns:
@@ -283,6 +283,10 @@ class PipelineConfiguration:
                         raise InputException(f"Provided file: {file}, in row {index}, does not exist.")
             if "file_path" in row and row["file_path"] and str(row["paired_end"]).lower() == 'true' and len(row["file_path"].split(";")) == 1:
                 raise InputException(f"Running pipeline in paired end mode, but only one read provided for row {index} in sample sheet.")
+
+    def get_config_option(self, option: str) -> str:
+        if not option in self.config: raise Exception(f"Option {option} does not exist in the configuration file.")
+        return str(self.config[option]).lower()
 
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:

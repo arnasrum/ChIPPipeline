@@ -1,7 +1,7 @@
 rule macs3_narrow_peak:
     input:
-        control=lambda wildcards: peak_calling_input(wildcards.sample)["control"],
-        treatment=lambda wildcards: peak_calling_input(wildcards.sample)["treatment"],
+        control=lambda wildcards: peak_calling_input(wildcards.sample, RESULTS, pipeline_config)["control"],
+        treatment=lambda wildcards: peak_calling_input(wildcards.sample, RESULTS, pipeline_config)["treatment"],
     output:
         peaks=f"{RESULTS}/macs3/{{sample}}_peaks.narrowPeak",
         xls=f"{RESULTS}/macs3/{{sample}}_peaks.xls",
@@ -26,8 +26,8 @@ rule macs3_narrow_peak:
 
 rule macs3_broad_peak:
     input:
-        control=lambda wildcards: peak_calling_input(wildcards.sample)["control"],
-        treatment=lambda wildcards: peak_calling_input(wildcards.sample)["treatment"],
+        control=lambda wildcards: peak_calling_input(wildcards.sample, RESULTS, pipeline_config)["control"],
+        treatment=lambda wildcards: peak_calling_input(wildcards.sample, RESULTS, pipeline_config)["treatment"],
     output:
         peaks=f"{RESULTS}/macs3/{{sample}}_peaks.broadPeak",
         gapped=f"{RESULTS}/macs3/{{sample}}_peaks.gappedPeak",

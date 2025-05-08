@@ -10,9 +10,9 @@ rule unzip_genome:
 
 rule unzip_sample:
     input:
-        f"{RESULTS}/{config['trimmer']}/{{sample}}.gz"
+        f"{RESULTS}/{pipeline_config.get_config_option('trimmer')}/{{sample}}.gz"
     output:
-        temp(f"{RESULTS}/{config['trimmer']}/{{sample}}")
+        temp(f"{RESULTS}/{pipeline_config.get_config_option('trimmer')}/{{sample}}")
     resources:
         tmpdir=TEMP
     shell:

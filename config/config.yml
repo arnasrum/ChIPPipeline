@@ -7,7 +7,7 @@ trimmer: "fastp"
 # Choose aligner
 aligner: "bowtie2"
 # Choose tool to process duplicates
-duplicate_processor: "MarkDuplicates"
+duplicate_processor: "mark_duplicates"
 peak_caller: "macs3"
 
 # Genome to be used to peak call and align
@@ -108,7 +108,7 @@ star:
   runtime: 120
 
 # Duplicate processor config
-MarkDuplicates:
+mark_duplicates:
   args: ""
   mem_mb: 8000
   runtime: 60

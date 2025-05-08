@@ -38,7 +38,7 @@ rule get_fastq_SE:
 
 rule concatenate_runs_SE:
     input:
-        lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample)
+        lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample, RESOURCES, pipeline_config)
     output:
         f"{RESOURCES}/reads/{{sample}}.fastq.gz"
     log:
@@ -52,7 +52,7 @@ rule concatenate_runs_SE:
 
 rule concatenate_runs_PE:
     input:
-        lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample)
+        lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample, RESOURCES, pipeline_config)
     output:
         f"{RESOURCES}/reads/{{sample}}_1.fastq.gz",
         f"{RESOURCES}/reads/{{sample}}_2.fastq.gz"
@@ -67,7 +67,7 @@ rule concatenate_runs_PE:
 
 rule handle_provided_samples_SE:
     input:
-        lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
+        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config)["read1"]["path"],
     output:
         f"{RESOURCES}/reads/{{file_name}}.fastq.gz"
     log:
@@ -81,8 +81,8 @@ rule handle_provided_samples_SE:
 
 rule handle_provided_samples_PE:
     input:
-        lambda wildcards: symlink_input(wildcards.file_name)["read1"]["path"],
-        lambda wildcards: symlink_input(wildcards.file_name)["read2"]["path"]
+        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config)["read1"]["path"],
+        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config)["read2"]["path"]
     output:
         f"{RESOURCES}/reads/{{file_name}}_1.fastq.gz",
         f"{RESOURCES}/reads/{{file_name}}_2.fastq.gz"
@@ -103,7 +103,7 @@ rule fetch_genome:
     benchmark:
         f"{BENCHMARKS}/genomes/{{genome}}.benchmark.txt"
     params:
-        samples = flatten_dict(file_info)
+        samples = flatten_dict(pipeline_config.sample_info)
     resources:
         tmpdir=TEMP
     conda:
