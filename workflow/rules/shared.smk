@@ -3,6 +3,7 @@ import sys
 sys.path.append(".")
 from workflow.scripts.pipeline_configuration import PipelineConfiguration
 from workflow.scripts.set_config_options import set_module_options, set_output_paths
+from uuid import uuid4
 
 set_module_options(config)
 set_output_paths(config)
@@ -52,7 +53,7 @@ def symlink_input(file_name: str) -> None:
     return next((item for item in samples.values() if item["file_name"] == file_name), None)
 
 def concatenate_runs_input(runs: list[str], file_name: str) -> list[str]:
-    extensions = ["_1", "_2"] if pipeline_config.is_paired_end(file_name) else []
+    extensions = ["_1", "_2"] if pipeline_config.is_paired_end(file_name) else [""]
     return [
         f"{RESOURCES}/reads/{run}{extension}.fastq"
         for extension in extensions
