@@ -12,6 +12,7 @@ rule get_fastq_PE:
     threads:
         int(config["fastq-dump"]["threads"])
     resources:
+        tmpdir = TEMP,
         cpus_per_task = int(config["fastq-dump"]["threads"]),
         runtime = int(config["fastq-dump"]["runtime"]),
         mem_mb = int(config["fastq-dump"]["mem_mb"])
@@ -24,10 +25,11 @@ rule get_fastq_SE:
     log:
         f"{LOGS}/fastq-dump_se/{{accession}}.log"
     params:
-        extra=str(config["fastq-dump"]["args"])
+        extra=lambda wildcards, resources: str(config["fastq-dump"]["args"])
     threads:
         int(config["fastq-dump"]["threads"])
     resources:
+        tmpdir = TEMP,
         cpus_per_task = int(config["fastq-dump"]["threads"]),
         runtime = int(config["fastq-dump"]["runtime"]),
         mem_mb = int(config["fastq-dump"]["mem_mb"])
