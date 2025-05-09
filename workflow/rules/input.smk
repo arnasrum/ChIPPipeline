@@ -38,7 +38,7 @@ rule get_fastq_SE:
 
 rule concatenate_runs_SE:
     input:
-        lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample, RESOURCES, pipeline_config)
+        lambda wildcards: concatenate_runs_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         f"{RESOURCES}/reads/{{sample}}.fastq.gz"
     log:
@@ -52,7 +52,7 @@ rule concatenate_runs_SE:
 
 rule concatenate_runs_PE:
     input:
-        lambda wildcards: concatenate_runs_input(file_info["public"][wildcards.sample.split("_")[0]]["runs"], wildcards.sample, RESOURCES, pipeline_config)
+        lambda wildcards: concatenate_runs_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
         f"{RESOURCES}/reads/{{sample}}_1.fastq.gz",
         f"{RESOURCES}/reads/{{sample}}_2.fastq.gz"

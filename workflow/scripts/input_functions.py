@@ -37,8 +37,9 @@ def symlink_input(file_name: str, pipeline_config: PipelineConfiguration) -> str
                 return sample
     return None
 
-def concatenate_runs_input(runs: list[str], file_name: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
+def concatenate_runs_input(file_name: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     extensions = ["_1", "_2"] if pipeline_config.is_paired_end(file_name) else [""]
+    runs = pipeline_config.get_sample_entry_by_file_name(file_name)["runs"]
     return [
         f"{resource_path}/reads/{run}{extension}.fastq"
         for extension in extensions
