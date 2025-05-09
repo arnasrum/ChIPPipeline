@@ -1,15 +1,8 @@
 from workflow.scripts.pipeline_configuration import PipelineConfiguration
-import os
-
 
 def trimmer_input(sample: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if pipeline_config.is_paired_end(sample) else [".fastq.gz"]
-    return [f"{resource_path}/reads/{sample}{extension}" for extension in fastq_file_extensions]
-
-def reference_genome_input(genome: str, pipeline_config: PipelineConfiguration) -> str:
-    genomes = [sample['genome'] for sample in flatten_dict(pipeline_config.sample_info).values()]
-    valid = filter(lambda sample_sheet_genome: genome in sample_sheet_genome and os.path.isfile(sample_sheet_genome), genomes)
-    return next(valid, "")
+    return [f"{resource_path.rstrip('/')}/reads/{sample}{extension}" for extension in fastq_file_extensions]
 
 def alignment_input(file_name: str, result_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if pipeline_config.is_paired_end(file_name) else [".fastq.gz"]
@@ -31,6 +24,7 @@ def get_consensus_peak_input(treatment_group: str, result_path: str, pipeline_co
     treatment_groups = pipeline_config.group_treatment_files()
     for files in treatment_groups[treatment_group].values():
         treatment_files += [f"{result_path}/{pipeline_config.get_config_option('peak_caller')}/{file}_peaks.narrowPeak" for file in files]
+
     if len(treatment_files) == 1:
         treatment_files.append(treatment_files[0])
     return treatment_files
