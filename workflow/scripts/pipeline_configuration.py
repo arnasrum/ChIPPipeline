@@ -37,7 +37,7 @@ class PipelineConfiguration:
         Validates the main configuration parameters and arguments.
 
         Checks if specified boolean arguments have valid 'true' or 'false' values.
-        Also validates potentially injectable arguments within the configuration
+        It Also validates potentially injectable arguments within the configuration
         dictionary for invalid characters to prevent command injection.
 
         Raises:
@@ -89,32 +89,42 @@ class PipelineConfiguration:
         self.__validate_config()
 
         for index, row in sample_sheet.iterrows():
-            sample = ""
-            availability_type = ""
+            if row['type'] == 'treatment':
+                pool = f"{row['mark']}_{row['sample']}_rep{row['replicate']}"
+            elif row['type'] == 'control':
+                pool = f"{row['sample']}_rep{row['replicate']}"
+            else:
+                raise InputException(f"Sample sheet type {row['type']} is not supported.")
+            sample = {}
             if ("file_path" in row and not row["file_path"]) and geo_accession_pattern.match(row["accession"]):
                 availability_type = "public"
-                sample = row["accession"]
                 geo_accessions.add(row["accession"])
-                sample_info[availability_type][sample] = {}
+                if not pool in sample_info[availability_type]:
+                    sample_info[availability_type][pool] = []
+                sample['accession'] = row["accession"]
             if "file_path" in row and row["file_path"]:
                 availability_type = "provided"
+                if not pool in sample_info[availability_type]:
+                    sample_info[availability_type][pool] = []
                 paths = row["file_path"].split(";")
                 genome_name = row['genome'].split('/')[-1].split('.')[0]
-                sample = f"{row['sample']}_{row['type']}_rep{row['replicate']}_{genome_name}".lstrip('_')
+                file_name = f"{row['sample']}_{row['type']}_rep{row['replicate']}_{genome_name}".lstrip('_')
                 if row["mark"]:
-                    sample = f"{row['mark']}_{sample}"
+                    file_name = f"{row['mark']}_{file_name}"
                 if row["accession"]:
-                    sample = f"{row['accession']}_{sample}"
-                sample_info[availability_type][sample] = {}
+                    file_name = f"{row['accession']}_{file_name}"
                 for i, read in enumerate(paths):
                     path = pathlib.Path(read)
-                    sample_info[availability_type][sample][f"read{i + 1}"] = {
+                    sample[f"read{i + 1}"] = {
                         "path": read,
                         "file_extension": "".join(path.suffixes),
                         "file_name": path.name.split("".join(path.suffixes))[0]
                     }
-                    sample_info[availability_type][sample]['file_name'] = sample
-            sample_info[availability_type][sample].update({
+                if len(sample_info[availability_type][pool]) >= 1:
+                    sample['file_name'] = f"{file_name}_pooled{len(sample_info[availability_type][pool]) + 1}"
+                else:
+                    sample['file_name'] = file_name
+            sample.update({
                 "type": row["type"],
                 "sample": row["sample"],
                 "replicate": row["replicate"],
@@ -123,13 +133,18 @@ class PipelineConfiguration:
                 "genome": row["genome"],
                 "paired_end": str(row["paired_end"]).lower(),
             })
+            sample_info[availability_type][pool].append(sample)
         # Handle publicly available files
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
-        sample_info["public"] = {key: value for key, value in map(lambda key: (key, sample_info["public"][key] | fetched_info[key]), sample_info["public"].keys())}
-        for sample in sample_info['public']:
-            sample_info['public'][sample]['file_name'] += f"_{sample_info['public'][sample]['genome'].split('/')[-1].split('.')[0]}"
+        for accession in fetched_info:
+            for pool in sample_info[availability_type]:
+                for entry in sample_info[availability_type][pool]:
+                    if entry["accession"].lower() == accession.lower():
+                        entry.update(fetched_info[accession])
 
         self.sample_info = sample_info
+        #with open('test.json', "w") as file:
+            #json.dump(sample_info, file, indent=4)
         return sample_info
 
     def is_paired_end(self, file_name: str) -> bool:
@@ -151,7 +166,10 @@ class PipelineConfiguration:
         Returns:
             A list of all file names for the samples.
         """
-        return [sample_info["file_name"] for sample_info in PipelineConfiguration.__flatten_dict(self.sample_info).values()]
+        return [entry["file_name"]
+                for pool in PipelineConfiguration.__flatten_dict(self.sample_info).values()
+                for entry in pool
+        ]
 
     def __group_control_files(self) -> dict[str, dict[str, list[str]]]:
         """
@@ -163,9 +181,10 @@ class PipelineConfiguration:
             containing a list of control file names.
         """
         control_files: dict[str, dict[str, list[str]]] = {}
-        for key, entry in self.__flatten_dict(self.sample_info).items():
-            if entry['type'] != "control": continue
-            group_name = f"{entry['sample']}_{self.get_sample_genome(entry['file_name'])}"
+        for pool_key, pool in self.__flatten_dict(self.sample_info).items():
+            if len(pool_key.split("_")) != 2: continue
+            for entry in pool:
+                group_name = f"{entry['sample']}_{self.get_sample_genome(entry['file_name'])}"
             if not group_name in control_files:
                 control_files[group_name] = {}
             if not entry['replicate'] in control_files[group_name]:
@@ -189,7 +208,7 @@ class PipelineConfiguration:
         Raises:
             Exception: If the provided treatment file does not exist in the sample info.
         """
-        treatment_entry = next(filter(lambda entry: entry["file_name"] == treatment_file, self.__flatten_dict(self.sample_info).values()))
+        treatment_entry = self.get_sample_entry_by_file_name(treatment_file)
         if treatment_entry is None:
             raise Exception(f"File: {treatment_file}; does not exists in sample info")
         sample = f"{treatment_entry['sample']}_{self.get_sample_genome(treatment_file)}"
@@ -203,22 +222,22 @@ class PipelineConfiguration:
 
         Returns:
             A nested dictionary where the first key is the treatment group
-            (mark_sample_genome) and the second key is the replicate,
+            (mark_sample_genome), and the second key is the replicate,
             containing a list of treatment file names.
         """
         treatment_samples: dict[str, dict[str, list[str]]] = {}
-        for key, entry in self.__flatten_dict(self.sample_info).items():
-            if entry['type'] != "treatment": continue
-            genome = entry["genome"].split("/")[-1].split(".")[0]
-            group = f"{entry['mark']}_{entry['sample']}_{genome}"
-            if not group in treatment_samples:
-                treatment_samples[group] = {}
-            if not entry['replicate'] in treatment_samples[group]:
-                treatment_samples[group][entry['replicate']] = []
-            treatment_samples[group][entry['replicate']].append(entry['file_name'])
+        for pool_key, pool in self.__flatten_dict(self.sample_info).items():
+            if len(pool_key.split("_")) == 3: # Meaning the pool for treatment files, which is required for treatment files
+                pool_key = "_".join(pool_key.split("_")[:2])
+                if not pool_key in treatment_samples:
+                    treatment_samples[pool_key] = {}
+                for entry in pool:
+                    if not entry['replicate'] in treatment_samples[pool_key]:
+                        treatment_samples[pool_key][entry['replicate']] = []
+                    treatment_samples[pool_key][entry["replicate"]].append(entry["file_name"])
         return treatment_samples
 
-    def get_treatment_files(self, return_entries = False) -> list[str]:
+    def get_treatment_files(self, return_entries = False) -> list[str] | list[dict]:
         """
         Retrieves a list of treatment files.
 
@@ -230,10 +249,16 @@ class PipelineConfiguration:
         Returns:
             A list of treatment file names or sample information dictionaries.
         """
-        if return_entries:
-            return [*filter(lambda entry: entry["type"] == "treatment", self.__flatten_dict(self.sample_info).values())]
-        else:
-            return [entry['file_name'] for entry in filter(lambda entry: entry["type"] == "treatment", self.__flatten_dict(self.sample_info).values())]
+
+        treatment_files = []
+        for pool in self.__flatten_dict(self.sample_info).values():
+            entry = pool[0]
+            if entry['type'] == 'treatment':
+                if return_entries:
+                    treatment_files.append(entry)
+                else:
+                    treatment_files.append(entry['file_name'])
+        return treatment_files
 
     def get_sample_entry_by_file_name(self, file_name: str) -> dict:
         """
@@ -245,7 +270,11 @@ class PipelineConfiguration:
         Returns:
             The dictionary containing all information for the specified sample.
         """
-        return next(filter(lambda entry: entry["file_name"] == file_name, self.__flatten_dict(self.sample_info).values()))
+        for pool in self.__flatten_dict(self.sample_info).values():
+            for entry in pool:
+                if entry["file_name"] == file_name:
+                    return entry
+        raise Exception(f"File {file_name} not found in sample info")
 
     def get_sample_genome(self, file_name: str) -> str:
         """
@@ -287,6 +316,10 @@ class PipelineConfiguration:
     def get_config_option(self, option: str) -> str:
         if not option in self.config: raise Exception(f"Option {option} does not exist in the configuration file.")
         return str(self.config[option]).lower()
+    def get_config_option_bool(self, option: str) -> bool:
+        if not option in self.config: raise Exception(f"Option {option} does not exist in the configuration file.")
+        return str(self.config[option]).lower() in ['true', 't', "y", "yes", "1"]
+
 
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:

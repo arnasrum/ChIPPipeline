@@ -23,15 +23,19 @@ def get_consensus_peak_input(treatment_group: str, result_path: str, pipeline_co
     treatment_files = []
     treatment_groups = pipeline_config.group_treatment_files()
     for files in treatment_groups[treatment_group].values():
-        treatment_files += [f"{result_path}/{pipeline_config.get_config_option('peak_caller')}/{file}_peaks.narrowPeak" for file in files]
+        treatment_files += [f"{result_path}/{pipeline_config.get_config_option('peak_caller')}/{files[0]}_peaks.narrowPeak"]
 
     if len(treatment_files) == 1:
         treatment_files.append(treatment_files[0])
     return treatment_files
 
-def symlink_input(file_name: str, pipeline_config: PipelineConfiguration) -> str:
-    samples = pipeline_config.sample_info["provided"]
-    return next((item for item in samples.values() if item["file_name"] == file_name), None)
+def symlink_input(file_name: str, pipeline_config: PipelineConfiguration) -> str | None:
+    pools = pipeline_config.sample_info["provided"].values()
+    for pool in pools:
+        for sample in pool:
+            if sample['file_name'] == file_name:
+                return sample
+    return None
 
 def concatenate_runs_input(runs: list[str], file_name: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     extensions = ["_1", "_2"] if pipeline_config.is_paired_end(file_name) else [""]
@@ -52,9 +56,9 @@ def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> l
     input_files = []
     path = result_path
     treatment_groups = pipeline_config.group_treatment_files()
-    if pipeline_config.get_config_option('generate_fastqc_reports') == "true":
-        for file_name in pipeline_config.get_all_file_names():
-            input_files += get_fastqc_output(file_name, path, pipeline_config)
+    all_files = pipeline_config.get_all_file_names()
+    if pipeline_config.get_config_option_bool('generate_fastqc_reports'):
+        input_files += [get_fastqc_output(file_name, result_path, pipeline_config) for file_name in all_files]
     for treatment_file in pipeline_config.get_treatment_files():
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "narrow":
             input_files += [f"{path}/pyGenomeTracks/{treatment_file}.png"]
