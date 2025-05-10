@@ -92,6 +92,12 @@ def get_fastqc_output(file_name: str, result_path: str, pipeline_config: Pipelin
     ]
     return output_files
 
+def get_treatment_group_genome_code(group_name: str, pipeline_config: PipelineConfiguration) -> str:
+    treatment_groups = pipeline_config.group_treatment_files()
+    group = next(filter(lambda group: group_name in group, treatment_groups), None)
+    return pipeline_config.get_sample_genome(list(treatment_groups[group].values())[0][0])
+
+
 def flatten_dict(old_dict: dict) -> dict:
     new_dict = {}
     for key, value in old_dict.items():

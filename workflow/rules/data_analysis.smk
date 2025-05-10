@@ -130,7 +130,7 @@ rule homer_annotate_peaks:
         "../envs/data_analysis.yml"
     params:
         outdir = f"{RESULTS}/homer",
-        genome = lambda wildcards: wildcards.group.split("_")[-1]
+        genome = lambda wildcards: get_treatment_group_genome_code(wildcards.group, pipeline_config),
     log:
         f"{LOGS}/homer/{{group}}_annotate.log"
     resources:
@@ -155,7 +155,7 @@ rule homer_find_motifs_genome:
         "../envs/data_analysis.yml"
     params:
         outdir = f"{RESULTS}/homer",
-        genome = lambda wildcards: wildcards.group.split("_")[-1],
+        genome = lambda wildcards: get_treatment_group_genome_code(wildcards.group, pipeline_config),
         args = config["find_motifs_genome"]["args"]
     threads:
         int(config["find_motifs_genome"]["threads"])

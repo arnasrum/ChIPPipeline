@@ -89,10 +89,11 @@ class PipelineConfiguration:
         self.__validate_config()
 
         for index, row in sample_sheet.iterrows():
+            genome_name = row['genome'].split('/')[-1].split('.')[0]
             if row['type'] == 'treatment':
-                pool = f"{row['mark']}_{row['sample']}_rep{row['replicate']}"
+                pool = f"{row['mark']}_{row['sample']}_rep{row['replicate']}_{genome_name}_treatment"
             elif row['type'] == 'control':
-                pool = f"{row['sample']}_rep{row['replicate']}"
+                pool = f"{row['sample']}_rep{row['replicate']}_{genome_name}_control"
             else:
                 raise InputException(f"Sample sheet type {row['type']} is not supported.")
             sample = {}
@@ -107,7 +108,6 @@ class PipelineConfiguration:
                 if not pool in sample_info[availability_type]:
                     sample_info[availability_type][pool] = []
                 paths = row["file_path"].split(";")
-                genome_name = row['genome'].split('/')[-1].split('.')[0]
                 file_name = f"{row['sample']}_{row['type']}_rep{row['replicate']}_{genome_name}".lstrip('_')
                 if row["mark"]:
                     file_name = f"{row['mark']}_{file_name}"
@@ -143,8 +143,8 @@ class PipelineConfiguration:
                         entry.update(fetched_info[accession])
 
         self.sample_info = sample_info
-        #with open('test.json', "w") as file:
-            #json.dump(sample_info, file, indent=4)
+        with open('test.json', "w") as file:
+            json.dump(sample_info, file, indent=4)
         return sample_info
 
     def is_paired_end(self, file_name: str) -> bool:
@@ -182,7 +182,7 @@ class PipelineConfiguration:
         """
         control_files: dict[str, dict[str, list[str]]] = {}
         for pool_key, pool in self.__flatten_dict(self.sample_info).items():
-            if len(pool_key.split("_")) != 2: continue
+            if 'treatment' in pool_key: continue
             for entry in pool:
                 group_name = f"{entry['sample']}_{self.get_sample_genome(entry['file_name'])}"
             if not group_name in control_files:
@@ -227,14 +227,14 @@ class PipelineConfiguration:
         """
         treatment_samples: dict[str, dict[str, list[str]]] = {}
         for pool_key, pool in self.__flatten_dict(self.sample_info).items():
-            if len(pool_key.split("_")) == 3: # Meaning the pool for treatment files, which is required for treatment files
-                pool_key = "_".join(pool_key.split("_")[:2])
-                if not pool_key in treatment_samples:
-                    treatment_samples[pool_key] = {}
-                for entry in pool:
-                    if not entry['replicate'] in treatment_samples[pool_key]:
-                        treatment_samples[pool_key][entry['replicate']] = []
-                    treatment_samples[pool_key][entry["replicate"]].append(entry["file_name"])
+            for entry in pool:
+                if "control" in pool_key: continue
+                treatment_group = f"{entry['mark']}_{entry['sample']}_{entry['genome'].split('/')[-1].split('.')[0]}"
+                if not treatment_group in treatment_samples:
+                    treatment_samples[treatment_group] = {}
+                if not entry['replicate'] in treatment_samples[treatment_group]:
+                    treatment_samples[treatment_group][entry['replicate']] = []
+                treatment_samples[treatment_group][entry["replicate"]].append(entry["file_name"])
         return treatment_samples
 
     def get_treatment_files(self, return_entries = False) -> list[str] | list[dict]:
