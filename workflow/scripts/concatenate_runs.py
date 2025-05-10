@@ -9,7 +9,7 @@ if len(snakemake.output) == 2:
     reads2 = " ".join(filter(lambda file: file.endswith("_2.fastq"), snakemake.input))
     if len(snakemake.input) == 2:
         command = f"gzip -fc {snakemake.input[0]} > {snakemake.output[0]}"
-        command += f"gzip -fc {snakemake.input[1]} > {snakemake.output[1]}"
+        command += f"\ngzip -fc {snakemake.input[1]} > {snakemake.output[1]}"
     else:
         command = f"cat {reads1} | gzip -fc - > {snakemake.output[0]}"
         command += f"\ncat {reads2} | gzip -fc - > {snakemake.output[1]}"
