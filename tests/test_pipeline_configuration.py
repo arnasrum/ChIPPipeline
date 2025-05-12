@@ -34,7 +34,7 @@ def mock_sample_sheet_json() -> Iterator[NamedTemporaryFile]:
             "type": "treatment",
             "replicate": 1,
             "peak_type": "narrow",
-            "paired_end": True,
+            "paired_end": "true",
             "accession": "GSM123",
             "file_path": f"{temp_read1.name};{temp_read2.name}",
             "genome": "data/genome.fa.gz"
@@ -54,7 +54,7 @@ def mock_sample_sheet_json() -> Iterator[NamedTemporaryFile]:
             "mark": "antibody",
             "sample": "sample1",
             "type": "treatment",
-            "replicate": 2,
+            "replicate": "2",
             "peak_type": "narrow",
             "paired_end": False,
             "accession": "GSM123451",
@@ -99,4 +99,25 @@ def test_pipeline_configuration_get_all_file_names(pipeline_config):
                        "sample1_control_rep1_genome"
     }
     assert expected_output == set(pipeline_config.get_all_file_names())
+
+def test_pipeline_configuration_get_treatment_files(pipeline_config):
+    # No pooled
+    expected_output = {"antibody_sample1_treatment_rep1_genome",
+                       "GSM123451_antibody_sample1_treatment_rep2_genome",
+    }
+    assert expected_output == set(pipeline_config.get_treatment_files())
+
+
+
+def test_pipeline_configuration_is_paired_end(pipeline_config):
+    assert pipeline_config.is_paired_end("antibody_sample1_treatment_rep1_genome") == True
+    assert pipeline_config.is_paired_end("GSM123_antibody_sample1_treatment_rep1_genome_pooled2") == True
+    assert pipeline_config.is_paired_end("sample1_control_rep1_genome") == False
+
+def test_pipeline_configuration_get_sample_entry_by_file_name(pipeline_config):
+    groups = pipeline_config.group_treatment_files()
+    assert "antibody_sample1_genome" in groups and 1 in groups["antibody_sample1_genome"] and 2 in groups["antibody_sample1_genome"] and \
+        "antibody_sample1_treatment_rep1_genome" == groups["antibody_sample1_genome"][1][0] and \
+        "GSM123_antibody_sample1_treatment_rep1_genome_pooled2" == groups["antibody_sample1_genome"][1][1] and \
+        "GSM123451_antibody_sample1_treatment_rep2_genome" == groups["antibody_sample1_genome"][2][0]
 
