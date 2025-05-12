@@ -208,3 +208,133 @@ def test_consensus_peak_input_single_replicate(mock_pipeline_config):
         "results/peak_caller/file_name1_peaks.narrowPeak"
     ]
     assert expected_outputs == get_consensus_peak_input(group, results_path, mock_pipeline_config)
+
+def test_symlink_input_base_case(mock_pipeline_config):
+    mock_pipeline_config.sample_info = {
+        "provided": {
+            "antibody_sample1_rep1_mm10_treatment": [
+                {
+                    "read1": {
+                        "path": "data/treatment_sample_1.fq.gz",
+                        "file_extension": ".fq.gz",
+                        "file_name": "treatment_sample_1"
+                    },
+                    "read2": {
+                        "path": "data/treatment_sample_2.fq.gz",
+                        "file_extension": ".fq.gz",
+                        "file_name": "treatment_sample_2"
+                    },
+                    "file_name": "antibody_sample1_treatment_rep1_mm10",
+                    "type": "treatment",
+                    "sample": "sample1",
+                    "replicate": 1,
+                    "mark": "antibody",
+                    "peak_type": "narrow",
+                    "genome": "data/mm10.fa.gz",
+                    "paired_end": "true"
+                }
+            ],
+            "sample1_rep1_mm10_control": [
+                {
+                    "read1": {
+                        "path": "data/control_sample_1.fq.gz",
+                        "file_extension": ".fq.gz",
+                        "file_name": "control_sample_1"
+                    },
+                    "read2": {
+                        "path": "data/control_sample_2.fq.gz",
+                        "file_extension": ".fq.gz",
+                        "file_name": "control_sample_2"
+                    },
+                    "file_name": "GSM0123450_sample1_control_rep1_mm10",
+                    "type": "control",
+                    "sample": "sample1",
+                    "replicate": 1,
+                    "mark": "",
+                    "peak_type": "",
+                    "genome": "mm10",
+                    "paired_end": "true"
+                }
+            ],
+        }
+    }
+    expected_output =  {
+        "read1": {
+            "path": "data/treatment_sample_1.fq.gz",
+            "file_extension": ".fq.gz",
+            "file_name": "treatment_sample_1"
+        },
+        "read2": {
+            "path": "data/treatment_sample_2.fq.gz",
+            "file_extension": ".fq.gz",
+            "file_name": "treatment_sample_2"
+        },
+        "file_name": "antibody_sample1_treatment_rep1_mm10",
+        "type": "treatment",
+        "sample": "sample1",
+        "replicate": 1,
+        "mark": "antibody",
+        "peak_type": "narrow",
+        "genome": "data/mm10.fa.gz",
+        "paired_end": "true"
+    }
+    assert expected_output == symlink_input("antibody_sample1_treatment_rep1_mm10", mock_pipeline_config)
+
+def test_symlink_input_no_results(mock_pipeline_config):
+    mock_pipeline_config.sample_info = {"provided": {}}
+    assert None ==  symlink_input("antibody_sample1", mock_pipeline_config)
+
+def test_join_read_files_paired_end():
+    reads = ["SRA111", "SRA222", "SRA333"]
+    paired_end = True
+    resource_path = "resources"
+
+    expected_output = ["resources/reads/SRA111_1.fastq resources/reads/SRA222_1.fastq resources/reads/SRA333_1.fastq",
+                       "resources/reads/SRA111_2.fastq resources/reads/SRA222_2.fastq resources/reads/SRA333_2.fastq"]
+
+    assert expected_output == join_read_files(reads, paired_end, resource_path)
+
+def test_join_read_files_single_end():
+    reads = ["SRA111", "SRA222", "SRA333"]
+    paired_end = False
+    resource_path = "resources"
+
+    expected_output = "resources/reads/SRA111.fastq resources/reads/SRA222.fastq resources/reads/SRA333.fastq"
+
+    assert expected_output == join_read_files(reads, paired_end, resource_path)
+
+def test_get_fastqc_output_paired_end(mock_pipeline_config):
+        mock_pipeline_config.get_config_option.return_value = "trimmer"
+        mock_pipeline_config.is_paired_end.return_value = True
+        file_name = "file1"
+        results_path = "path/to/results"
+
+        expected_output = [
+            f"path/to/results/fastqc/unprocessed/file1_1_fastqc.zip",
+            f"path/to/results/fastqc/unprocessed/file1_2_fastqc.zip",
+            f"path/to/results/fastqc/unprocessed/file1_1_fastqc.html",
+            f"path/to/results/fastqc/unprocessed/file1_2_fastqc.html",
+            f"path/to/results/fastqc/trimmer/file1_1_fastqc.zip",
+            f"path/to/results/fastqc/trimmer/file1_2_fastqc.zip",
+            f"path/to/results/fastqc/trimmer/file1_1_fastqc.html",
+            f"path/to/results/fastqc/trimmer/file1_2_fastqc.html",
+        ]
+        assert isinstance(get_fastqc_output(file_name, results_path, mock_pipeline_config), list)
+        assert set(expected_output) == (set(get_fastqc_output(file_name, results_path, mock_pipeline_config)))
+
+
+def test_get_fastqc_output_single_end(mock_pipeline_config):
+    mock_pipeline_config.get_config_option.return_value = "trimmer"
+    mock_pipeline_config.is_paired_end.return_value = False
+    file_name = "file1"
+    results_path = "path/to/results"
+
+    expected_output = [
+        f"path/to/results/fastqc/unprocessed/file1_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/file1_fastqc.html",
+        f"path/to/results/fastqc/trimmer/file1_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/file1_fastqc.html",
+    ]
+    assert isinstance(get_fastqc_output(file_name, results_path, mock_pipeline_config), list)
+    assert set(expected_output) == (set(get_fastqc_output(file_name, results_path, mock_pipeline_config)))
+
