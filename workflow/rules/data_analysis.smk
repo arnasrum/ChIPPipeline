@@ -1,3 +1,5 @@
+from workflow.scripts.input_functions import get_pooled_treatment_samples
+
 rule deeptools_bamCoverage:
     input:
         bam = f"{RESULTS}/{pipeline_config.get_config_option('duplicate_processor')}/{{sample}}.bam",
@@ -24,7 +26,7 @@ rule deeptools_bamCoverage:
 rule deeptools_computeMatrix:
     input:
         beds = lambda wildcards:f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak",
-        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
+        bigwigs = lambda wildcards: [f"{RESULTS}/deeptools-bamCoverage/{file_name}.bw" for file_name in get_pooled_treatment_samples(wildcards.sample, pipeline_config)]
     output:
         f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     wildcard_constraints:

@@ -97,6 +97,15 @@ def get_fastqc_output(file_name: str, result_path: str, pipeline_config: Pipelin
     ]
     return output_files
 
+def get_pooled_treatment_samples(file_name: str, pipeline_config: PipelineConfiguration) -> list[str]:
+    groups = pipeline_config.group_treatment_files()
+    for group in groups:
+        for replicate in groups[group]:
+            if file_name in groups[group][replicate]:
+                return groups[group][replicate]
+    raise ValueError(f"No samples found for {file_name}")
+
+
 def get_treatment_group_genome_code(group_name: str, pipeline_config: PipelineConfiguration) -> str:
     treatment_groups = pipeline_config.group_treatment_files()
     group = next(filter(lambda group: group_name in group, treatment_groups), None)
