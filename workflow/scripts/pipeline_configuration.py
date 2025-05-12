@@ -128,7 +128,7 @@ class PipelineConfiguration:
             sample.update({
                 "type": row["type"],
                 "sample": row["sample"],
-                "replicate": row["replicate"],
+                "replicate": int(row["replicate"]),
                 "mark": row["mark"],
                 "peak_type": row["peak_type"],
                 "genome": row["genome"],
@@ -325,13 +325,13 @@ class PipelineConfiguration:
     @staticmethod
     def __flatten_dict(old_dict: dict) -> dict:
         """
-        Flattens a nested dictionary (specifically the sample_info structure).
+        Flattens a nested dictionary.
 
         Combines the 'public' and 'provided' nested dictionaries into a single
         level dictionary.
 
         Args:
-            old_dict: The nested dictionary to flatten (e.g., self.sample_info).
+            old_dict: The nested dictionary to flatten.
 
         Returns:
             A flattened dictionary.
