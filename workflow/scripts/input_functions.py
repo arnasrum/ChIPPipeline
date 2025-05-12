@@ -46,13 +46,16 @@ def concatenate_runs_input(file_name: str, resource_path: str, pipeline_config: 
         for run in runs
     ]
 
-def join_read_files(runs: list, paired_end: bool, resource_path: str) -> tuple[str] | list[str]:
+def join_read_files(runs: list, paired_end: bool, resource_path: str) -> str | list[str]:
+    resource_path = resource_path.rstrip('/')
     if paired_end:
         return [" ".join([f"{resource_path}/reads/{run}_1.fastq" for run in runs]),
                 " ".join([f"{resource_path}/reads/{run}_2.fastq" for run in runs])
         ]
-    return " ".join([f"{resource_path}/reads/{run}.fastq" for run in runs]),
+    return " ".join([f"{resource_path}/reads/{run}.fastq" for run in runs])
 
+
+HOMER_SUPPORTED_GENOMES = ['panTro4', 'gorGor5', 'rn4', 'corn.AGP', 'ce6', 'mm10', 'hg19', 'galGal4', 'danRer10', 'ce10', 'panPan3', 'ci3', 'xenLae2', 'rn7', 'rheMac2', 'ce11', 'dm3', 'patens.ASM242', 'rice.IRGSP-1.0', 'hg17', 'taeGut2', 'anoGam1', 'sacCer3', 'petMar2', 'xenTro7', 'susScr11', 'rn6', 'apiMel2', 'AGP', 'hg18', 'panTro6', 'xenTro3', 'fr3', 'canFam5', 'tair10', 'rheMac10', 'galGal6', 'panTro3', 'dm6', 'aplCal1', 'papAnu2', 'susScr3', 'mm9', 'tetNig2', 'panPan2', 'papAnu4', 'hg38', 'gorGor6', 'xenTro10', 'rheMac3', 'gorGor3', 'mm39', 'anoGam3', 'mm8', 'gorGor4', 'panTro5', 'canFam6', 'sacCer2', 'canFam3', 'petMar3', 'galGal5', 'rn5', 'ci2', 'apiMel3', 'xenTro9', 'panPan1', 'danRer11', 'xenTro2', 'danRer7', 'strPur2', 'rheMac8']
 def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     input_files = []
     path = result_path
@@ -62,14 +65,16 @@ def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> l
         input_files += [get_fastqc_output(file_name, result_path, pipeline_config) for file_name in all_files]
     for treatment_file in pipeline_config.get_treatment_files():
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "narrow":
-            input_files += [f"{path}/pyGenomeTracks/{treatment_file}.png"]
+            input_files.append(f"{path}/pyGenomeTracks/{treatment_file}.png")
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "broad":
-            input_files += [f"{path}/{pipeline_config.get_config_option('peak_caller')}/{treatment_file}_peaks.broadPeak"]
+            input_files.append(f"{path}/{pipeline_config.get_config_option('peak_caller')}/{treatment_file}_peaks.broadPeak")
         input_files.append(f"{path}/deeptools/{treatment_file}_heatmap.png")
         input_files.append(f"{path}/deeptools/{treatment_file}_profile.png")
+
     for group, replicates in treatment_groups.items():
         allow_append = all(
             pipeline_config.get_sample_entry_by_file_name(sample)["peak_type"] == "narrow"
+                and pipeline_config.get_sample_genome(sample) in HOMER_SUPPORTED_GENOMES
             for replicate in replicates
             for sample in replicates[replicate]
         )
