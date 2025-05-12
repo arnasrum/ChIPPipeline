@@ -58,7 +58,7 @@ class PipelineConfiguration:
 
 
 
-    def make_sample_info(self) -> dict[str:dict]:
+    def parse_sample_sheet(self) -> dict[str:dict]:
         """
         Creates a dictionary of with parsed sample information from the sample sheet.
 
@@ -113,10 +113,11 @@ class PipelineConfiguration:
                     file_name = f"{row['mark']}_{file_name}"
                 if row["accession"]:
                     file_name = f"{row['accession']}_{file_name}"
-                for i, read in enumerate(paths):
-                    path = pathlib.Path(read)
+                num_reads = range(2) if str(row["paired_end"]).lower() == "true" else range(1)
+                for i in num_reads:
+                    path = pathlib.Path(paths[i])
                     sample[f"read{i + 1}"] = {
-                        "path": read,
+                        "path": str(path),
                         "file_extension": "".join(path.suffixes),
                         "file_name": path.name.split("".join(path.suffixes))[0]
                     }
@@ -137,8 +138,8 @@ class PipelineConfiguration:
         # Handle publicly available files
         fetched_info = get_meta_data(get_sra_accessions(geo_accessions).values())
         for accession in fetched_info:
-            for pool in sample_info[availability_type]:
-                for entry in sample_info[availability_type][pool]:
+            for pool in sample_info['public']:
+                for entry in sample_info['public'][pool]:
                     if entry["accession"].lower() == accession.lower():
                         entry.update(fetched_info[accession])
 
@@ -185,11 +186,11 @@ class PipelineConfiguration:
             if 'treatment' in pool_key: continue
             for entry in pool:
                 group_name = f"{entry['sample']}_{self.get_sample_genome(entry['file_name'])}"
-            if not group_name in control_files:
-                control_files[group_name] = {}
-            if not entry['replicate'] in control_files[group_name]:
-                control_files[group_name][entry['replicate']] = []
-            control_files[group_name][entry['replicate']].append(entry['file_name'])
+                if not group_name in control_files:
+                    control_files[group_name] = {}
+                if not entry['replicate'] in control_files[group_name]:
+                    control_files[group_name][entry['replicate']] = []
+                control_files[group_name][entry['replicate']].append(entry['file_name'])
         return control_files
 
     def get_control_files(self, treatment_file: str) -> list[str]:
