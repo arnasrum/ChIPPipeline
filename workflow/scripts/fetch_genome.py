@@ -5,7 +5,7 @@ from os import path
 log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 
 command =  ""
-path: str | None = snakemake.params[path]
+path: str | None = snakemake.params['path']
 if path:
     if path.endswith(".gz"):
         command += "echo 'gzipped genome detected; symlinking'"
