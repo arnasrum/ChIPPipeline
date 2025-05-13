@@ -35,7 +35,10 @@ def symlink_input(file_name: str, pipeline_config: PipelineConfiguration) -> str
     for pool in pools:
         for sample in pool:
             if sample['file_name'] == file_name:
-                return sample
+                if pipeline_config.is_paired_end(file_name):
+                    return[sample['read1']['path'], sample['read2']['path']]
+                else:
+                    return[sample['read1']['path']]
     return None
 
 def concatenate_runs_input(file_name: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
@@ -118,9 +121,13 @@ def get_genome_path(genome: str, pipeline_config: PipelineConfiguration) -> str 
             return genome
     return None
 
-def bigwig_compare_input(sample: str, results_path: str, pipeline_config: PipelineConfiguration) -> dict:
+def bigwig_compare_input(sample: str, results_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     base_path = f"{results_path}/deeptools-bamCoverage"
-    return {"treatment": f"{base_path}/{sample}.bw", "control": f"{base_path}/{pipeline_config.get_control_files(sample)[0]}.bw"}
+    control_files = pipeline_config.get_control_files(sample)
+    input_files = [f"{base_path}/{sample}.bw"]
+    if control_files:
+        input_files.append(f"{base_path}/{control_files[0]}.bw")
+    return input_files
 
 def flatten_dict(old_dict: dict) -> dict:
     new_dict = {}

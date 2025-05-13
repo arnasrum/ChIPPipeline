@@ -80,6 +80,7 @@ rule handle_provided_samples_SE:
         outdir = f"{RESOURCES}/reads"
     shell:
         """
+        exec > {log} 2>&1
         mkdir -p {params.outdir}
         if [[ {input} = *.gz]]; then
             ln -srf {input} {output}
