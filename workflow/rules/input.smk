@@ -67,7 +67,7 @@ rule concatenate_runs_PE:
 
 rule handle_provided_samples_SE:
     input:
-        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config)["read1"]["path"],
+        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config),
     output:
         f"{RESOURCES}/reads/{{file_name}}.fastq.gz"
     log:
@@ -76,24 +76,51 @@ rule handle_provided_samples_SE:
         tmpdir=TEMP
     conda:
         "../envs/input.yml"
-    script:
-        "../scripts/handle_provided_files.py"
+    params:
+        outdir = f"{RESOURCES}/reads"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        if [[ {input} = *.gz]]; then
+            ln -srf {input} {output}
+        else
+            gzip -kfc {input} > {output} 
+        fi
+        """
 
 rule handle_provided_samples_PE:
     input:
-        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config)["read1"]["path"],
-        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config)["read2"]["path"]
+        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config),
     output:
         f"{RESOURCES}/reads/{{file_name}}_1.fastq.gz",
         f"{RESOURCES}/reads/{{file_name}}_2.fastq.gz"
     log:
         f"{LOGS}/provided_files/{{file_name}}.log"
+    params:
+        outdir = f"{RESOURCES}/reads"
     resources:
         tmpdir=TEMP
     conda:
         "../envs/input.yml"
-    script:
-        "../scripts/handle_provided_files.py"
+    shell:
+        """
+            exec > {log} 2>&1
+            mkdir -p {params.outdir}
+            input="{input}"  
+            output="{output}"  
+            INPUT_ARRAY=( $input )
+            OUTPUT_ARRAY=( $output )
+            OUTPUT_DIR="{params.outdir}"
+            for index in "${{!INPUT_ARRAY[@]}}"; do
+                input_file="${{INPUT_ARRAY[index]}}"
+                output_file="${{OUTPUT_ARRAY[index]}}"
+                if [[ "$input_file" = *.gz ]]; then
+                    ln -srf "$input_file" "$output_file"
+                else
+                    gzip -kfc "$input_file" > "$output_file"
+                fi
+            done
+        """
 
 rule fetch_genome:
     output:
