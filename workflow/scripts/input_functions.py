@@ -1,4 +1,5 @@
 from workflow.scripts.pipeline_configuration import PipelineConfiguration
+import os
 
 def trimmer_input(sample: str, resource_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
     fastq_file_extensions = ["_1.fastq.gz", "_2.fastq.gz"] if pipeline_config.is_paired_end(sample) else [".fastq.gz"]
@@ -66,10 +67,11 @@ def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> l
     for treatment_file in pipeline_config.get_treatment_files():
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "narrow":
             input_files.append(f"{path}/pyGenomeTracks/{treatment_file}.png")
+            input_files.append(f"{path}/deeptools/{treatment_file}_heatmap.png")
+            input_files.append(f"{path}/deeptools/{treatment_file}_profile.png")
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "broad":
             input_files.append(f"{path}/{pipeline_config.get_config_option('peak_caller')}/{treatment_file}_peaks.broadPeak")
-        input_files.append(f"{path}/deeptools/{treatment_file}_heatmap.png")
-        input_files.append(f"{path}/deeptools/{treatment_file}_profile.png")
+
 
     for group, replicates in treatment_groups.items():
         allow_append = all(
@@ -106,10 +108,16 @@ def get_pooled_treatment_samples(file_name: str, pipeline_config: PipelineConfig
     raise ValueError(f"No samples found for {file_name}")
 
 
-def get_treatment_group_genome_code(group_name: str, pipeline_config: PipelineConfiguration) -> str:
-    treatment_groups = pipeline_config.group_treatment_files()
-    group = next(filter(lambda group: group_name in group, treatment_groups), None)
-    return pipeline_config.get_sample_genome(list(treatment_groups[group].values())[0][0])
+def get_genome_path(genome: str, pipeline_config: PipelineConfiguration) -> str | None:
+    genomes = [
+        sample['genome']
+        for pool in flatten_dict(pipeline_config.sample_info).values()
+        for sample in pool
+    ]
+    for genome in genomes:
+        if os.path.isfile(genome):
+            return genome
+    return None
 
 
 def flatten_dict(old_dict: dict) -> dict:

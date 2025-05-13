@@ -103,7 +103,7 @@ rule fetch_genome:
     benchmark:
         f"{BENCHMARKS}/genomes/{{genome}}.benchmark.txt"
     params:
-        samples = flatten_dict(pipeline_config.sample_info)
+        path = lambda wildcards: get_genome_path(wildcards.genome, pipeline_config)
     resources:
         tmpdir=TEMP
     conda:
