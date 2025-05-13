@@ -131,10 +131,25 @@ rule fetch_genome:
     benchmark:
         f"{BENCHMARKS}/genomes/{{genome}}.benchmark.txt"
     params:
-        path = lambda wildcards: get_genome_path(wildcards.genome, pipeline_config)
+        path = lambda wildcards: get_genome_path(wildcards.genome, pipeline_config),
     resources:
         tmpdir=TEMP
     conda:
         "../envs/input.yml"
-    script:
-        "../scripts/fetch_genome.py"
+    shell:
+        """
+            exec > {log} 2>&1
+            if [[ "{params.path}" = "None" ]]; then
+                echo "Defined genome is not a file; trying to download"
+                rsync -a -P rsync://hgdownload.soe.ucsc.edu/goldenPath/{wildcards.genome}/bigZips/{wildcards.genome}.fa.gz {output}
+            else
+                if [[ "{params.path}" = *.gz ]]; then
+                    echo "gzipped genome detected; symlinking"
+                    ln -sr {params.path} {output}
+                else
+                    echo "non-gzipped genome detected; gzipping"
+                    gzip -kfc {params.path} > {output}
+                fi
+            fi
+        """
+
