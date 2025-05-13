@@ -1,4 +1,4 @@
-from workflow.scripts.input_functions import get_pooled_treatment_samples
+from workflow.scripts.input_functions import get_pooled_treatment_samples, bigwig_compare_input
 
 rule deeptools_bamCoverage:
     input:
@@ -9,7 +9,7 @@ rule deeptools_bamCoverage:
     conda:
         "../envs/data_analysis.yml"
     log:
-        f"{LOGS}/bamCoverage/{{sample}}.log"
+        f"{LOGS}/deeptools-bamCoverage/{{sample}}.log"
     threads:
         int(config['bamCoverage']['threads'])
     resources:
@@ -23,14 +23,35 @@ rule deeptools_bamCoverage:
         bamCoverage -p {threads} -b {input.bam} -o {output}
         """
 
+rule deeptools_bigwigCompare:
+    input:
+        treatment = lambda wildcards: bigwig_compare_input(wildcards.sample, RESULTS, pipeline_config)["treatment"],
+        control = lambda wildcards: bigwig_compare_input(wildcards.sample, RESULTS, pipeline_config)["control"]
+    output:
+        f"{RESULTS}/deeptools-bigwigCompare/{{sample}}.bw"
+    conda:
+        "../envs/data_analysis.yml"
+    log:
+        f"{LOGS}/deeptools-bigwigCompare/{{sample}}.log"
+    threads:
+        int(config['bamCoverage']['threads'])
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads,
+        mem_mb= lambda wildcards,attempt: int(config['bamCoverage']['mem_mb']) * attempt,
+        runtime= lambda wildcards,attempt: int(config['bamCoverage']['runtime']) * attempt,
+    shell:
+        """
+        exec > {log} 2>&1
+        bigwigCompare -p {threads} -b1 {input.treatment} -b2 {input.control} -o {output}
+        """
+
 rule deeptools_computeMatrix:
     input:
-        beds = lambda wildcards:f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak",
-        bigwigs = lambda wildcards: [f"{RESULTS}/deeptools-bamCoverage/{file_name}.bw" for file_name in get_pooled_treatment_samples(wildcards.sample, pipeline_config)]
+        beds = lambda wildcards: f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak",
+        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bigwigCompare/{wildcards.sample}.bw"
     output:
         f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
-    wildcard_constraints:
-        replicate = r"[0-9]"
     conda:
         "../envs/data_analysis.yml"
     params:
@@ -132,7 +153,7 @@ rule homer_annotate_peaks:
         "../envs/data_analysis.yml"
     params:
         outdir = f"{RESULTS}/homer",
-        genome = lambda wildcards: get_treatment_group_genome_code(wildcards.group, pipeline_config),
+        genome= lambda wildcards: wildcards.group.split("_")[-1],
     log:
         f"{LOGS}/homer/{{group}}_annotate.log"
     resources:
@@ -157,7 +178,7 @@ rule homer_find_motifs_genome:
         "../envs/data_analysis.yml"
     params:
         outdir = f"{RESULTS}/homer",
-        genome = lambda wildcards: get_treatment_group_genome_code(wildcards.group, pipeline_config),
+        genome = lambda wildcards: wildcards.group.split("_")[-1],
         args = config["find_motifs_genome"]["args"]
     threads:
         int(config["find_motifs_genome"]["threads"])

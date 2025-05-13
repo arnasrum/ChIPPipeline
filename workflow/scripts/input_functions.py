@@ -72,7 +72,6 @@ def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> l
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "broad":
             input_files.append(f"{path}/{pipeline_config.get_config_option('peak_caller')}/{treatment_file}_peaks.broadPeak")
 
-
     for group, replicates in treatment_groups.items():
         allow_append = all(
             pipeline_config.get_sample_entry_by_file_name(sample)["peak_type"] == "narrow"
@@ -119,6 +118,9 @@ def get_genome_path(genome: str, pipeline_config: PipelineConfiguration) -> str 
             return genome
     return None
 
+def bigwig_compare_input(sample: str, results_path: str, pipeline_config: PipelineConfiguration) -> dict:
+    base_path = f"{results_path}/deeptools-bamCoverage"
+    return {"treatment": f"{base_path}/{sample}.bw", "control": f"{base_path}/{pipeline_config.get_control_files(sample)[0]}.bw"}
 
 def flatten_dict(old_dict: dict) -> dict:
     new_dict = {}
