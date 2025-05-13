@@ -124,6 +124,11 @@ macs3:
   runtime: 120
   args: ""
 # Deeptools computeMatrix args used for plot_heat_map and plot_profile
+bigwigCompare:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
+  args: "--operation ratio"
 computeMatrix:
   threads: 12
   mem_mb: 8000

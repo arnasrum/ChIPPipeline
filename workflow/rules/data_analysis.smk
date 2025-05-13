@@ -34,16 +34,18 @@ rule deeptools_bigwigCompare:
     log:
         f"{LOGS}/deeptools-bigwigCompare/{{sample}}.log"
     threads:
-        int(config['bamCoverage']['threads'])
+        int(config['bigwigCompare']['threads'])
+    params:
+        args = config["bigwigCompare"]["args"]
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards,threads: threads,
-        mem_mb= lambda wildcards,attempt: int(config['bamCoverage']['mem_mb']) * attempt,
-        runtime= lambda wildcards,attempt: int(config['bamCoverage']['runtime']) * attempt,
+        mem_mb= lambda wildcards,attempt: int(config['bigwigCompare']['mem_mb']) * attempt,
+        runtime= lambda wildcards,attempt: int(config['bigwigCompare']['runtime']) * attempt,
     shell:
         """
         exec > {log} 2>&1
-        bigwigCompare -p {threads} -b1 {input.treatment} -b2 {input.control} -o {output}
+        bigwigCompare {params.args} -p {threads} -b1 {input.treatment} -b2 {input.control} -o {output}
         """
 
 rule deeptools_computeMatrix:
