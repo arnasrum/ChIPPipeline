@@ -25,8 +25,7 @@ rule deeptools_bamCoverage:
 
 rule deeptools_bigwigCompare:
     input:
-        treatment = lambda wildcards: bigwig_compare_input(wildcards.sample, RESULTS, pipeline_config)["treatment"],
-        control = lambda wildcards: bigwig_compare_input(wildcards.sample, RESULTS, pipeline_config)["control"]
+        lambda wildcards: bigwig_compare_input(wildcards.sample, RESULTS, pipeline_config)
     output:
         f"{RESULTS}/deeptools-bigwigCompare/{{sample}}.bw"
     conda:
@@ -42,11 +41,9 @@ rule deeptools_bigwigCompare:
         cpus_per_task= lambda wildcards,threads: threads,
         mem_mb= lambda wildcards,attempt: int(config['bigwigCompare']['mem_mb']) * attempt,
         runtime= lambda wildcards,attempt: int(config['bigwigCompare']['runtime']) * attempt,
-    shell:
-        """
-        exec > {log} 2>&1
-        bigwigCompare {params.args} -p {threads} -b1 {input.treatment} -b2 {input.control} -o {output}
-        """
+    script:
+        "../scripts/tools/bigwig_compare.py"
+
 
 rule deeptools_computeMatrix:
     input:
