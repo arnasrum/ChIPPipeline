@@ -177,6 +177,7 @@ rule star_index:
         """
         exec > {log} 2>&1
         uuid=$(uuidgen) 
+        mkdir -p {resources.tmpdir}/star_index
         STAR --outTmpDir {resources.tmpdir}/star_index/$uuid --runThreadN {threads} --runMode genomeGenerate --genomeDir {params.result_path} --genomeFastaFiles {params.genome_path}
         """ 
 
