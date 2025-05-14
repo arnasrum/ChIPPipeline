@@ -12,6 +12,8 @@ peak_caller: "macs3"
 
 # Genome to be used to peak call and align
 generate_fastqc_reports: True
+# Enable Homer motif enrichment analysis
+enable_homer_motif_analysis: True
 
 # Plotting region for peaks plotted by pyGenomeTracks
 plot_region: "chr1:14,000,000-15,000,000"

@@ -75,16 +75,17 @@ def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> l
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "broad":
             input_files.append(f"{path}/{pipeline_config.get_config_option('peak_caller')}/{treatment_file}_peaks.broadPeak")
 
-    for group, replicates in treatment_groups.items():
-        allow_append = all(
-            pipeline_config.get_sample_entry_by_file_name(sample)["peak_type"] == "narrow"
-                and pipeline_config.get_sample_genome(sample) in HOMER_SUPPORTED_GENOMES
-            for replicate in replicates
-            for sample in replicates[replicate]
-        )
-        if allow_append:
-            input_files.append(f"{path}/homer/{group}/homerResults.html")
-            input_files.append(f"{path}/plots/{group}_genes.png")
+    if pipeline_config.get_config_option_bool("enable_homer_motif_analysis"):
+        for group, replicates in treatment_groups.items():
+            allow_append = all(
+                pipeline_config.get_sample_entry_by_file_name(sample)["peak_type"] == "narrow"
+                    and pipeline_config.get_sample_genome(sample) in HOMER_SUPPORTED_GENOMES
+                for replicate in replicates
+                for sample in replicates[replicate]
+            )
+            if allow_append:
+                input_files.append(f"{path}/homer/{group}/homerResults.html")
+                input_files.append(f"{path}/plots/{group}_genes.png")
     return input_files
 
 def get_fastqc_output(file_name: str, result_path: str, pipeline_config: PipelineConfiguration) -> list[str]:

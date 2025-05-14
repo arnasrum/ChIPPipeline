@@ -95,6 +95,11 @@ Or by editing the [configuration file](../config/config.yml) directly
       <td>Relative path within <code>outdir</code> for temporary files.</td>
     </tr>
     <tr>
+      <td><code>enable_homer_motif_analysis</code></td>
+      <td>Boolean (<code>true</code> or <code>false</code>)</td>
+      <td>Decides of HOMER rules for motif enrichment analysis are run.</td>
+    </tr>
+    <tr>
       <td colspan="3"><strong>Tool Configurations (Parameters per External Tool)</strong></td>
     </tr>
      <tr>

@@ -76,6 +76,7 @@ If network connection is not available on the compute nodes, install conda packa
 
 `apptainer exec <container_name> snakemake --conda-create-envs-only`
 
+and disable HOMER rules via the configuration file. Refer to the [configuration option docs](docs/conf.md).
 
 ## Editing Config 
 
