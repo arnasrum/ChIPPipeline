@@ -112,14 +112,14 @@ def get_pooled_treatment_samples(file_name: str, pipeline_config: PipelineConfig
     raise ValueError(f"No samples found for {file_name}")
 
 
-def get_genome_path(genome: str, pipeline_config: PipelineConfiguration) -> str | None:
+def get_genome_path(target_genome: str, pipeline_config: PipelineConfiguration) -> str | None:
     genomes = [
         sample['genome']
         for pool in flatten_dict(pipeline_config.sample_info).values()
         for sample in pool
     ]
     for genome in genomes:
-        if os.path.isfile(genome):
+        if target_genome in genome and os.path.isfile(genome):
             return genome
     return None
 
