@@ -1,6 +1,6 @@
 from snakemake.script import snakemake
 from snakemake import shell
-from make_tracks_file import make_tracks
+from workflow.scripts.make_tracks_file import make_tracks
 import sys
 
 def parse_options(option_string: str, options: dict, file_type: str):
