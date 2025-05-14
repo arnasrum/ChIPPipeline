@@ -1,5 +1,3 @@
-from workflow.scripts.input_functions import get_pooled_treatment_samples, bigwig_compare_input
-
 rule deeptools_bamCoverage:
     input:
         bam = f"{RESULTS}/{pipeline_config.get_config_option('duplicate_processor')}/{{sample}}.bam",
