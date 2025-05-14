@@ -66,7 +66,8 @@ def get_all_input(result_path: str, pipeline_config: PipelineConfiguration) -> l
     treatment_groups = pipeline_config.group_treatment_files()
     all_files = pipeline_config.get_all_file_names()
     if pipeline_config.get_config_option_bool('generate_fastqc_reports'):
-        input_files += [get_fastqc_output(file_name, result_path, pipeline_config) for file_name in all_files]
+        for file_name in all_files:
+            input_files += get_fastqc_output(file_name, result_path, pipeline_config)
     for treatment_file in pipeline_config.get_treatment_files():
         if pipeline_config.get_sample_entry_by_file_name(treatment_file)["peak_type"] == "narrow":
             input_files.append(f"{path}/pyGenomeTracks/{treatment_file}.png")
