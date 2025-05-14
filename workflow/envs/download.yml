@@ -1,7 +1,0 @@
-name: download
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - sra-tools=3.1.1
-  - rsync=3.3

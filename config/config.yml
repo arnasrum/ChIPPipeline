@@ -1,107 +1,156 @@
-fasterq-dump:
-  downloadPath: "resources/reads"
-  args: ""
-
-fastqc:
-  args: ""
-  extra: ""
-  threads: 12
-
-# Trimmer config
-trim_galore:
-  threads: 12
-  args: ""
-cutadapt:
-  threads: 12
-  args: ""
-fastp:
-  threads: 12
-  args: ""
-
-# Aligner config
-bowtie2:
-  args: ""
-  extra: "--very-sensitive"
-  threads: 12
-bowtie2-build:
-  args: ""
-  threads: 12
-bwa-mem:
-  args: "-v 1 -Y"
-  extra: ""
-  threads: 12
-bwa-mem2:
-  args: "-v 1 -Y"
-  extra: ""
-  threads: 12
-bwa-index:
-  args: ""
-STAR:
-  args: ""
-  extra: ""
-  threads: 12
-
-# Utils config
-gzip:
-  args: ""
-samtools-index:
-  threads: 4
-MarkDuplicates:
-  args: ""
-markdup:
-  args: ""
-  threads: 12
-
-# Peak calling config
-macs3:
-  args: ""
-pyGenomeTracks:
-  args: ""
-
-# Deeptools computeMatrix args used for plot_heat_map and plot_profile
-computeMatrix:
-  args: "--referencePoint 'center' --skipZeros -a 4000 -b 4000"
-
-
-
 # Workflow config
 
+# String to overwrite which tools are to be run
+modules: ""
+# Choose trimmer
+trimmer: "fastp"
+# Choose aligner
+aligner: "bowtie2"
+# Choose tool to process duplicates
+duplicate_processor: "mark_duplicates"
+peak_caller: "macs3"
+
+# Genome to be used to peak call and align
+generate_fastqc_reports: True
+# Enable Homer motif enrichment analysis
+enable_homer_motif_analysis: True
+
+# Plotting region for peaks plotted by pyGenomeTracks
+plot_region: "chr1:14,000,000-15,000,000"
+
+# Path to sample sheet
+sample_sheet: "config/samples.csv"
+
 # Path to write generated files to
-prefix: ""
-json_path: "samples.json"
+outdir: ""
 results_path: "results"
 resources_path: "resources"
 logs_path: "logs"
 benchmarks_path: "benchmarks"
 temp_path: "temp"
 
-# Times chosen trimmer is repeated for chosen trimmer
-benchmark_repeat_trim: 1
-# Times chosen aligner is repeated for chosen aligner
-benchmark_repeat_align: 1
-# Times chosen duplicate marker is repeated for chosen duplicate processor
-benchmark_repeat_duplicate: 1
+fastq-dump:
+  args: "--skip-technical"
+  threads: 12
+  runtime: 20
+  mem_mb: 4000
+fastqc:
+  args: ""
+  threads: 12
+  runtime: 20
+  mem_mb: 4000
+trim_galore:
+  args: ""
+  threads: 8
+  runtime: 60
+  mem_mb: 8000
+cutadapt:
+  args: ""
+  threads: 8
+  runtime: 60
+  mem_mb: 8000
+fastp:
+  args: ""
+  threads: 12
+  runtime: 60
+  mem_mb: 8000
+trimmomatic:
+  args: ""
+  trimming_steps: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
+  threads: 12
+  runtime: 60
+  mem_mb: 8000
 
-# String to overwrite which tools are to be ran
-modules: ""
-# Choose trimmer
-trimmer: "trim_galore"
-# Choose alginer
-aligner: "bowtie2"
-# Choose tool to process duplicates
-duplicate_processor: "markdup"
-peak_caller: "macs3"
+# Aligner config
+bowtie2-build:
+  args: ""
+  threads: 25
+  mem_mb: 12000
+  runtime: 200
+bowtie2:
+  args: ""
+  threads: 25
+  mem_mb: 16000
+  runtime: 120
+bwa_mem_index:
+  args: ""
+  mem_mb: 64000
+  runtime: 200
+bwa_mem:
+  args: "-v 1 -Y"
+  threads: 25
+  mem_mb: 32000
+  runtime: 120
+bwa_mem2_index:
+  args: ""
+  mem_mb: 64000
+  runtime: 200
+bwa_mem2:
+  args: "-v 1 -Y"
+  threads: 25
+  mem_mb: 32000
+  runtime: 120
+star_index:
+  args: ""
+  threads: 25
+  mem_mb: 36000
+  runtime: 200
+star:
+  args: "--alignIntronMax 1 --alignEndsType EndToEnd"
+  threads: 25
+  mem_mb: 8000
+  runtime: 120
 
-# Genome to be used to peak call and align
-genome: "mm39"
+# Duplicate processor config
+mark_duplicates:
+  args: ""
+  mem_mb: 8000
+  runtime: 60
+markdup:
+  args: "-s"
+  threads: 12
+  mem_mb: 8000
+  runtime: 60
 
-# Plotting region for peaks plotted by pyGenomeTracks
-plot_regions: "chr1:10,000,000-15,000,000"
-
-# Defined reads in sample sheet are paired end
-paired_end: True
-
-# Path to sample sheet
-sample_sheet: "config/samples.csv"
-
-
+# Peak calling config
+macs3:
+  mem_mb: 1200
+  runtime: 120
+  args: ""
+# Deeptools computeMatrix args used for plot_heat_map and plot_profile
+bigwigCompare:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
+  args: "--operation ratio"
+computeMatrix:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
+  mode: "reference-point"
+  args: "--skipZeros -a 4000 -b 4000"
+plotHeatMap:
+  mem_mb: 8000
+  runtime: 15
+plotProfile:
+  mem_mb: 2000
+  runtime: 15
+bamCoverage:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
+pyGenomeTracks:
+  args: ""
+  # Comma seperated options will be appended the track files
+  bigwig_options: "max_value = 6"
+  bed_options: ""
+# HOMER config
+annotate_peaks:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
+find_motifs_genome:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
+  args: "-size 200"

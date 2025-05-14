@@ -57,9 +57,6 @@ def get_meta_data(sra_accessions: list[str]) -> dict[str: dict]:
     #response = xmltodict.parse(result.content)
     return meta_data
 
-
-
-
 def __poll_request(url: str) -> Response:
     wait_time: int = 1
     failed_request_count: int = 0
@@ -79,6 +76,6 @@ def __poll_request(url: str) -> Response:
     return response
 
 def __make_clean_file_name(title: str) -> str:
-    for old, new in [(" ", ""), (":", "_"), ("+", "_"), (",", "_"), (";", "_"), (".", "_")]:
+    for old, new in [(" ", ""), (":", "_"), ("+", "_"), (",", "_"), (";", "_"), (".", "_"), ("(", "_"), (")", "_"), ("__", "_")]:
         title = title.replace(old, new)
     return title.rstrip("_1").rstrip("_2")

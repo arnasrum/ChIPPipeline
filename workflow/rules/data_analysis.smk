@@ -1,17 +1,24 @@
+localrules: homer_configure
+
 rule deeptools_bamCoverage:
     input:
-        bam = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bam",
-        bam_index = RESULTS + "/" + config['duplicate_processor'] + "/{sample}.bai",
+        bam = f"{RESULTS}/{pipeline_config.get_config_option('duplicate_processor')}/{{sample}}.bam",
+        bam_index = f"{RESULTS}/{pipeline_config.get_config_option('duplicate_processor')}/{{sample}}.bam.bai",
     output:
-        RESULTS + "/deeptools-bamCoverage/{sample}.bw"
+        f"{RESULTS}/deeptools-bamCoverage/{{sample}}.bw"
     conda:
         "../envs/data_analysis.yml"
     log:
-        LOGS + "/bamCoverage/{sample}.log"
-    resources:
-        tmpdir=TEMP
+        f"{LOGS}/deeptools-bamCoverage/{{sample}}.log"
     threads:
-        12
+        int(config['bamCoverage']['threads'])
+    benchmark:
+        f"{BENCHMARKS}/deeptools-bamCoverage/{{sample}}.txt"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads,
+        mem_mb= lambda wildcards,attempt: int(config['bamCoverage']['mem_mb']) * attempt,
+        runtime= lambda wildcards,attempt: int(config['bamCoverage']['runtime']) * attempt,
     shell:
         """
         exec > {log} 2>&1
@@ -20,154 +27,185 @@ rule deeptools_bamCoverage:
 
 rule deeptools_computeMatrix:
     input:
-        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
+        beds = lambda wildcards: f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak",
         bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
-        RESULTS + "/deeptools/{sample}_matrix.gz"
-    wildcard_constraints:
-        replicate = r"[0-9]"
+        f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     conda:
         "../envs/data_analysis.yml"
     params:
-        mode = "reference-point",
+        mode = config["computeMatrix"]["mode"],
         args = config["computeMatrix"]["args"],
         outdir = f"{RESULTS}/deeptools"
     threads:
-        8
+        int(config["computeMatrix"]["threads"])
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards, threads: threads,
+        mem_mb= lambda wildcards, attempt: int(config['computeMatrix']['mem_mb']) * attempt,
+        runtime= lambda wildcards, attempt: int(config['computeMatrix']['runtime']) * attempt,
     shell:
         """
         mkdir -p {params.outdir}
-        computeMatrix {params.mode} -p {threads} -S {input.bigwigs} -R {input.beds} -o {output} {params.args}
+        computeMatrix {params.mode} {params.args} -p {threads} -S {input.bigwigs} -R {input.beds} -o {output}
         """
 
 rule deeptools_plotHeatMap:
     input:
-        RESULTS + "/deeptools/{sample}_matrix.gz"
+        f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     output:
-        RESULTS + "/deeptools/{sample}_heatmap.png"
+        f"{RESULTS}/deeptools/{{sample}}_heatmap.png"
     conda:
         "../envs/data_analysis.yml"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        runtime= lambda wildcards,attempt: config['plotHeatMap']['runtime'] * attempt,
+        mem_mb= lambda wildcards,attempt: config['plotHeatMap']['mem_mb'] * attempt,
     shell:
         """
-        plotHeatmap -m {input} -o {output}
+        plotHeatmap -m {input} -o {output} --whatToShow 'heatmap and colorbar'
         """
 rule deeptools_plotProfile:
     input:
-        RESULTS + "/deeptools/{sample}_matrix.gz"
+        f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     output:
-        RESULTS + "/deeptools/{sample}_profile.png"
+        f"{RESULTS}/deeptools/{{sample}}_profile.png"
     conda:
         "../envs/data_analysis.yml"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        runtime = lambda wildcards, attempt: config['plotProfile']['runtime'] * attempt,
+        mem_mb = lambda  wildcards, attempt: config['plotProfile']['mem_mb'] * attempt,
     shell:
         """
         plotProfile -m {input} -o {output}
         """
 
-rule plot_genome_track:
+rule pyGenomeTracks:
     input:
-        beds = lambda wildcards:[f"{RESULTS}/{config['peak_caller']}/{wildcards.sample}.bed"],
-        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
+        bed = lambda wildcards: [f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak"],
+        bigwig = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
-        tracks = temp(RESULTS + "/pyGenomeTracks/{sample}_tracks.ini"),
-        plot = RESULTS + "/pyGenomeTracks/{sample}.png"
+        tracks = temp(f"{RESULTS}/pyGenomeTracks/{{sample}}_tracks.ini"),
+        plot = f"{RESULTS}/pyGenomeTracks/{{sample}}.png"
     params:
-        region = config["plot_regions"],
-        args = config["pyGenomeTracks"]["args"]
+        region = config["plot_region"],
+        args = config["pyGenomeTracks"]["args"],
+        peak_type = lambda wildcards: pipeline_config.get_sample_entry_by_file_name(wildcards.sample)["peak_type"],
+        bigwig_options = config["pyGenomeTracks"]["bigwig_options"],
+        bed_options = config["pyGenomeTracks"]["bed_options"],
     conda:
         "../envs/data_analysis.yml"
     log:
-        LOGS + "/pyGenomeTracks/{sample}.log"
+        f"{LOGS}/pyGenomeTracks/{{sample}}.log"
     resources:
         tmpdir=TEMP
-    shell:
-        ''' 
-        exec > {log} 2>&1
-        make_tracks_file -f {input.beds} {input.bigwigs} -o {output.tracks}
-        python3 workflow/scripts/rename_tracks.py {output.tracks}
-        pyGenomeTracks --tracks {output.tracks} --region {params.region} --outFileName {output.plot} {params.args}
-        '''
+    script:
+        '../scripts/tools/pyGenomeTracks.py'
 
 rule bedtools_intersect:
     input:
-        a = lambda wildcards: get_consensus_peak_input(wildcards.sample)[0],
-        b = lambda wildcards: get_consensus_peak_input(wildcards.sample)[1:]
+        a = lambda wildcards: get_consensus_peak_input(wildcards.group, RESULTS, pipeline_config)[0],
+        b = lambda wildcards: get_consensus_peak_input(wildcards.group, RESULTS, pipeline_config)[1:]
     output:
-        RESULTS + "/bedtools/{sample}.consensusPeak"
+        f"{RESULTS}/bedtools/{{group}}.consensusPeak"
     conda:
         "../envs/data_analysis.yml"
     log:
-        LOGS + "/bedtools-intersect/{sample}.log"
+        f"{LOGS}/bedtools-intersect/{{group}}.log"
     benchmark:
-        BENCHMARKS + "/bedtools-intersect/{sample}.txt"
+        f"{BENCHMARKS}/bedtools-intersect/{{group}}.txt"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
     shell:
         '''
         exec > {log} 2>&1
         bedtools intersect -a {input.a} -b {input.b} -wa > {output}
         '''
 
-rule homer_annotate_peaks:
-    input:
-        lambda wildcards: f"{RESULTS}/bedtools/{wildcards.sample}.consensusPeak"
+rule homer_configure:
     output:
-        RESULTS + "/homer/{sample}_annotate.txt"
+        touch(f"{RESULTS}/homer/{{genome}}.setup")
     conda:
         "../envs/data_analysis.yml"
-    params:
-        outdir = RESULTS + "/homer",
-        genome = genome
     log:
-        LOGS + "/homer/{sample}_annotate.log"
+        f"{LOGS}/homer/{{genome}}_setup.log"
+    params:
+        outdir = f"{RESULTS}/homer",
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task = lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: 2000 * attempt,
+        runtime = lambda wildcards, attempt: 10 * attempt,
     shell:
         '''
         exec > {log} 2>&1
         mkdir -p {params.outdir} 
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {params.genome} 
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input} {params.genome} > {output}
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {wildcards.genome} 
         '''
 
-rule homer_findMotifsGenome:
+rule homer_annotate_peaks:
     input:
-        RESULTS + "/homer/{sample}_annotate.txt"
+        peaks = lambda wildcards: f"{RESULTS}/bedtools/{wildcards.group}_{wildcards.genome}.consensusPeak",
+        setup = lambda wildcards: f"{RESULTS}/homer/{wildcards.genome}.setup" 
     output:
-        multiext(RESULTS + "/homer/{sample}/", "homerResults.html", "knownResults.html")
+        f"{RESULTS}/homer/{{group}}_{{genome}}_annotate.txt"
     conda:
         "../envs/data_analysis.yml"
     params:
-        outdir = RESULTS + "/homer",
-        genome = config['genome'],
-        size = 200
-    threads:
-        12
+        outdir = f"{RESULTS}/homer",
     log:
-        LOGS + "/homer/{sample}_findMotifs.log"
+        f"{LOGS}/homer/{{group}}_{{genome}}_annotate.log"
     resources:
-        tmpdir=TEMP
+        tmpdir=TEMP,
+        cpus_per_task = lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: config["annotate_peaks"]["mem_mb"] * attempt,
+        runtime = lambda wildcards, attempt: config["annotate_peaks"]["runtime"] * attempt,
+    shell:
+        '''
+        exec > {log} 2>&1
+        mkdir -p {params.outdir} 
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peaks} {wildcards.genome} > {output}
+        '''
+
+rule homer_find_motifs_genome:
+    input:
+        f"{RESULTS}/homer/{{group}}_annotate.txt"
+    output:
+        multiext(f"{RESULTS}/homer/{{group}}/", "homerResults.html", "knownResults.html")
+    conda:
+        "../envs/data_analysis.yml"
+    params:
+        outdir = f"{RESULTS}/homer",
+        genome = lambda wildcards: wildcards.group.split("_")[-1],
+        args = config["find_motifs_genome"]["args"]
+    threads:
+        int(config["find_motifs_genome"]["threads"])
+    log:
+        f"{LOGS}/homer/{{group}}_findMotifs.log"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task= lambda wildcards,threads: threads,
+        mem_mb= lambda wildcards,attempt: config["find_motifs_genome"]["mem_mb"] * attempt,
+        runtime= lambda wildcards,attempt: config["find_motifs_genome"]["runtime"] * attempt,
     shell:
         '''
         exec > {log} 2>&1
         mkdir -p {params.outdir}
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.sample} -size {params.size} -p {threads} 
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/findMotifsGenome.pl {input} {params.genome} {params.outdir}/{wildcards.group} -p {threads} {params.args}
         '''
 
 rule plot_annotated_peaks:
     input:
-        RESULTS + "/homer/{sample}_annotate.txt"
+        f"{RESULTS}/homer/{{sample}}_annotate.txt"
     output:
-        distribution_plot = RESULTS + "/plots/{sample}_distribution.png",
-        gene_distribution_plot =  RESULTS + "/plots/{sample}_genes.png"
+        distribution_plot = f"{RESULTS}/plots/{{sample}}_distribution.png",
+        gene_distribution_plot =  f"{RESULTS}/plots/{{sample}}_genes.png"
     params:
         threshold_fraction = 0.01
     conda:
         "../envs/data_analysis.yml"
+    log:
+        f"{LOGS}/plot_annotated_peaks/{{sample}}.log"
     script:
         "../scripts/plot_annotated_peaks.py"

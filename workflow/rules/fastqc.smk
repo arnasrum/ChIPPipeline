@@ -1,48 +1,47 @@
-
-# Add prefix to these paths
-rule fastqc_after_trimming:
+rule fastqc_unprocessed:
     input:
-        config['results_path'] + "/" + "{tool}/{sample}.fastq",
+        raw = f"{RESOURCES}/reads/{{sample}}.fastq.gz",
     output:
-        multiext(config['results_path'] + "/fastqc/{tool}/{sample}_fastqc.", "zip", "html")
+        raw = multiext(f"{RESULTS}/fastqc/unprocessed/{{sample}}_fastqc.", "zip", "html"),
     params:
-        outputPath = lambda wildcards: f"{config['results_path']}/fastqc/" + wildcards.tool
+        outputPath = lambda wildcards: f"{RESULTS}/fastqc/unprocessed"
     conda:
         "../envs/fastqc.yml"
     log:
-        config['logs_path'] + "/fastqc/{tool}/{sample}.log"
+        f"{LOGS}/fastqc/{{sample}}.log",
     threads:
         int(config["fastqc"]["threads"])
     resources:
-        tmpdir=config["temp_path"],
-        mem_mb=1024
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: int(config["fastqc"]["mem_mb"]) * attempt,
+        runtime = lambda wildcards, attempt: int(config["fastqc"]["runtime"]) * attempt,
     shell:
         """
         exec > {log} 2>&1
-        fastqc -t {threads} -o {params.outputPath} --memory {resources.mem_mb} {input} 
+        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath} {input.raw} 
         """
 
-rule fastqc_before_trimming:
+rule fastqc_trimmed:
     input:
-        RESOURCES + "/reads/{sample}.fastq",
+        trimmed = f"{RESULTS}/{{tool}}/{{sample}}.fastq.gz",
     output:
-        multiext(config['results_path'] + "/fastqc/unprocessed/{sample}_fastqc.", "zip", "html")
+        trimmed = multiext(f"{RESULTS}/fastqc/{{tool}}/{{sample}}_fastqc.","zip","html")
     params:
-        outputPath = lambda wildcards: f"{config['results_path']}/fastqc/unprocessed"
+        outputPath = lambda wildcards: f"{RESULTS}/fastqc/{wildcards.tool}"
     conda:
         "../envs/fastqc.yml"
     log:
-        config['logs_path'] + "/fastqc/raw/{sample}.log"
+        f"{LOGS}/fastqc/{{tool}}/{{sample}}.log",
     threads:
         int(config["fastqc"]["threads"])
     resources:
-        tmpdir=config["temp_path"],
-        mem_mb=1024
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb = lambda wildcards, attempt: int(config["fastqc"]["mem_mb"]) * attempt,
+        runtime = lambda wildcards, attempt: int(config["fastqc"]["runtime"]) * attempt,
     shell:
         """
         exec > {log} 2>&1
-        fastqc -t {threads} -o {params.outputPath} --memory {resources.mem_mb} {input} 
+        fastqc --dir {resources.tmpdir} -t {threads} -o {params.outputPath} {input.trimmed} 
         """
-
-
-

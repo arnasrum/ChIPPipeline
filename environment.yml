@@ -1,0 +1,8 @@
+name: chippipeline
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - snakemake=8.20.1
+  - snakemake-executor-plugin-slurm
+  - snakemake-executor-plugin-cluster-generic

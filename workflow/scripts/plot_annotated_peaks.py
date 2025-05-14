@@ -71,7 +71,7 @@ def plot_violin(file_path, output_path='violin_plot.png'):
     # Create the violin plot
     plt.figure(figsize=(12, 6))
     sns.violinplot(x=category_col, y=distance_col, data=data_clean,
-                   scale='width', inner='box', palette='muted')
+                   density_norm='width', inner='box')
 
     plt.title('TSS Distance Distribution Across Gene Types')
     plt.xlabel('Gene Type')

@@ -1,126 +1,197 @@
-
-
 ruleorder: trim_galore_PE > trim_galore_SE
-
-rule trim_galore_PE:
-    input:
-        lambda wildcards: trimmer_input(wildcards.sample)
-    output:
-        out1 = RESULTS + "/trim_galore/{sample}_1.fastq",
-        out2 = RESULTS + "/trim_galore/{sample}_2.fastq"
-    conda:
-        "../envs/trim.yml"
-    params:
-        args = config["trim_galore"]["args"],
-        output_dir = RESULTS + "/trim_galore",
-        paired_end = config["paired_end"]
-    threads:
-        int(config["trim_galore"]["threads"])
-    log:
-        LOGS + "/trim_galore/{sample}.log"
-    benchmark:
-        repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat_trim"])
-    resources:
-        tmpdir=TEMP,
-        cpus_per_task=int(config["trim_galore"]["threads"]),
-    shell:
-        """
-        exec > {log} 2>&1
-        trim_galore --paired -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
-        mv {params.output_dir}/{wildcards.sample}_val_1.fq {output.out1} 
-        mv {params.output_dir}/{wildcards.sample}_val_2.fq {output.out2} 
-        """
+ruleorder: fastp_PE > fastp_SE
+ruleorder: cutadapt_PE > cutadapt_SE
+ruleorder: trimmomatic_PE > trimmomatic_SE
 
 rule trim_galore_SE:
     input:
-        lambda wildcards: trimmer_input(wildcards.sample)
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
-        RESULTS + "/trim_galore/{sample}.fastq"
+        temp(f"{RESULTS}/trim_galore/{{sample}}.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
         args = config["trim_galore"]["args"],
-        output_dir = RESULTS + "/trim_galore",
-        paired_end = config["paired_end"]
+        output_dir = f"{RESULTS}/trim_galore",
     threads:
         int(config["trim_galore"]["threads"])
     log:
-        LOGS + "/trim_galore/{sample}.log"
+        f"{LOGS}/trim_galore/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/trim_galore/{sample}.txt", config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/trim_galore/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
-        cpus_per_task=int(config["trim_galore"]["threads"]),
-    shell:
-        """
-        exec > {log} 2>&1
-        trim_galore -j {threads} -o {params.output_dir} --basename {wildcards.sample} {params.args} {input}
-        mv {params.output_dir}/{wildcards.sample}_trimmed.fq {output} 
-        """
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['trim_galore']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['trim_galore']['runtime'] * attempt
+    script:
+        "../scripts/tools/trim_galore.py"
 
-rule cutadapt:
+rule trim_galore_PE:
     input:
-        lambda wildcards: trimmer_input(wildcards.sample)
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
-        temp(expand(RESULTS + "/cutadapt/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
+        temp(f"{RESULTS}/trim_galore/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/trim_galore/{{sample}}_2.fastq.gz"),
     conda:
-        "../envs/cutadapt.yml"
+        "../envs/trim.yml"
+    params:
+        args=config["trim_galore"]["args"],
+        output_dir=f"{RESULTS}/trim_galore",
+    threads:
+        int(config["trim_galore"]["threads"])
+    log:
+        f"{LOGS}/trim_galore/{{sample}}.log"
+    benchmark:
+        f"{BENCHMARKS}/trim_galore/{{sample}}.txt"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['trim_galore']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['trim_galore']['runtime'] * attempt
+    script:
+        "../scripts/tools/trim_galore.py"
+
+rule cutadapt_SE:
+    input:
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
+    output:
+        temp(f"{RESULTS}/cutadapt/{{sample}}.fastq.gz")
+    conda:
+        "../envs/trim.yml"
     params:
         args = config["cutadapt"]["args"],
-        paired_end = config["paired_end"]
     threads:
         int(config["cutadapt"]["threads"])
     log:
-        LOGS + "/cutadapt/{sample}.log"
+        f"{LOGS}/cutadapt/{{sample}}.log"
     benchmark:
-        repeat(BENCHMARKS + "/cutadapt/{sample}.txt", config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/cutadapt/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
-        cpus_per_task=int(config["cutadapt"]["threads"]),
-    shell:
-        '''
-        exec > {log} 2>&1
-        shopt -s nocasematch
-        if [[ {params.paired_end} =~ true ]]; then
-            read -a output_array <<< "{output}"
-            out1="${{output_array[0]}}"
-            out2="${{output_array[1]}}"
-            cutadapt -o $out1 -p $out2 {params.args} {input}
-        else
-            cutadapt -j {threads} -o {output} {params.args} {input}
-        fi
-        '''
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['cutadapt']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['cutadapt']['runtime'] * attempt
+    script:
+        "../scripts/tools/cutadapt.py"
 
-rule fastp:
+rule cutadapt_PE:
     input:
-        samples = lambda wildcards: trimmer_input(wildcards.sample)
+        lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
-        temp(expand(RESULTS + "/fastp/{sample}{extension}", extension=fastq_file_extensions, allow_missing=True))
+        temp(f"{RESULTS}/cutadapt/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/cutadapt/{{sample}}_2.fastq.gz"),
+    conda:
+        "../envs/trim.yml"
+    params:
+        args=config["cutadapt"]["args"],
+    threads:
+        int(config["cutadapt"]["threads"])
+    log:
+        f"{LOGS}/cutadapt/{{sample}}.log"
+    benchmark:
+        f"{BENCHMARKS}/cutadapt/{{sample}}.txt"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['cutadapt']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['cutadapt']['runtime'] * attempt
+    script:
+        "../scripts/tools/cutadapt.py"
+
+rule fastp_SE:
+    input:
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
+    output:
+        temp(f"{RESULTS}/fastp/{{sample}}.fastq.gz")
     conda:
         "../envs/trim.yml"
     params:
         args = config["fastp"]["args"],
-        paired_end = config["paired_end"],
-        path = RESULTS + "/fastp"
     threads:
         int(config["fastp"]["threads"])
     log:
-        LOGS + "/fastp/{sample}.log"
+        f"{LOGS}/fastp/{{sample}}.log"
     resources:
         tmpdir=TEMP,
-        cpus_per_task=int(config["fastp"]["threads"]),
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb= lambda wildcards,attempt: config['fastp']['mem_mb'] * attempt,
+        runtime= lambda wildcards,attempt: config['fastp']['runtime'] * attempt
     benchmark:
-        repeat(BENCHMARKS + "/fastp/{sample}.txt", config["benchmark_repeat_trim"])
-    shell:
-        '''
-        exec > {log} 2>&1
-        shopt -s nocasematch
-        if [[ {params.paired_end} =~ true ]]; then
-            read -a output_array <<< "{output}"
-            out1="${{output_array[0]}}"
-            out2="${{output_array[1]}}"
-            fastp -j {params.path}/{wildcards.sample}.json -h {params.path}/{wildcards.sample}.html -i {input.samples[0]} -I {input.samples[1]} -o $out1 -O $out2 {params.args}
-        else
-            fastp -w {threads} -j {params.path}/{wildcards.sample}.json -h {params.path}/{wildcards.sample}.html -i {input} -o {output} {params.args}
-        fi
-        '''
+        f"{BENCHMARKS}/fastp/{{sample}}.txt"
+    script:
+        "../scripts/tools/fastp.py"
+
+rule fastp_PE:
+    input:
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
+    output:
+        temp(f"{RESULTS}/fastp/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/fastp/{{sample}}_2.fastq.gz")
+    conda:
+        "../envs/trim.yml"
+    params:
+        args=config["fastp"]["args"],
+    threads:
+        int(config["fastp"]["threads"])
+    log:
+        f"{LOGS}/fastp/{{sample}}.log"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=lambda wildcards, attempt: config['fastp']['mem_mb'] * attempt,
+        runtime=lambda wildcards, attempt: config['fastp']['runtime'] * attempt
+    benchmark:
+        f"{BENCHMARKS}/fastp/{{sample}}.txt"
+    script:
+        "../scripts/tools/fastp.py"
+
+
+rule trimmomatic_SE:
+    input:
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
+    output:
+        temp(f"{RESULTS}/trimmomatic/{{sample}}.fastq.gz")
+    conda:
+        "../envs/trim.yml"
+    params:
+        args = config["trimmomatic"]["args"],
+        trimming_steps = config['trimmomatic']['trimming_steps']
+    threads:
+        int(config["trimmomatic"]["threads"])
+    log:
+        f"{LOGS}/trimmomatic/{{sample}}.log"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=config['trimmomatic']['mem_mb'],
+        runtime=config['trimmomatic']['runtime']
+    benchmark:
+        f"{BENCHMARKS}/trimmomatic/{{sample}}.txt"
+    script:
+        "../scripts/tools/trimmomatic.py"
+
+rule trimmomatic_PE:
+    input:
+        samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
+    output:
+        temp(f"{RESULTS}/trimmomatic/{{sample}}_1.fastq.gz"),
+        temp(f"{RESULTS}/trimmomatic/{{sample}}_2.fastq.gz")
+    conda:
+        "../envs/trim.yml"
+    params:
+        args = config["trimmomatic"]["args"],
+        trimming_steps = config['trimmomatic']['trimming_steps']
+    threads:
+        int(config["trimmomatic"]["threads"])
+    log:
+        f"{LOGS}/trimmomatic/{{sample}}.log"
+    resources:
+        tmpdir=TEMP,
+        cpus_per_task=lambda wildcards, threads: threads,
+        mem_mb=config['trimmomatic']['mem_mb'],
+        runtime=config['trimmomatic']['runtime']
+    benchmark:
+        f"{BENCHMARKS}/trimmomatic/{{sample}}.txt"
+    script:
+        "../scripts/tools/trimmomatic.py"
