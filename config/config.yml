@@ -27,14 +27,6 @@ logs_path: "logs"
 benchmarks_path: "benchmarks"
 temp_path: "temp"
 
-# Times chosen trimmer is repeated for chosen trimmer
-benchmark_repeat_trim: 1
-# Times chosen aligner is repeated for chosen aligner
-benchmark_repeat_align: 1
-# Times chosen duplicate marker is repeated for chosen duplicate processor
-benchmark_repeat_duplicate: 1
-
-
 fastq-dump:
   args: "--skip-technical"
   threads: 12
@@ -102,7 +94,7 @@ star_index:
   mem_mb: 36000
   runtime: 200
 star:
-  args: ""
+  args: "--alignIntronMax 1 --alignEndsType EndToEnd"
   threads: 25
   mem_mb: 8000
   runtime: 120

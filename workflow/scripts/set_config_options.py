@@ -4,10 +4,8 @@ def set_module_options(config: dict) -> None:
     '''
         Reads config["modules"] and overwrites the default values.
         Optimally specified when running snakemake through CLI 
-        with --config modules="--flag value -f value"
+        with --config modules="--flag value -f value2"
     '''
-    # --flag- is not caught as a flag in regex
-    # multi character flag with single dash is read as value
     if not config["modules"]: return
     pattern = re.compile(r"(?i)\B--[a-z]*\s|\B-[a-z]\s")
     flags = pattern.findall(config["modules"])
@@ -18,20 +16,22 @@ def set_module_options(config: dict) -> None:
         match flags[i].rstrip():
             case "-t":
                 __set_config_option(config, "trimmer", argument)
-            case "--trim":
+            case "--trimmer":
                 __set_config_option(config, "trimmer", argument)
             case "-a":
                 __set_config_option(config, "aligner", argument)
-            case "--align":
+            case "--aligner":
                 __set_config_option(config, "aligner", argument)
-            case "-g":
-                __set_config_option(config, "genome", argument)
-            case "--genome":
-                __set_config_option(config, "genome", argument)
+            case "-p":
+                __set_config_option(config, "peak_caller", argument)
+            case "--peak-caller":
+                __set_config_option(config, "peak_caller", argument)
             case "-d":
                 __set_config_option(config, "duplicate_processor", argument)
+            case "--duplicate-processor":
+                __set_config_option(config, "duplicate_processor", argument)
             case _:
-                raise NotImplementedError(f"{flags[i]} flag is not supported")
+                raise NotImplementedError(f"Modules keyword; {flags[i]}, flag is not supported")
 
 def set_output_paths(config):
     if config["outdir"] != "" and config["outdir"][-1] != "/": config["outdir"] += "/"

@@ -31,7 +31,7 @@ Activate the environment and start using the pipeline:
 
 `snakemake -c <num_cores> -C <config_options>`
 
-For documentation of config_options, please refer to the [docs](docs/conf.md)
+For documentation of config_options, please refer to the [configuration option page](docs/conf.md).
 
 ## Apptainer/Singularity
 
@@ -64,10 +64,6 @@ If conda is not available, use containers.
 
 Pull the container from Dockerhub using Apptainer/Singularity.
 
-Install conda packages before submitting jobs to compute nodes by running:
-
-`apptainer exec <container_name> snakemake --conda-create-envs-only`
-
 Then you can submit the pipeline to the workload manager, e.g. using Slurm
 
 `srun --nodes <num_nodes>... apptainer run <container_name> ...`
@@ -75,6 +71,11 @@ Then you can submit the pipeline to the workload manager, e.g. using Slurm
 Or edit and submit the provided Slurm [script](slurm.sh):
 
 `sbatch slurm.sh`
+
+If network connection is not available on the compute nodes, install conda packages before submitting jobs to compute nodes by running:
+
+`apptainer exec <container_name> snakemake --conda-create-envs-only`
+
 
 ## Editing Config 
 

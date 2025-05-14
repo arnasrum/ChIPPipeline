@@ -26,27 +26,27 @@ Or by editing the [configuration file](../config/config.yml) directly
     </tr>
     <tr>
       <td><code>modules</code></td>
-      <td>String (e.g., <code>""</code>, <code>"alignment,peaks"</code>)</td>
+      <td>String (e.g., <code>""</code>, <code>"-a bowtie2 --trimmer fastp"</code>)</td>
       <td>Specifies which specific parts or modules of the workflow should be executed. Empty means run default/all.</td>
     </tr>
     <tr>
       <td><code>trimmer</code></td>
-      <td>String (e.g., <code>"fastp"</code>, <code>"trim_galore"</code>)</td>
+      <td>String (<code>"cutadapt"</code>, <code>"fastp"</code>, <code>"trim_galore"</code> or <code>"trimmomatic"</code>)</td>
       <td>Selects the tool to be used for trimming raw sequencing reads.</td>
     </tr>
     <tr>
       <td><code>aligner</code></td>
-      <td>String (e.g., <code>"bowtie2"</code>, <code>"bwa_mem"</code>)</td>
+      <td>String (<code>"bowtie2"</code>, <code>"bwa_mem"</code>, <code>"bwa_mem2"</code> or <code>"star"</code>)</td>
       <td>Selects the tool to be used for aligning processed reads to a reference genome.</td>
     </tr>
     <tr>
       <td><code>duplicate_processor</code></td>
-      <td>String (e.g., <code>"mark_duplicates"</code>, <code>"markdup"</code>)</td>
+      <td>String (<code>"mark_duplicates"</code> or <code>"markdup"</code>)</td>
       <td>Selects the tool used to identify and/or mark duplicate reads.</td>
     </tr>
     <tr>
       <td><code>peak_caller</code></td>
-      <td>String (e.g., <code>"macs3"</code>)</td>
+      <td>String (<code>"macs3"</code>)</td>
       <td>Selects the tool used for identifying genomic regions enriched with reads (peaks).</td>
     </tr>
     <tr>
@@ -62,7 +62,7 @@ Or by editing the [configuration file](../config/config.yml) directly
     <tr>
       <td><code>sample_sheet</code></td>
       <td>String (e.g., <code>"config/samples.csv"</code>)</td>
-      <td>Path to the CSV file containing sample metadata and file information.</td>
+      <td>Path to the CSV or JSON file containing sample metadata and file information.</td>
     </tr>
     <tr>
       <td><code>outdir</code></td>
@@ -93,21 +93,6 @@ Or by editing the [configuration file](../config/config.yml) directly
       <td><code>temp_path</code></td>
       <td>String (e.g., <code>"temp"</code>)</td>
       <td>Relative path within <code>outdir</code> for temporary files.</td>
-    </tr>
-    <tr>
-      <td><code>benchmark_repeat_trim</code></td>
-      <td>Integer (e.g., <code>1</code>)</td>
-      <td>Number of times the trimming step is repeated for benchmarking.</td>
-    </tr>
-    <tr>
-      <td><code>benchmark_repeat_align</code></td>
-      <td>Integer (e.g., <code>1</code>)</td>
-      <td>Number of times the alignment step is repeated for benchmarking.</td>
-    </tr>
-    <tr>
-      <td><code>benchmark_repeat_duplicate</code></td>
-      <td>Integer (e.g., <code>1</code>)</td>
-      <td>Number of times the duplicate processing step is repeated for benchmarking.</td>
     </tr>
     <tr>
       <td colspan="3"><strong>Tool Configurations (Parameters per External Tool)</strong></td>
@@ -150,13 +135,13 @@ Or by editing the [configuration file](../config/config.yml) directly
     </tr>
     <tr>
       <td><code>pyGenomeTracks</code> -> <code>bigwig_options</code></td>
-      <td>String (e.g., <code>"max_value = 6"</code>)</td>
+      <td>String (e.g., <code>"max_value = 6,color = red"</code>)</td>
       <td>Comma-separated options appended to bigWig track configurations in pyGenomeTracks.</td>
     </tr>
     <tr>
       <td><code>pyGenomeTracks</code> -> <code>bed_options</code></td>
-      <td>String (e.g., <code>""</code>)</td>
-      <td>Comma-separated options appended to BED track configurations in pyGenomeTracks.</td>
+      <td>String (e.g., <code>"show_labels=true,color=red"</code>)</td>
+      <td>Comma-separated options appended to narrowPeak(BED) track configurations in pyGenomeTracks. The extensive options can be found at the offical pyGenomeTracks documentation.</td>
     </tr>
   </tbody>
 </table>
@@ -169,13 +154,14 @@ Overwrite the default configuration by running:
 
 Example:
 
-`snakemake -c <num> <rule> --config modules="-t trimmomatic -a bwa_mem2"`
+`snakemake -c <num> <rule> --config modules="-t trimmomatic --aligner bwa_mem2"`
 
-## Flags
+### Flags
 
-**-t** or **--trim** overwrites the trimmer
+**-t** or **--trimmer** overwrites the trimmer
 
-**-a** or **--align** overwrites the aligner
+**-a** or **--aligner** overwrites the aligner
 
 **-d** or **--duplicate_processor** overwrites the duplicate processor
 
+**-p** or **--peak_caller** overwrites the duplicate processor
