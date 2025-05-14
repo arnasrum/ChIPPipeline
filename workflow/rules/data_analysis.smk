@@ -101,7 +101,7 @@ rule pyGenomeTracks:
     resources:
         tmpdir=TEMP
     script:
-        '../scripts/pyGenomeTracks.py'
+        '../scripts/tools/pyGenomeTracks.py'
 
 rule bedtools_intersect:
     input:

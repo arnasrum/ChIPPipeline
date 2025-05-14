@@ -48,7 +48,7 @@ rule concatenate_runs_SE:
     conda:
         "../envs/input.yml"
     script:
-        "../scripts/concatenate_runs.py"
+        "../scripts/tools/concatenate_runs.py"
 
 rule concatenate_runs_PE:
     input:
@@ -63,7 +63,7 @@ rule concatenate_runs_PE:
     conda:
         "../envs/input.yml"
     script:
-        "../scripts/concatenate_runs.py"
+        "../scripts/tools/concatenate_runs.py"
 
 rule handle_provided_samples_SE:
     input:
