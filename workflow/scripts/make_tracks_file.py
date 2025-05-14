@@ -1,7 +1,6 @@
 import argparse
 
 def make_tracks(tracks_file: str, bed: str, bigwig: str, options: dict[str, dict[str, str]]):
-    spacer_height = 0.5
     sections = {
                 "bed": {
                     "file": bed,

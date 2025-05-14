@@ -57,9 +57,6 @@ def get_meta_data(sra_accessions: list[str]) -> dict[str: dict]:
     #response = xmltodict.parse(result.content)
     return meta_data
 
-
-
-
 def __poll_request(url: str) -> Response:
     wait_time: int = 1
     failed_request_count: int = 0
