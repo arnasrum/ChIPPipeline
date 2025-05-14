@@ -12,6 +12,8 @@ rule deeptools_bamCoverage:
         f"{LOGS}/deeptools-bamCoverage/{{sample}}.log"
     threads:
         int(config['bamCoverage']['threads'])
+    benchmark:
+        f"{BENCHMARKS}/deeptools-bamCoverage/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards,threads: threads,
@@ -23,32 +25,10 @@ rule deeptools_bamCoverage:
         bamCoverage -p {threads} -b {input.bam} -o {output}
         """
 
-rule deeptools_bigwigCompare:
-    input:
-        lambda wildcards: bigwig_compare_input(wildcards.sample, RESULTS, pipeline_config)
-    output:
-        f"{RESULTS}/deeptools-bigwigCompare/{{sample}}.bw"
-    conda:
-        "../envs/data_analysis.yml"
-    log:
-        f"{LOGS}/deeptools-bigwigCompare/{{sample}}.log"
-    threads:
-        int(config['bigwigCompare']['threads'])
-    params:
-        args = config["bigwigCompare"]["args"]
-    resources:
-        tmpdir=TEMP,
-        cpus_per_task= lambda wildcards,threads: threads,
-        mem_mb= lambda wildcards,attempt: int(config['bigwigCompare']['mem_mb']) * attempt,
-        runtime= lambda wildcards,attempt: int(config['bigwigCompare']['runtime']) * attempt,
-    script:
-        "../scripts/tools/bigwig_compare.py"
-
-
 rule deeptools_computeMatrix:
     input:
         beds = lambda wildcards: f"{RESULTS}/{pipeline_config.get_config_option('peak_caller')}/{wildcards.sample}_peaks.narrowPeak",
-        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bigwigCompare/{wildcards.sample}.bw"
+        bigwigs = lambda wildcards: f"{RESULTS}/deeptools-bamCoverage/{wildcards.sample}.bw"
     output:
         f"{RESULTS}/deeptools/{{sample}}_matrix.gz"
     conda:

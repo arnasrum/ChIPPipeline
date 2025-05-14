@@ -121,15 +121,6 @@ def get_genome_path(genome: str, pipeline_config: PipelineConfiguration) -> str 
             return genome
     return None
 
-def bigwig_compare_input(sample: str, results_path: str, pipeline_config: PipelineConfiguration) -> list[str]:
-    base_path = f"{results_path}/deeptools-bamCoverage"
-    input_files = {"treatment": [], "control": []}
-    control_files = pipeline_config.get_control_files(sample)
-    input_files['treatment'] = [f"{base_path}/{file_name}.bw" for file_name in get_pooled_treatment_samples(sample, pipeline_config)]
-    if control_files:
-        input_files["control"] = [f"{base_path}/{file_name}.bw" for file_name in control_files]
-    return input_files
-
 def flatten_dict(old_dict: dict) -> dict:
     new_dict = {}
     for key, value in old_dict.items():
