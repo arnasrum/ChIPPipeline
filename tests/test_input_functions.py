@@ -319,3 +319,100 @@ def test_get_fastqc_output_single_end(mock_pipeline_config):
     assert isinstance(get_fastqc_output(file_name, results_path, mock_pipeline_config), list)
     assert set(expected_output) == (set(get_fastqc_output(file_name, results_path, mock_pipeline_config)))
 
+def test_get_all_input_fastqc_paired_end(mock_pipeline_config):
+    mock_pipeline_config.get_all_file_names.return_value = ["treatment1", "treatment2", "control1"]
+    mock_pipeline_config.is_paired_end.return_value = True
+    mock_pipeline_config.get_config_option.return_value = "trimmer"
+    results_path = "path/to/results"
+
+    expected_output = [
+        f"path/to/results/fastqc/unprocessed/treatment1_1_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/treatment1_2_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/treatment1_1_fastqc.html",
+        f"path/to/results/fastqc/unprocessed/treatment1_2_fastqc.html",
+        f"path/to/results/fastqc/unprocessed/treatment2_1_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/treatment2_2_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/treatment2_1_fastqc.html",
+        f"path/to/results/fastqc/unprocessed/treatment2_2_fastqc.html",
+        f"path/to/results/fastqc/unprocessed/control1_1_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/control1_2_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/control1_1_fastqc.html",
+        f"path/to/results/fastqc/unprocessed/control1_2_fastqc.html",
+        f"path/to/results/fastqc/trimmer/treatment1_1_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/treatment1_2_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/treatment1_1_fastqc.html",
+        f"path/to/results/fastqc/trimmer/treatment1_2_fastqc.html",
+        f"path/to/results/fastqc/trimmer/treatment2_1_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/treatment2_2_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/treatment2_1_fastqc.html",
+        f"path/to/results/fastqc/trimmer/treatment2_2_fastqc.html",
+        f"path/to/results/fastqc/trimmer/control1_1_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/control1_2_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/control1_1_fastqc.html",
+        f"path/to/results/fastqc/trimmer/control1_2_fastqc.html"
+    ]
+    function_output = get_all_input(results_path, mock_pipeline_config)
+    for path in expected_output:
+        assert path in function_output
+
+
+def test_get_all_input_fastqc_single_end(mock_pipeline_config):
+    mock_pipeline_config.get_all_file_names.return_value = ["treatment1", "treatment2", "control1"]
+    mock_pipeline_config.is_paired_end.return_value = False
+    mock_pipeline_config.get_config_option.return_value = "trimmer"
+    results_path = "path/to/results"
+
+    expected_output = [
+        f"path/to/results/fastqc/unprocessed/treatment1_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/treatment1_fastqc.html",
+        f"path/to/results/fastqc/unprocessed/treatment2_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/treatment2_fastqc.html",
+        f"path/to/results/fastqc/unprocessed/control1_fastqc.zip",
+        f"path/to/results/fastqc/unprocessed/control1_fastqc.html",
+        f"path/to/results/fastqc/trimmer/treatment1_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/treatment1_fastqc.html",
+        f"path/to/results/fastqc/trimmer/treatment2_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/treatment2_fastqc.html",
+        f"path/to/results/fastqc/trimmer/control1_fastqc.zip",
+        f"path/to/results/fastqc/trimmer/control1_fastqc.html",
+    ]
+    function_output = get_all_input(results_path, mock_pipeline_config)
+    for path in expected_output:
+        assert path in function_output
+
+
+def test_get_all_input_treatment_files(mock_pipeline_config):
+    mock_pipeline_config.get_all_file_names.return_value = ["treatment1", "treatment2", "treatment3", "control1", "control2"]
+    mock_pipeline_config.get_treatment_files.return_value = ["treatment1", "treatment2", "treatment3"]
+    mock_pipeline_config.get_config_option.return_value = "peak_caller"
+
+    def get_sample_entry_side_effect(file_name):
+        if file_name in ["treatment1", "treatment2"]:
+            return {"peak_type": "narrow"}
+        elif file_name == "treatment3":
+            return {"peak_type": "broad"}
+        return None
+    mock_pipeline_config.get_sample_entry_by_file_name.side_effect = get_sample_entry_side_effect
+    results_path = "path/to/results"
+
+    expected_output = [
+        f"path/to/results/pyGenomeTracks/treatment1.png",
+        f"path/to/results/pyGenomeTracks/treatment2.png",
+        f"path/to/results/deeptools/treatment1_heatmap.png",
+        f"path/to/results/deeptools/treatment2_heatmap.png",
+        f"path/to/results/deeptools/treatment1_profile.png",
+        f"path/to/results/deeptools/treatment2_profile.png",
+        f"path/to/results/peak_caller/treatment3_peaks.broadPeak",
+    ]
+    unexpected_output = [
+        f"path/to/results/pyGenomeTracks/treatment3.png",
+        f"path/to/results/deeptools/treatment3_heatmap.png",
+        f"path/to/results/deeptools/treatment3_profile.png",
+    ]
+
+    function_output = get_all_input(results_path, mock_pipeline_config)
+    for path in expected_output:
+        assert path in function_output
+    for path in unexpected_output:
+        assert not path in function_output
+
