@@ -67,7 +67,7 @@ rule concatenate_runs_PE:
 
 rule handle_provided_samples_SE:
     input:
-        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config),
+        lambda wildcards: handle_provided_input(wildcards.file_name, pipeline_config),
     output:
         f"{RESOURCES}/reads/{{file_name}}.fastq.gz"
     log:
@@ -91,7 +91,7 @@ rule handle_provided_samples_SE:
 
 rule handle_provided_samples_PE:
     input:
-        lambda wildcards: symlink_input(wildcards.file_name, pipeline_config),
+        lambda wildcards: handle_provided_input(wildcards.file_name, pipeline_config),
     output:
         f"{RESOURCES}/reads/{{file_name}}_1.fastq.gz",
         f"{RESOURCES}/reads/{{file_name}}_2.fastq.gz"

@@ -30,7 +30,7 @@ def get_consensus_peak_input(treatment_group: str, result_path: str, pipeline_co
         treatment_files.append(treatment_files[0])
     return treatment_files
 
-def symlink_input(file_name: str, pipeline_config: PipelineConfiguration) -> str | None:
+def handle_provided_input(file_name: str, pipeline_config: PipelineConfiguration) -> str | None:
     pools = pipeline_config.sample_info["provided"].values()
     for pool in pools:
         for sample in pool:

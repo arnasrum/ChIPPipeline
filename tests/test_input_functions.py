@@ -209,7 +209,7 @@ def test_consensus_peak_input_single_replicate(mock_pipeline_config):
     ]
     assert expected_outputs == get_consensus_peak_input(group, results_path, mock_pipeline_config)
 
-def test_symlink_input_base_case(mock_pipeline_config):
+def test_handle_provided_input_base_case(mock_pipeline_config):
     mock_pipeline_config.sample_info = {
         "provided": {
             "antibody_sample1_rep1_mm10_treatment": [
@@ -258,31 +258,12 @@ def test_symlink_input_base_case(mock_pipeline_config):
             ],
         }
     }
-    expected_output =  {
-        "read1": {
-            "path": "data/treatment_sample_1.fq.gz",
-            "file_extension": ".fq.gz",
-            "file_name": "treatment_sample_1"
-        },
-        "read2": {
-            "path": "data/treatment_sample_2.fq.gz",
-            "file_extension": ".fq.gz",
-            "file_name": "treatment_sample_2"
-        },
-        "file_name": "antibody_sample1_treatment_rep1_mm10",
-        "type": "treatment",
-        "sample": "sample1",
-        "replicate": 1,
-        "mark": "antibody",
-        "peak_type": "narrow",
-        "genome": "data/mm10.fa.gz",
-        "paired_end": "true"
-    }
-    assert expected_output == symlink_input("antibody_sample1_treatment_rep1_mm10", mock_pipeline_config)
+    expected_output = ["data/treatment_sample_1.fq.gz", "data/treatment_sample_2.fq.gz"] 
+    assert expected_output == handle_provided_input("antibody_sample1_treatment_rep1_mm10", mock_pipeline_config)
 
-def test_symlink_input_no_results(mock_pipeline_config):
+def test_handle_provided_input_no_results(mock_pipeline_config):
     mock_pipeline_config.sample_info = {"provided": {}}
-    assert None ==  symlink_input("antibody_sample1", mock_pipeline_config)
+    assert None ==  handle_provided_input("antibody_sample1", mock_pipeline_config)
 
 def test_join_read_files_paired_end():
     reads = ["SRA111", "SRA222", "SRA333"]
