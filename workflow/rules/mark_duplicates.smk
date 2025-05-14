@@ -13,7 +13,7 @@ rule picard_mark_duplicates:
     log:
         f"{LOGS}/mark_duplicates/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/mark_duplicates/{{sample}}.txt", config["benchmark_repeat_duplicate"])
+        f"{BENCHMARKS}/mark_duplicates/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_thread= lambda wildcards,threads: threads,
@@ -44,7 +44,7 @@ rule samtools_markdup:
     log:
         f"{LOGS}/markdup/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/markdup/{{sample}}.txt", config["benchmark_repeat_duplicate"])
+        f"{BENCHMARKS}/markdup/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_thread=lambda wildcards, threads: threads,

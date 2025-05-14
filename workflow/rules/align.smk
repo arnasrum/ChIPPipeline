@@ -40,7 +40,7 @@ rule bowtie2:
     log:
         f"{LOGS}/bowtie2/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/bowtie2/{{sample}}.txt", int(config["benchmark_repeat_align"]))
+        f"{BENCHMARKS}/bowtie2/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
@@ -91,7 +91,7 @@ rule bwa_mem:
     log:
         f"{LOGS}/bwa_mem/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/bwa_mem/{{sample}}.txt", int(config["benchmark_repeat_align"]))
+        f"{BENCHMARKS}/bwa_mem/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
@@ -142,7 +142,7 @@ rule bwa_mem2:
     log:
         f"{LOGS}/bwa_mem2/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/bwa_mem2/{{sample}}.txt", int(config["benchmark_repeat_align"]))
+        f"{BENCHMARKS}/bwa_mem2/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task= lambda wildcards, threads: threads,
@@ -196,7 +196,7 @@ rule STAR:
     log:
         f"{LOGS}/STAR/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/STAR/{{sample}}.txt", config["benchmark_repeat_align"])
+        f"{BENCHMARKS}/STAR/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task = lambda wildcards, threads: threads,

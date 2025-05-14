@@ -18,7 +18,7 @@ rule trim_galore_SE:
     log:
         f"{LOGS}/trim_galore/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/trim_galore/{{sample}}.txt", config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/trim_galore/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -43,7 +43,7 @@ rule trim_galore_PE:
     log:
         f"{LOGS}/trim_galore/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/trim_galore/{{sample}}.txt",config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/trim_galore/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -66,7 +66,7 @@ rule cutadapt_SE:
     log:
         f"{LOGS}/cutadapt/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/cutadapt/{{sample}}.txt", config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/cutadapt/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -90,7 +90,7 @@ rule cutadapt_PE:
     log:
         f"{LOGS}/cutadapt/{{sample}}.log"
     benchmark:
-        repeat(f"{BENCHMARKS}/cutadapt/{{sample}}.txt",config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/cutadapt/{{sample}}.txt"
     resources:
         tmpdir=TEMP,
         cpus_per_task=lambda wildcards, threads: threads,
@@ -118,7 +118,7 @@ rule fastp_SE:
         mem_mb= lambda wildcards,attempt: config['fastp']['mem_mb'] * attempt,
         runtime= lambda wildcards,attempt: config['fastp']['runtime'] * attempt
     benchmark:
-        repeat(f"{BENCHMARKS}/fastp/{{sample}}.txt", config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/fastp/{{sample}}.txt"
     script:
         "../scripts/tools/fastp.py"
 
@@ -142,7 +142,7 @@ rule fastp_PE:
         mem_mb=lambda wildcards, attempt: config['fastp']['mem_mb'] * attempt,
         runtime=lambda wildcards, attempt: config['fastp']['runtime'] * attempt
     benchmark:
-        repeat(f"{BENCHMARKS}/fastp/{{sample}}.txt",config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/fastp/{{sample}}.txt"
     script:
         "../scripts/tools/fastp.py"
 
@@ -167,7 +167,7 @@ rule trimmomatic_SE:
         mem_mb=config['trimmomatic']['mem_mb'],
         runtime=config['trimmomatic']['runtime']
     benchmark:
-        repeat(f"{BENCHMARKS}/trimmomatic/{{sample}}.txt", config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/trimmomatic/{{sample}}.txt"
     script:
         "../scripts/tools/trimmomatic.py"
 
@@ -192,6 +192,6 @@ rule trimmomatic_PE:
         mem_mb=config['trimmomatic']['mem_mb'],
         runtime=config['trimmomatic']['runtime']
     benchmark:
-        repeat(f"{BENCHMARKS}/trimmomatic/{{sample}}.txt", config["benchmark_repeat_trim"])
+        f"{BENCHMARKS}/trimmomatic/{{sample}}.txt"
     script:
         "../scripts/tools/trimmomatic.py"
