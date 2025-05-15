@@ -42,7 +42,12 @@ The pipeline requires a sample sheet (defaulting to config/samples.csv) to defin
         <td>Genome</td>
         <td>The genome that the sample will the aligned to. Samples will also be separated by the genome they are aligned to.</td>
         <td>Yes</td>
-        <td>Genome identifier or path to a FASTA or gzipped FASTA file named after the identifier. Example; hg19 or path/to/genome/hg19.fa.gz</td>
+        <td>You can provide either; 
+        <ul>
+            <li>An UCSC genome identifier (e.g., hg19, mm10, dm6). This will be downloaded from UCSC.</li>
+            <li>A path to a local FASTA or gzipped FASTA file containing the genome sequence (e.g., path/to/genome/hg19.fa.gz). Important: For HOMER (used for motif enrichment) to function correctly with a locally provided genome file, the filename (excluding the extension, e.g., hg19 from hg19.fa.gz) must be a recognized UCSC genome identifier. If the filename is not a recognized identifier by HOMER, motif enrichment analysis will be disabled for samples aligned to this genome.</li>
+        </ul>
+        </td>
     </tr>
     <tr>
         <td>File_path</td>
@@ -129,7 +134,7 @@ Or in JSON format:
     "genome": "genomes/mm10.fa",
     "paired_end": "true",
     "accession": "",
-    "file_path": "data/sample1_R1.fastq.gz;data/sample1_R2.fastq.gz",
+    "file_path": "data/sample1_R1.fastq.gz;data/sample1_R2.fastq.gz"
   },
   {
     "type": "treatment",
