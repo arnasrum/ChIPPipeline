@@ -54,7 +54,7 @@ class PipelineConfiguration:
                 if isinstance(self.config[tool], dict) and key in self.config[tool].keys() and self.config[tool][key]:
                     if next(filter(lambda char: not re.match(char_whitelist, char), self.config[tool][key]), None):
                         raise InputException(f"The configuration argument; {tool} {key}, contains invalid characters.")
-        if next(filter(lambda char: not re.match(char_whitelist, char), self.config['plot_region']), None):
+        if 'plot_region' in self.config and next(filter(lambda char: not re.match(char_whitelist, char), self.config['plot_region']), None):
             raise InputException(f"The configuration argument; \"plot_region\", contains invalid characters.")       
 
 
