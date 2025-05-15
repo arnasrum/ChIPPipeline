@@ -3,7 +3,7 @@
 # String to overwrite which tools are to be run
 modules: ""
 # Choose trimmer
-trimmer: "fastp"
+trimmer: "cutadapt"
 # Choose aligner
 aligner: "bowtie2"
 # Choose tool to process duplicates
@@ -29,7 +29,7 @@ logs_path: "logs"
 benchmarks_path: "benchmarks"
 temp_path: "temp"
 
-fastq-dump:
+fasterq-dump:
   args: "--skip-technical"
   threads: 4
   runtime: 20
