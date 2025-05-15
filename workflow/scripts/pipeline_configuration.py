@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import pathlib
 import pandas as pd
 import numpy as np
@@ -55,6 +54,8 @@ class PipelineConfiguration:
                 if isinstance(self.config[tool], dict) and key in self.config[tool].keys() and self.config[tool][key]:
                     if next(filter(lambda char: not re.match(char_whitelist, char), self.config[tool][key]), None):
                         raise InputException(f"The configuration argument; {tool} {key}, contains invalid characters.")
+        if next(filter(lambda char: not re.match(char_whitelist, char), self.config['plot_region']), None):
+            raise InputException(f"The configuration argument; \"plot_region\", contains invalid characters.")       
 
 
 
@@ -144,8 +145,6 @@ class PipelineConfiguration:
                         entry.update(fetched_info[accession])
 
         self.sample_info = sample_info
-        with open('test.json', "w") as file:
-            json.dump(sample_info, file, indent=4)
         return sample_info
 
     def is_paired_end(self, file_name: str) -> bool:
