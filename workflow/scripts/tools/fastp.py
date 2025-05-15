@@ -9,8 +9,8 @@ command += f" -o {snakemake.output['reads'][0]}"
 if len(snakemake.input) == 2:
     command += f" -I {snakemake.input[1]}"
     command += f" -O {snakemake.output['reads'][1]}"
-command += f" -j {snakemake.output['json']}.json"
-command += f" -h {snakemake.output['html']}.html"
+command += f" -j {snakemake.output['json']}"
+command += f" -h {snakemake.output['html']}"
 if snakemake.config["fastp"]["args"]:
     command += " " + snakemake.config["fastp"]["args"]
 shell(f"({command}) {log}")
