@@ -31,19 +31,19 @@ temp_path: "temp"
 
 fastq-dump:
   args: "--skip-technical"
-  threads: 12
+  threads: 4
   runtime: 20
   mem_mb: 4000
 fastqc:
   args: ""
-  threads: 12
+  threads: 4
   runtime: 20
   mem_mb: 4000
 trim_galore:
   args: ""
   threads: 8
   runtime: 60
-  mem_mb: 8000
+  mem_mb: 2500
 cutadapt:
   args: ""
   threads: 8
@@ -51,13 +51,13 @@ cutadapt:
   mem_mb: 8000
 fastp:
   args: ""
-  threads: 12
+  threads: 8
   runtime: 60
-  mem_mb: 8000
+  mem_mb: 5000
 trimmomatic:
   args: ""
   trimming_steps: "ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36"
-  threads: 12
+  threads: 8
   runtime: 60
   mem_mb: 8000
 
@@ -104,7 +104,7 @@ star:
 # Duplicate processor config
 mark_duplicates:
   args: ""
-  mem_mb: 8000
+  mem_mb: 12000
   runtime: 60
 markdup:
   args: "-s"
@@ -114,7 +114,7 @@ markdup:
 
 # Peak calling config
 macs3:
-  mem_mb: 1200
+  mem_mb: 2000
   runtime: 120
   args: ""
 # Deeptools computeMatrix args used for plot_heat_map and plot_profile
@@ -130,7 +130,7 @@ computeMatrix:
   mode: "reference-point"
   args: "--skipZeros -a 4000 -b 4000"
 plotHeatMap:
-  mem_mb: 8000
+  mem_mb: 2000
   runtime: 15
 plotProfile:
   mem_mb: 2000
