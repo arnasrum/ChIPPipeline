@@ -103,7 +103,9 @@ rule fastp_SE:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
-        temp(f"{RESULTS}/fastp/{{sample}}.fastq.gz")
+        reads = [temp(f"{RESULTS}/fastp/{{sample}}.fastq.gz")],
+        html= temp(f"{RESULTS}/fastp_reports/{{sample}}.html"),
+        json= temp(f"{RESULTS}/fastp_reports/{{sample}}.json")
     conda:
         "../envs/trim.yml"
     params:
@@ -126,8 +128,9 @@ rule fastp_PE:
     input:
         samples = lambda wildcards: trimmer_input(wildcards.sample, RESOURCES, pipeline_config)
     output:
-        temp(f"{RESULTS}/fastp/{{sample}}_1.fastq.gz"),
-        temp(f"{RESULTS}/fastp/{{sample}}_2.fastq.gz")
+        reads = [temp(f"{RESULTS}/fastp/{{sample}}_1.fastq.gz"), temp(f"{RESULTS}/fastp/{{sample}}_2.fastq.gz")],
+        html = temp(f"{RESULTS}/fastp_reports/{{sample}}.html"),
+        json = temp(f"{RESULTS}/fastp_reports/{{sample}}.json")
     conda:
         "../envs/trim.yml"
     params:
