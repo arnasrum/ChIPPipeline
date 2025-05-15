@@ -39,6 +39,8 @@ rule fasterq_dump_SE:
         cpus_per_task = int(config["fasterq-dump"]["threads"]),
         runtime = int(config["fasterq-dump"]["runtime"]),
         mem_mb = int(config["fasterq-dump"]["mem_mb"])
+    conda:
+        "../envs/input.yml"
     shell:
         """
         fasterq-dump {wildcards.accession} {params.args} -e {threads} -t {resources.tmpdir} -O {params.outdir} -F fastq
