@@ -1,45 +1,45 @@
-ruleorder: get_fastq_PE > get_fastq_SE
+ruleorder: fasterq_dump_PE > fasterq_dump_SE
 ruleorder: concatenate_runs_PE > concatenate_runs_SE
 
-rule get_fastq_PE:
+rule fasterq_dump_PE:
     output:
         temp(f"{RESOURCES}/reads/{{accession}}_1.fastq"),
         temp(f"{RESOURCES}/reads/{{accession}}_2.fastq")
     log:
-        f"{LOGS}/fastq-dump_pe/{{accession}}.log"
+        f"{LOGS}/fasterq-dump_pe/{{accession}}.log"
     params:
-        args=str(config["fastq-dump"]["args"]),
+        args=str(config["fasterq-dump"]["args"]),
         outdir=f"{RESOURCES}/reads"
     threads:
-        int(config["fastq-dump"]["threads"])
+        int(config["fasterq-dump"]["threads"])
     resources:
         tmpdir = TEMP,
-        cpus_per_task = int(config["fastq-dump"]["threads"]),
-        runtime = int(config["fastq-dump"]["runtime"]),
-        mem_mb = int(config["fastq-dump"]["mem_mb"])
+        cpus_per_task = int(config["fasterq-dump"]["threads"]),
+        runtime = int(config["fasterq-dump"]["runtime"]),
+        mem_mb = int(config["fasterq-dump"]["mem_mb"])
     conda:
         "../envs/input.yml"
-    script:
+    shell:
         """
             fasterq-dump {wildcards.accession} {params.args} -e {threads} -t {resources.tmpdir} -O {params.outdir} -F fastq
         """
 
-rule get_fastq_SE:
+rule fasterq_dump_SE:
     output:
         temp(f"{RESOURCES}/reads/{{accession}}.fastq")
     log:
-        f"{LOGS}/fastq-dump_se/{{accession}}.log"
+        f"{LOGS}/fasterq-dump_se/{{accession}}.log"
     params:
-        args=lambda wildcards, resources: str(config["fastq-dump"]["args"]),
+        args=lambda wildcards, resources: str(config["fasterq-dump"]["args"]),
         outdir=f"{RESOURCES}/reads"
     threads:
-        int(config["fastq-dump"]["threads"])
+        int(config["fasterq-dump"]["threads"])
     resources:
         tmpdir = TEMP,
-        cpus_per_task = int(config["fastq-dump"]["threads"]),
-        runtime = int(config["fastq-dump"]["runtime"]),
-        mem_mb = int(config["fastq-dump"]["mem_mb"])
-    script:
+        cpus_per_task = int(config["fasterq-dump"]["threads"]),
+        runtime = int(config["fasterq-dump"]["runtime"]),
+        mem_mb = int(config["fasterq-dump"]["mem_mb"])
+    shell:
         """
         fasterq-dump {wildcards.accession} {params.args} -e {threads} -t {resources.tmpdir} -O {params.outdir} -F fastq
         """
