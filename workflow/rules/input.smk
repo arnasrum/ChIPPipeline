@@ -8,7 +8,8 @@ rule get_fastq_PE:
     log:
         f"{LOGS}/fastq-dump_pe/{{accession}}.log"
     params:
-        extra=str(config["fastq-dump"]["args"])
+        args=str(config["fastq-dump"]["args"]),
+        outdir=f"{RESOURCES}/reads"
     threads:
         int(config["fastq-dump"]["threads"])
     resources:
@@ -16,8 +17,12 @@ rule get_fastq_PE:
         cpus_per_task = int(config["fastq-dump"]["threads"]),
         runtime = int(config["fastq-dump"]["runtime"]),
         mem_mb = int(config["fastq-dump"]["mem_mb"])
-    wrapper:
-        "v5.10.0/bio/sra-tools/fasterq-dump"
+    conda:
+        "../envs/input.yml"
+    script:
+        """
+            fasterq-dump {wildcards.accession} {params.args} -e {threads} -t {resources.tmpdir} -O {params.outdir} -F fastq
+        """
 
 rule get_fastq_SE:
     output:
@@ -25,7 +30,8 @@ rule get_fastq_SE:
     log:
         f"{LOGS}/fastq-dump_se/{{accession}}.log"
     params:
-        extra=lambda wildcards, resources: str(config["fastq-dump"]["args"])
+        args=lambda wildcards, resources: str(config["fastq-dump"]["args"]),
+        outdir=f"{RESOURCES}/reads"
     threads:
         int(config["fastq-dump"]["threads"])
     resources:
@@ -33,8 +39,10 @@ rule get_fastq_SE:
         cpus_per_task = int(config["fastq-dump"]["threads"]),
         runtime = int(config["fastq-dump"]["runtime"]),
         mem_mb = int(config["fastq-dump"]["mem_mb"])
-    wrapper:
-        "v5.10.0/bio/sra-tools/fasterq-dump"
+    script:
+        """
+        fasterq-dump {wildcards.accession} {params.args} -e {threads} -t {resources.tmpdir} -O {params.outdir} -F fastq
+        """
 
 rule concatenate_runs_SE:
     input:

@@ -105,8 +105,6 @@ def test_pipeline_configuration_get_treatment_files(pipeline_config):
     }
     assert expected_output == set(pipeline_config.get_treatment_files())
 
-
-
 def test_pipeline_configuration_is_paired_end(pipeline_config):
     assert pipeline_config.is_paired_end("antibody_sample1_treatment_rep1_genome") == True
     assert pipeline_config.is_paired_end("GSM123_antibody_sample1_treatment_rep1_genome_pooled2") == True
@@ -119,3 +117,10 @@ def test_pipeline_configuration_get_sample_entry_by_file_name(pipeline_config):
         "GSM123_antibody_sample1_treatment_rep1_genome_pooled2" == groups["antibody_sample1_genome"][1][1] and \
         "GSM123451_antibody_sample1_treatment_rep2_genome" == groups["antibody_sample1_genome"][2][0]
 
+def test_pipeline_configuration_get_sample_genome(pipeline_config):
+    for file_name in pipeline_config.get_all_file_names():
+        assert pipeline_config.get_sample_genome(file_name) == "genome"
+
+def test_get_control_files(pipeline_config):
+    assert ["sample1_control_rep1_genome"] == pipeline_config.get_control_files("antibody_sample1_treatment_rep1_genome")
+    assert ["sample1_control_rep1_genome"] == pipeline_config.get_control_files("antibody_sample1_treatment_rep1_genome")
