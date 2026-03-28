@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 import pathlib
 import pandas as pd
 import numpy as np
@@ -57,6 +58,17 @@ class PipelineConfiguration:
         if 'plot_region' in self.config and next(filter(lambda char: not re.match(char_whitelist, char), self.config['plot_region']), None):
             raise InputException(f"The configuration argument; \"plot_region\", contains invalid characters.")       
 
+        gtf_by_genome = self.config.get("annotate_peaks", {}).get("gtf_by_genome", {}) or {}
+        if not isinstance(gtf_by_genome, dict):
+            raise InputException('The configuration argument; annotate_peaks gtf_by_genome, must be a dictionary of genome-to-GTF mappings.')
+        for genome, gtf_path in gtf_by_genome.items():
+            if not isinstance(genome, str) or genome == "":
+                raise InputException("The configuration argument; annotate_peaks gtf_by_genome, contains an invalid genome key.")
+            if not isinstance(gtf_path, str) or gtf_path == "":
+                raise InputException(f"The configuration argument; annotate_peaks gtf_by_genome {genome}, must define a non-empty file path.")
+            if not os.path.isfile(gtf_path):
+                raise InputException(f"Provided GTF file: {gtf_path}, for genome {genome}, does not exist.")
+
 
 
     def parse_sample_sheet(self) -> dict[str:dict]:
@@ -90,7 +102,7 @@ class PipelineConfiguration:
         self.__validate_config()
 
         for index, row in sample_sheet.iterrows():
-            genome_name = row['genome'].split('/')[-1].split('.')[0]
+            genome_name = self.normalize_genome_name(row['genome'])
             if row['type'] == 'treatment':
                 pool = f"{row['mark']}_{row['sample']}_rep{row['replicate']}_{genome_name}_treatment"
             elif row['type'] == 'control':
@@ -229,7 +241,7 @@ class PipelineConfiguration:
         for pool_key, pool in self.__flatten_dict(self.sample_info).items():
             for entry in pool:
                 if "control" in pool_key: continue
-                treatment_group = f"{entry['mark']}_{entry['sample']}_{entry['genome'].split('/')[-1].split('.')[0]}"
+                treatment_group = f"{entry['mark']}_{entry['sample']}_{self.normalize_genome_name(entry['genome'])}"
                 if not treatment_group in treatment_samples:
                     treatment_samples[treatment_group] = {}
                 if not entry['replicate'] in treatment_samples[treatment_group]:
@@ -289,8 +301,23 @@ class PipelineConfiguration:
         Returns:
             The extracted genome name.
         """
-        genome = self.get_sample_entry_by_file_name(file_name)['genome'].split("/")[-1].split(".")[0]
+        genome = self.normalize_genome_name(self.get_sample_entry_by_file_name(file_name)['genome'])
         return genome
+
+    @staticmethod
+    def normalize_genome_name(genome: str) -> str:
+        return str(genome).split("/")[-1].split(".")[0]
+
+    def get_homer_annotation_gtf(self, genome: str) -> str | None:
+        gtf_by_genome = self.config.get("annotate_peaks", {}).get("gtf_by_genome", {}) or {}
+        normalized_genome = self.normalize_genome_name(genome)
+        return gtf_by_genome.get(genome) or gtf_by_genome.get(normalized_genome)
+
+    def get_homer_annotation_args(self, genome: str) -> str:
+        gtf_path = self.get_homer_annotation_gtf(genome)
+        if gtf_path is None:
+            return ""
+        return f"-gtf {shlex.quote(gtf_path)}"
 
     @staticmethod
     def __validate_sample_sheet(sample_sheet: pd.DataFrame):

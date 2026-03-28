@@ -148,8 +148,29 @@ Or by editing the [configuration file](../config/config.yml) directly
       <td>String (e.g., <code>"show_labels=true,color=red"</code>)</td>
       <td>Comma-separated options appended to narrowPeak(BED) track configurations in pyGenomeTracks. The extensive options can be found at the offical pyGenomeTracks documentation.</td>
     </tr>
+    <tr>
+      <td><code>annotate_peaks</code> -> <code>gtf_by_genome</code></td>
+      <td>Dictionary (e.g., <code>{"mm10": "/path/to/mm10.gtf", "hg38": "/path/to/hg38.gtf.gz"}</code>)</td>
+      <td>Optional mapping of genome names to custom GTF files passed to HOMER <code>annotatePeaks.pl</code> via <code>-gtf</code>. Keys should match the normalized genome name used by the pipeline (for example <code>mm10</code> for <code>genomes/mm10.fa.gz</code>).</td>
+    </tr>
   </tbody>
 </table>
+
+## Custom GTF files for HOMER peak annotation
+
+If you want HOMER peak annotation to use your own gene models, set <code>annotate_peaks.gtf_by_genome</code> in <code>config/config.yml</code>:
+
+```yaml
+annotate_peaks:
+  threads: 12
+  mem_mb: 8000
+  runtime: 30
+  gtf_by_genome:
+    mm10: "/path/to/mm10.custom.gtf.gz"
+    hg38: "/path/to/hg38.custom.gtf"
+```
+
+The configured file must exist when the workflow starts. If no GTF is configured for a genome, the pipeline keeps using HOMER's default annotation for that genome.
 
 ## Module Options
 

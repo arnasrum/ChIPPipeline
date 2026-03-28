@@ -140,22 +140,24 @@ rule homer_configure:
     shell:
         '''
         exec > {log} 2>&1
-        mkdir -p {params.outdir} 
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {wildcards.genome} 
+        mkdir -p {params.outdir}
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/configureHomer.pl -install {wildcards.genome}
         '''
 
 rule homer_annotate_peaks:
     input:
-        peaks = lambda wildcards: f"{RESULTS}/bedtools/{wildcards.group}_{wildcards.genome}.consensusPeak",
-        setup = lambda wildcards: f"{RESULTS}/homer/{wildcards.genome}.setup" 
+        peaks = lambda wildcards: f"{RESULTS}/bedtools/{wildcards.group}.consensusPeak",
+        setup = lambda wildcards: f"{RESULTS}/homer/{wildcards.group.split('_')[-1]}.setup"
     output:
-        f"{RESULTS}/homer/{{group}}_{{genome}}_annotate.txt"
+        f"{RESULTS}/homer/{{group}}_annotate.txt"
     conda:
         "../envs/data_analysis.yml"
     params:
         outdir = f"{RESULTS}/homer",
+        genome = lambda wildcards: wildcards.group.split('_')[-1],
+        annotation_args = lambda wildcards: pipeline_config.get_homer_annotation_args(wildcards.group.split('_')[-1]),
     log:
-        f"{LOGS}/homer/{{group}}_{{genome}}_annotate.log"
+        f"{LOGS}/homer/{{group}}_annotate.log"
     resources:
         tmpdir=TEMP,
         cpus_per_task = lambda wildcards, threads: threads,
@@ -164,8 +166,8 @@ rule homer_annotate_peaks:
     shell:
         '''
         exec > {log} 2>&1
-        mkdir -p {params.outdir} 
-        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peaks} {wildcards.genome} > {output}
+        mkdir -p {params.outdir}
+        perl -I $CONDA_PREFIX/share/homer/bin $CONDA_PREFIX/share/homer/bin/annotatePeaks.pl {input.peaks} {params.genome} {params.annotation_args} > {output}
         '''
 
 rule homer_find_motifs_genome:

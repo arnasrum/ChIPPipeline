@@ -144,6 +144,7 @@ annotate_peaks:
   threads: 12
   mem_mb: 8000
   runtime: 30
+  gtf_by_genome: {}
 find_motifs_genome:
   threads: 12
   mem_mb: 8000

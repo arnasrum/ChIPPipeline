@@ -5,6 +5,13 @@ import pytest
 import json
 
 @pytest.fixture
+def mock_gtf_file() -> Iterator[NamedTemporaryFile]:
+    with NamedTemporaryFile(mode="w+", suffix=".gtf") as file:
+        file.write("chr1\ttest\tgene\t1\t1000\t.\t+\t.\tgene_id \"gene1\"; transcript_id \"tx1\";\n")
+        file.flush()
+        yield file
+
+@pytest.fixture
 def mock_sample_sheet_json() -> Iterator[NamedTemporaryFile]:
     pre_created_temp_files: List[NamedTemporaryFile] = []
     temp_read1 = NamedTemporaryFile(mode="w+", suffix=".fq.gz")
@@ -124,3 +131,35 @@ def test_pipeline_configuration_get_sample_genome(pipeline_config):
 def test_get_control_files(pipeline_config):
     assert ["sample1_control_rep1_genome"] == pipeline_config.get_control_files("antibody_sample1_treatment_rep1_genome")
     assert ["sample1_control_rep1_genome"] == pipeline_config.get_control_files("antibody_sample1_treatment_rep1_genome")
+
+def test_get_homer_annotation_gtf_supports_normalized_genome_keys(mock_sample_sheet_json, mock_gtf_file):
+    config = {
+        "sample_sheet": mock_sample_sheet_json.name,
+        "generate_fastqc_reports": True,
+        "annotate_peaks": {
+            "gtf_by_genome": {
+                "genome": mock_gtf_file.name,
+            }
+        }
+    }
+    pipeline_config = PipelineConfiguration(config)
+    pipeline_config.parse_sample_sheet()
+
+    assert pipeline_config.get_homer_annotation_gtf("genome") == mock_gtf_file.name
+    assert pipeline_config.get_homer_annotation_gtf("data/genome.fa.gz") == mock_gtf_file.name
+    assert pipeline_config.get_homer_annotation_args("genome") == f"-gtf {mock_gtf_file.name}"
+
+def test_parse_sample_sheet_rejects_missing_homer_gtf(mock_sample_sheet_json):
+    config = {
+        "sample_sheet": mock_sample_sheet_json.name,
+        "generate_fastqc_reports": True,
+        "annotate_peaks": {
+            "gtf_by_genome": {
+                "genome": "/path/to/missing_annotation.gtf",
+            }
+        }
+    }
+
+    with pytest.raises(Exception, match="Provided GTF file"):
+        PipelineConfiguration(config).parse_sample_sheet()
+

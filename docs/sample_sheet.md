@@ -45,7 +45,7 @@ The pipeline requires a sample sheet (defaulting to config/samples.csv) to defin
         <td>You can provide either; 
         <ul>
             <li>An UCSC genome identifier (e.g., hg19, mm10, dm6). This will be downloaded from UCSC.</li>
-            <li>A path to a local FASTA or gzipped FASTA file containing the genome sequence (e.g., path/to/genome/hg19.fa.gz). Important: For HOMER (used for motif enrichment) to function correctly with a locally provided genome file, the filename (excluding the extension, e.g., hg19 from hg19.fa.gz) must be a recognized UCSC genome identifier. If the filename is not a recognized identifier by HOMER, motif enrichment analysis will be disabled for samples aligned to this genome.</li>
+            <li>A path to a local FASTA or gzipped FASTA file containing the genome sequence (e.g., path/to/genome/hg19.fa.gz). Important: For HOMER (used for motif enrichment) to function correctly with a locally provided genome file, the filename (excluding the extension, e.g., hg19 from hg19.fa.gz) must be a recognized UCSC genome identifier. If you want HOMER peak annotation to use a custom transcript annotation, you can additionally configure <code>annotate_peaks.gtf_by_genome</code> in <a href="../config/config.yml">config/config.yml</a>.</li>
         </ul>
         </td>
     </tr>
